@@ -10,6 +10,7 @@ on:
 
 permissions:
   pull-requests: read
+  checks: write
 
 jobs:
   gate:
@@ -19,7 +20,9 @@ jobs:
         with:
           script: |
             const owner = 'utkarshutt2706';
+            const checkName = 'review-required';
             const pr = context.payload.pull_request.number;
+            const headSha = context.payload.pull_request.head.sha;
 
             const { data: commits } = await github.rest.pulls.listCommits({
               owner: context.repo.owner,
@@ -27,22 +30,50 @@ jobs:
               pull_number: pr,
             });
             const allMine = commits.every((c) => c.author && c.author.login === owner);
+
+            let conclusion = 'failure';
+            let summary = `This PR has commits not authored by ${owner} and has not been approved by ${owner} yet.`;
+
             if (allMine) {
-              core.info(`All commits authored by ${owner}, no review required.`);
-              return;
+              conclusion = 'success';
+              summary = `All commits authored by ${owner}, no review required.`;
+            } else {
+              const { data: reviews } = await github.rest.pulls.listReviews({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pr,
+              });
+              const latestOwnerReview = reviews.filter((r) => r.user.login === owner).pop();
+              if (latestOwnerReview && latestOwnerReview.state === 'APPROVED') {
+                conclusion = 'success';
+                summary = `Approved by ${owner}.`;
+              }
             }
 
-            const { data: reviews } = await github.rest.pulls.listReviews({
+            // One check run per commit, updated in place regardless of which event
+            // fired — a PR opened by someone else and later approved must flip this
+            // same check from failing to passing, not spawn a second, unrelated one.
+            const { data: existing } = await github.rest.checks.listForRef({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              pull_number: pr,
+              ref: headSha,
+              check_name: checkName,
             });
-            const latestOwnerReview = reviews.filter((r) => r.user.login === owner).pop();
-            if (latestOwnerReview && latestOwnerReview.state === 'APPROVED') {
-              core.info(`Approved by ${owner}.`);
-              return;
+
+            const payload = {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              name: checkName,
+              head_sha: headSha,
+              status: 'completed',
+              conclusion,
+              output: { title: checkName, summary },
+            };
+
+            if (existing.check_runs.length > 0) {
+              await github.rest.checks.update({ check_run_id: existing.check_runs[0].id, ...payload });
+            } else {
+              await github.rest.checks.create(payload);
             }
 
-            core.setFailed(
-              `This PR has commits not authored by ${owner} and has not been approved by ${owner} yet.`,
-            );
+            core.info(summary);
