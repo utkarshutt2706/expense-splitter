@@ -28,17 +28,18 @@ pnpm dev
 
 ## Scripts
 
-| Command             | Description                              |
-| ------------------- | ---------------------------------------- |
-| `pnpm dev`          | Start the dev server                     |
-| `pnpm build`        | Type-check and build for production      |
-| `pnpm preview`      | Preview the production build locally     |
-| `pnpm format`       | Format the codebase with Prettier        |
-| `pnpm format:check` | Check formatting without writing changes |
-| `pnpm lint`         | Lint the codebase with ESLint            |
-| `pnpm lint:fix`     | Lint and auto-fix what's fixable         |
-| `pnpm test`         | Run the test suite once                  |
-| `pnpm test:watch`   | Run the test suite in watch mode         |
+| Command              | Description                              |
+| -------------------- | ---------------------------------------- |
+| `pnpm dev`           | Start the dev server                     |
+| `pnpm build`         | Type-check and build for production      |
+| `pnpm preview`       | Preview the production build locally     |
+| `pnpm format`        | Format the codebase with Prettier        |
+| `pnpm format:check`  | Check formatting without writing changes |
+| `pnpm lint`          | Lint the codebase with ESLint            |
+| `pnpm lint:fix`      | Lint and auto-fix what's fixable         |
+| `pnpm test`          | Run the test suite once                  |
+| `pnpm test:watch`    | Run the test suite in watch mode         |
+| `pnpm test:coverage` | Run tests with coverage (80% threshold)  |
 
 ## License
 
