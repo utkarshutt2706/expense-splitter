@@ -1,0 +1,48 @@
+name: Review gate
+
+# pull_request_target (not pull_request) so a PR can't neutralize this check by
+# editing this file itself — the job always runs the version committed on main.
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, ready_for_review]
+  pull_request_review:
+    types: [submitted, dismissed]
+
+permissions:
+  pull-requests: read
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = 'utkarshutt2706';
+            const pr = context.payload.pull_request.number;
+
+            const { data: commits } = await github.rest.pulls.listCommits({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr,
+            });
+            const allMine = commits.every((c) => c.author && c.author.login === owner);
+            if (allMine) {
+              core.info(`All commits authored by ${owner}, no review required.`);
+              return;
+            }
+
+            const { data: reviews } = await github.rest.pulls.listReviews({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr,
+            });
+            const latestOwnerReview = reviews.filter((r) => r.user.login === owner).pop();
+            if (latestOwnerReview && latestOwnerReview.state === 'APPROVED') {
+              core.info(`Approved by ${owner}.`);
+              return;
+            }
+
+            core.setFailed(
+              `This PR has commits not authored by ${owner} and has not been approved by ${owner} yet.`,
+            );

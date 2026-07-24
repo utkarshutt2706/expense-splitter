@@ -28,12 +28,12 @@ pnpm dev
 
 ## Scripts
 
-| Command | Description |
-|---|---|
-| `pnpm dev` | Start the dev server |
-| `pnpm build` | Type-check and build for production |
-| `pnpm preview` | Preview the production build locally |
-| `pnpm format` | Format the codebase with Prettier |
+| Command             | Description                              |
+| ------------------- | ---------------------------------------- |
+| `pnpm dev`          | Start the dev server                     |
+| `pnpm build`        | Type-check and build for production      |
+| `pnpm preview`      | Preview the production build locally     |
+| `pnpm format`       | Format the codebase with Prettier        |
 | `pnpm format:check` | Check formatting without writing changes |
 
 ## License
