@@ -20,3 +20,8 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: https://sonarcloud.io
+        with:
+          # Without this the scan step exits as soon as results upload, before the
+          # Quality Gate is even computed — this job would report success regardless
+          # of the actual analysis outcome.
+          args: -Dsonar.qualitygate.wait=true
