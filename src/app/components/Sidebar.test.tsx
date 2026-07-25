@@ -82,6 +82,22 @@ describe('Sidebar', () => {
         expect(screen.getByText('Dashboard').className).not.toContain('hidden');
     });
 
+    it('swaps the hamburger icon for a close icon when expanded', async () => {
+        const user = userEvent.setup();
+        render(
+            <MemoryRouter>
+                <Sidebar />
+            </MemoryRouter>,
+        );
+
+        const toggle = () => screen.getByRole('button', { name: /(expand|collapse) sidebar/i });
+        expect(toggle().querySelector('svg')?.classList).toContain('lucide-menu');
+
+        await user.click(toggle());
+
+        expect(toggle().querySelector('svg')?.classList).toContain('lucide-x');
+    });
+
     it('renders the user menu trigger at the bottom of the sidebar', () => {
         render(
             <MemoryRouter>
@@ -122,11 +138,11 @@ describe('Sidebar', () => {
         const classTokens = () => aside.className.split(/\s+/);
 
         expect(classTokens()).toContain('w-16');
-        expect(classTokens()).not.toContain('w-64');
+        expect(classTokens()).not.toContain('w-72');
 
         await user.click(screen.getByRole('button', { name: /expand sidebar/i }));
 
-        expect(classTokens()).toContain('w-64');
+        expect(classTokens()).toContain('w-72');
         expect(classTokens()).not.toContain('w-16');
     });
 
@@ -143,5 +159,80 @@ describe('Sidebar', () => {
         await user.click(screen.getByRole('button', { name: /expand sidebar/i }));
 
         expect(screen.getByText('Alex Morgan').parentElement?.className).not.toContain('hidden');
+    });
+
+    it('reveals the brand logo and title once the sidebar is expanded', async () => {
+        const user = userEvent.setup();
+        render(
+            <MemoryRouter>
+                <Sidebar />
+            </MemoryRouter>,
+        );
+
+        const brandLink = () => screen.getByRole('link', { name: /expense splitter/i });
+        const classTokens = () => brandLink().className.split(/\s+/);
+
+        expect(classTokens()).toContain('hidden');
+        expect(classTokens()).not.toContain('flex');
+
+        await user.click(screen.getByRole('button', { name: /expand sidebar/i }));
+
+        expect(classTokens()).toContain('flex');
+        expect(classTokens()).not.toContain('hidden');
+    });
+
+    it('stays a fixed overlay in both collapsed and expanded states, so it never resizes the main content', async () => {
+        const user = userEvent.setup();
+        render(
+            <MemoryRouter>
+                <Sidebar />
+            </MemoryRouter>,
+        );
+
+        const aside = screen.getByRole('complementary');
+        const classTokens = () => aside.className.split(/\s+/);
+
+        expect(classTokens()).toContain('fixed');
+
+        await user.click(screen.getByRole('button', { name: /expand sidebar/i }));
+
+        expect(classTokens()).toContain('fixed');
+    });
+
+    it('shows a backdrop only while expanded, and closes the sidebar when it is clicked', async () => {
+        const user = userEvent.setup();
+        const { container } = render(
+            <MemoryRouter>
+                <Sidebar />
+            </MemoryRouter>,
+        );
+
+        expect(container.querySelector('div[aria-hidden="true"]')).not.toBeInTheDocument();
+
+        await user.click(screen.getByRole('button', { name: /expand sidebar/i }));
+
+        const backdrop = container.querySelector('div[aria-hidden="true"]');
+        expect(backdrop).toBeInTheDocument();
+
+        await user.click(backdrop!);
+
+        expect(screen.getByRole('button', { name: /expand sidebar/i })).toBeInTheDocument();
+        expect(container.querySelector('div[aria-hidden="true"]')).not.toBeInTheDocument();
+    });
+
+    it('collapses the sidebar when a nav item is clicked', async () => {
+        const user = userEvent.setup();
+        render(
+            <MemoryRouter>
+                <Sidebar />
+            </MemoryRouter>,
+        );
+
+        await user.click(screen.getByRole('button', { name: /expand sidebar/i }));
+        expect(screen.getByRole('button', { name: /collapse sidebar/i })).toBeInTheDocument();
+
+        await user.click(screen.getByRole('link', { name: /friends/i }));
+
+        expect(screen.getByRole('button', { name: /expand sidebar/i })).toBeInTheDocument();
     });
 });

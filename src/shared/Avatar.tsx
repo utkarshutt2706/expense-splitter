@@ -13,7 +13,7 @@ export function Avatar({ name }: AvatarProps) {
     }
 
     return (
-        <span className="flex size-9 items-center justify-center rounded-full bg-brand-600 text-sm font-medium text-white">
+        <span className="flex size-9 items-center justify-center rounded-full select-none bg-brand-600 text-sm font-medium text-white">
             {initials}
         </span>
     );
