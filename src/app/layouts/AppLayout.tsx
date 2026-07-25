@@ -1,9 +1,9 @@
 import { Outlet } from 'react-router';
-import { Header } from './Header';
-import { Sidebar } from './Sidebar';
-import { useThemeAttribute } from './useThemeAttribute';
+import { Header } from '../components/Header';
+import { Sidebar } from '../components/Sidebar';
+import { useThemeAttribute } from '../hooks/useThemeAttribute';
 
-export function App() {
+export function AppLayout() {
     useThemeAttribute();
 
     return (

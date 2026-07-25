@@ -1,13 +1,13 @@
 import { createBrowserRouter } from 'react-router';
 import { FriendsPage } from '../features/friends/FriendsPage';
-import { App } from './App';
-import { PlaceholderPage } from './PlaceholderPage';
+import { AppLayout } from './layouts/AppLayout';
+import { PlaceholderPage } from './pages/PlaceholderPage';
 
 export const router = createBrowserRouter(
     [
         {
             path: '/',
-            element: <App />,
+            element: <AppLayout />,
             children: [
                 { index: true, element: <PlaceholderPage title="Dashboard coming soon" /> },
                 { path: 'friends', element: <FriendsPage /> },
