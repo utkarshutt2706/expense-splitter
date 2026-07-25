@@ -18,6 +18,12 @@
     --color-owe: var(--color-red-600);
     --color-owed: var(--color-green-600);
     --color-settled: var(--color-gray-500);
+
+    /* Fraunces for headings (warm, editorial character, ties into the Ember
+       theme); IBM Plex Sans for body/UI, chosen partly for its tabular
+       figures given how number-heavy balances and expense amounts will be. */
+    --font-display: 'Fraunces Variable', ui-serif, Georgia, serif;
+    --font-sans: 'IBM Plex Sans Variable', system-ui, 'Segoe UI', Roboto, sans-serif;
 }
 
 :root {
@@ -32,8 +38,8 @@
     --social-bg: rgba(244, 243, 236, 0.5);
     --shadow: rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
 
-    --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-    --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
+    --sans: var(--font-sans);
+    --heading: var(--font-display);
     --mono: ui-monospace, Consolas, monospace;
 
     font: 18px/145% var(--sans);
