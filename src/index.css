@@ -68,6 +68,27 @@
     }
 }
 
+/* Manual override from the theme store (src/app/stores/themeStore.ts) takes
+   precedence over prefers-color-scheme regardless of source order, since an
+   attribute selector is more specific than a bare :root. */
+:root[data-theme='light'] {
+    color-scheme: light;
+    --surface: #ffffff;
+    --surface-foreground: #1c1917;
+    --muted: #f5f3f0;
+    --muted-foreground: #6b6560;
+    --border-color: #e7e2dc;
+}
+
+:root[data-theme='dark'] {
+    color-scheme: dark;
+    --surface: #1c1a17;
+    --surface-foreground: #f5f1ec;
+    --muted: #29261f;
+    --muted-foreground: #a39d94;
+    --border-color: #3a352c;
+}
+
 body {
     margin: 0;
 }
