@@ -31,10 +31,7 @@ describe('Sidebar', () => {
             'href',
             '/activity',
         );
-        expect(screen.getByRole('link', { name: /settings/i })).toHaveAttribute(
-            'href',
-            '/settings',
-        );
+        expect(screen.queryByRole('link', { name: /settings/i })).not.toBeInTheDocument();
     });
 
     it('marks the matching route as active', () => {
