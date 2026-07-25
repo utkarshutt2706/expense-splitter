@@ -65,6 +65,18 @@ export function UserMenu() {
                     data-testid="user-menu-content"
                     className="z-10 w-56 rounded-lg border border-border bg-surface p-1 shadow-lg"
                 >
+                    <div className="flex items-center gap-3 px-3 py-2">
+                        <Avatar name={currentUser?.name ?? ''} />
+                        <div className="min-w-0">
+                            <p className="truncate text-sm font-medium text-surface-foreground">
+                                {currentUser?.name}
+                            </p>
+                            <p className="truncate text-xs text-muted-foreground">
+                                {currentUser?.email}
+                            </p>
+                        </div>
+                    </div>
+                    <div className="my-1 h-px bg-border" />
                     <MenuItem icon={UserRound} label="My account" />
                     <MenuItem icon={Settings} label="Settings" />
                     <ThemeToggleRow />
