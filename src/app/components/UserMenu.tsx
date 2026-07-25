@@ -44,7 +44,11 @@ function ThemeToggleRow() {
     );
 }
 
-export function UserMenu() {
+interface UserMenuProps {
+    expanded: boolean;
+}
+
+export function UserMenu({ expanded }: UserMenuProps) {
     const { data: currentUser } = useCurrentUser();
 
     return (
@@ -53,14 +57,23 @@ export function UserMenu() {
                 <button
                     type="button"
                     aria-label="Open user menu"
-                    className="rounded-full outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                    className={`flex w-full items-center gap-3 rounded-md p-1 text-left outline-none hover:bg-border focus-visible:ring-2 focus-visible:ring-brand-500 ${expanded ? 'px-3 py-2' : ''}`}
                 >
                     <Avatar name={currentUser?.name ?? ''} />
+                    <div className={`min-w-0 flex-1 ${expanded ? 'block' : 'hidden'} md:block`}>
+                        <p className="truncate text-sm font-medium text-surface-foreground">
+                            {currentUser?.name}
+                        </p>
+                        <p className="truncate text-xs text-muted-foreground">
+                            {currentUser?.email}
+                        </p>
+                    </div>
                 </button>
             </Popover.Trigger>
             <Popover.Portal>
                 <Popover.Content
-                    align="end"
+                    align="start"
+                    side="top"
                     sideOffset={8}
                     data-testid="user-menu-content"
                     className="z-10 w-56 rounded-lg border border-border bg-surface p-1 shadow-lg"
