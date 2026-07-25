@@ -1,24 +1,53 @@
+@import 'tailwindcss';
+
+/* Ember: a warm amber/terracotta brand scale, chosen deliberately over the
+   green/teal expense-app convention and generic SaaS indigo/violet. */
+@theme {
+    --color-brand-50: #fff6ec;
+    --color-brand-100: #ffeacc;
+    --color-brand-200: #ffd199;
+    --color-brand-300: #ffb25c;
+    --color-brand-400: #ff9433;
+    --color-brand-500: #f27318;
+    --color-brand-600: #d45a0f;
+    --color-brand-700: #ad440d;
+    --color-brand-800: #86340f;
+    --color-brand-900: #6b2b10;
+    --color-brand-950: #3a1406;
+
+    --color-owe: var(--color-red-600);
+    --color-owed: var(--color-green-600);
+    --color-settled: var(--color-gray-500);
+
+    /* Fraunces for headings (warm, editorial character, ties into the Ember
+       theme); IBM Plex Sans for body/UI, chosen partly for its tabular
+       figures given how number-heavy balances and expense amounts will be. */
+    --font-display: 'Fraunces Variable', ui-serif, Georgia, serif;
+    --font-sans: 'IBM Plex Sans Variable', system-ui, 'Segoe UI', Roboto, sans-serif;
+
+    /* Semantic surface/text/border tokens for real components (Phase 3+) to
+       build on, aliasing CSS variables that flip value under dark mode below
+       — bg-surface, text-surface-foreground, etc. stay correct in both
+       modes without every component needing its own dark: variant. */
+    --color-surface: var(--surface);
+    --color-surface-foreground: var(--surface-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-border: var(--border-color);
+}
+
 :root {
-    --text: #6b6375;
-    --text-h: #08060d;
-    --bg: #fff;
-    --border: #e5e4e7;
-    --code-bg: #f4f3ec;
-    --accent: #aa3bff;
-    --accent-bg: rgba(170, 59, 255, 0.1);
-    --accent-border: rgba(170, 59, 255, 0.5);
-    --social-bg: rgba(244, 243, 236, 0.5);
-    --shadow: rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+    --surface: #ffffff;
+    --surface-foreground: #1c1917;
+    --muted: #f5f3f0;
+    --muted-foreground: #6b6560;
+    --border-color: #e7e2dc;
 
-    --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-    --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-    --mono: ui-monospace, Consolas, monospace;
-
-    font: 18px/145% var(--sans);
+    font: 18px/145% var(--font-sans);
     letter-spacing: 0.18px;
     color-scheme: light dark;
-    color: var(--text);
-    background: var(--bg);
+    color: var(--surface-foreground);
+    background: var(--surface);
     font-synthesis: none;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
@@ -31,79 +60,35 @@
 
 @media (prefers-color-scheme: dark) {
     :root {
-        --text: #9ca3af;
-        --text-h: #f3f4f6;
-        --bg: #16171d;
-        --border: #2e303a;
-        --code-bg: #1f2028;
-        --accent: #c084fc;
-        --accent-bg: rgba(192, 132, 252, 0.15);
-        --accent-border: rgba(192, 132, 252, 0.5);
-        --social-bg: rgba(47, 48, 58, 0.5);
-        --shadow: rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-    }
-
-    #social .button-icon {
-        filter: invert(1) brightness(2);
+        --surface: #1c1a17;
+        --surface-foreground: #f5f1ec;
+        --muted: #29261f;
+        --muted-foreground: #a39d94;
+        --border-color: #3a352c;
     }
 }
 
-#root {
-    width: 1126px;
-    max-width: 100%;
-    margin: 0 auto;
-    text-align: center;
-    border-inline: 1px solid var(--border);
-    min-height: 100svh;
-    display: flex;
-    flex-direction: column;
-    box-sizing: border-box;
+/* Manual override from the theme store (src/app/stores/themeStore.ts) takes
+   precedence over prefers-color-scheme regardless of source order, since an
+   attribute selector is more specific than a bare :root. */
+:root[data-theme='light'] {
+    color-scheme: light;
+    --surface: #ffffff;
+    --surface-foreground: #1c1917;
+    --muted: #f5f3f0;
+    --muted-foreground: #6b6560;
+    --border-color: #e7e2dc;
+}
+
+:root[data-theme='dark'] {
+    color-scheme: dark;
+    --surface: #1c1a17;
+    --surface-foreground: #f5f1ec;
+    --muted: #29261f;
+    --muted-foreground: #a39d94;
+    --border-color: #3a352c;
 }
 
 body {
     margin: 0;
-}
-
-h1,
-h2 {
-    font-family: var(--heading);
-    font-weight: 500;
-    color: var(--text-h);
-}
-
-h1 {
-    font-size: 56px;
-    letter-spacing: -1.68px;
-    margin: 32px 0;
-    @media (max-width: 1024px) {
-        font-size: 36px;
-        margin: 20px 0;
-    }
-}
-h2 {
-    font-size: 24px;
-    line-height: 118%;
-    letter-spacing: -0.24px;
-    margin: 0 0 8px;
-    @media (max-width: 1024px) {
-        font-size: 20px;
-    }
-}
-p {
-    margin: 0;
-}
-
-code,
-.counter {
-    font-family: var(--mono);
-    display: inline-flex;
-    border-radius: 4px;
-    color: var(--text-h);
-}
-
-code {
-    font-size: 15px;
-    line-height: 135%;
-    padding: 4px 8px;
-    background: var(--code-bg);
 }
