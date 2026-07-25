@@ -1,4 +1,4 @@
-import { Activity, LayoutDashboard, Settings, Users, UsersRound } from 'lucide-react';
+import { Activity, LayoutDashboard, Users, UsersRound } from 'lucide-react';
 import type { ComponentType } from 'react';
 
 export interface NavItem {
@@ -12,5 +12,12 @@ export const navItems: NavItem[] = [
     { to: '/friends', label: 'Friends', icon: Users },
     { to: '/groups', label: 'Groups', icon: UsersRound },
     { to: '/activity', label: 'Activity', icon: Activity },
-    { to: '/settings', label: 'Settings', icon: Settings },
 ];
+
+export const pageTitles: Record<string, string> = {
+    '/': 'Dashboard',
+    '/friends': 'Friends',
+    '/groups': 'Groups',
+    '/activity': 'Activity',
+    '/settings': 'Settings',
+};
