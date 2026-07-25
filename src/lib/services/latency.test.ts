@@ -31,4 +31,21 @@ describe('simulateLatency', () => {
 
         await assertion;
     });
+
+    it('falls back to the minimum delay when getRandomValues returns no entries', async () => {
+        const getRandomValuesSpy = vi
+            .spyOn(crypto, 'getRandomValues')
+            .mockReturnValue(new Uint32Array(0) as unknown as Uint32Array<ArrayBuffer>);
+        const setTimeoutSpy = vi.spyOn(globalThis, 'setTimeout');
+
+        const operation = vi.fn().mockResolvedValue('result');
+        const promise = simulateLatency(operation);
+
+        expect(setTimeoutSpy).toHaveBeenCalledWith(expect.any(Function), 150);
+
+        await vi.advanceTimersByTimeAsync(150);
+        await expect(promise).resolves.toBe('result');
+
+        getRandomValuesSpy.mockRestore();
+    });
 });
