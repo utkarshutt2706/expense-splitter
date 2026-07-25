@@ -8,7 +8,7 @@ function MenuItem({ icon: Icon, label }: { icon: typeof UserRound; label: string
     return (
         <button
             type="button"
-            className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm font-medium text-surface-foreground hover:bg-muted"
+            className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm font-medium cursor-pointer text-surface-foreground hover:bg-muted"
         >
             <Icon className="size-4 text-muted-foreground" />
             {label}
@@ -25,7 +25,7 @@ function ThemeToggleRow() {
             role="switch"
             aria-checked={isDark}
             onClick={() => setIsDark((current) => !current)}
-            className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm font-medium text-surface-foreground hover:bg-muted"
+            className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm font-medium cursor-pointer text-surface-foreground hover:bg-muted"
         >
             <SunMoon className="size-4 text-muted-foreground" />
             <span className="flex-1">Theme</span>
@@ -57,7 +57,7 @@ export function UserMenu({ expanded }: UserMenuProps) {
                 <button
                     type="button"
                     aria-label="Open user menu"
-                    className={`flex w-full items-center gap-3 rounded-md p-1 text-left outline-none hover:bg-border focus-visible:ring-2 focus-visible:ring-brand-500 ${expanded ? 'px-3 py-2' : ''}`}
+                    className={`flex w-full items-center gap-3 rounded-md p-1 text-left outline-none cursor-pointer hover:bg-border focus-visible:ring-2 focus-visible:ring-brand-500 ${expanded ? 'px-3 py-2' : ''}`}
                 >
                     <Avatar name={currentUser?.name ?? ''} />
                     <div className={`min-w-0 flex-1 ${expanded ? 'block' : 'hidden'} md:block`}>
@@ -76,7 +76,7 @@ export function UserMenu({ expanded }: UserMenuProps) {
                     side="top"
                     sideOffset={8}
                     data-testid="user-menu-content"
-                    className="z-10 w-56 rounded-lg border border-border bg-surface p-1 shadow-lg"
+                    className="z-30 w-56 rounded-lg border border-border bg-surface p-1 shadow-lg"
                 >
                     <div className="flex items-center gap-3 px-3 py-2">
                         <Avatar name={currentUser?.name ?? ''} />
