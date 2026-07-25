@@ -8,5 +8,20 @@ export default defineConfig({
         environment: 'jsdom',
         setupFiles: ['./src/test/setup.ts'],
         globals: false,
+        coverage: {
+            provider: 'v8',
+            // json-summary and json are required by the PR coverage-report action,
+            // not just for local reading.
+            reporter: ['text', 'lcov', 'html', 'json-summary', 'json'],
+            reportOnFailure: true,
+            include: ['src/**/*.{ts,tsx}'],
+            exclude: ['src/main.tsx', 'src/test/**', 'src/**/*.test.{ts,tsx}'],
+            thresholds: {
+                lines: 80,
+                functions: 80,
+                branches: 80,
+                statements: 80,
+            },
+        },
     },
 });
