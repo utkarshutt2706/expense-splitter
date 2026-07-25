@@ -3,7 +3,7 @@ import '@fontsource-variable/ibm-plex-sans';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { RouterProvider } from 'react-router';
-import { AppProviders } from './app/providers.tsx';
+import { AppProviders } from './app/providers/AppProviders.tsx';
 import { router } from './app/router.tsx';
 import { expenseRepository, groupRepository, userRepository } from './lib/storage/db.ts';
 import { seedDatabase } from './lib/storage/seed.ts';

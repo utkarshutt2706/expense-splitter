@@ -1,14 +1,14 @@
 import * as Popover from '@radix-ui/react-popover';
 import { LogOut, Settings, SunMoon, UserRound } from 'lucide-react';
 import { useState } from 'react';
-import { Avatar } from '../shared/Avatar';
-import { useCurrentUser } from './useCurrentUser';
+import { Avatar } from '../../shared/Avatar';
+import { useCurrentUser } from '../hooks/useCurrentUser';
 
 function MenuItem({ icon: Icon, label }: { icon: typeof UserRound; label: string }) {
     return (
         <button
             type="button"
-            className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm font-medium text-surface-foreground hover:bg-muted"
+            className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm font-medium cursor-pointer text-surface-foreground hover:bg-muted"
         >
             <Icon className="size-4 text-muted-foreground" />
             {label}
@@ -25,7 +25,7 @@ function ThemeToggleRow() {
             role="switch"
             aria-checked={isDark}
             onClick={() => setIsDark((current) => !current)}
-            className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm font-medium text-surface-foreground hover:bg-muted"
+            className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm font-medium cursor-pointer text-surface-foreground hover:bg-muted"
         >
             <SunMoon className="size-4 text-muted-foreground" />
             <span className="flex-1">Theme</span>
@@ -44,7 +44,11 @@ function ThemeToggleRow() {
     );
 }
 
-export function UserMenu() {
+interface UserMenuProps {
+    expanded: boolean;
+}
+
+export function UserMenu({ expanded }: UserMenuProps) {
     const { data: currentUser } = useCurrentUser();
 
     return (
@@ -53,18 +57,39 @@ export function UserMenu() {
                 <button
                     type="button"
                     aria-label="Open user menu"
-                    className="rounded-full outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                    className={`flex w-full items-center gap-3 rounded-md p-1 text-left outline-none cursor-pointer hover:bg-border focus-visible:ring-2 focus-visible:ring-brand-500 ${expanded ? 'px-3 py-2' : ''}`}
                 >
                     <Avatar name={currentUser?.name ?? ''} />
+                    <div className={`min-w-0 flex-1 ${expanded ? 'block' : 'hidden'} md:block`}>
+                        <p className="truncate text-sm font-medium text-surface-foreground">
+                            {currentUser?.name}
+                        </p>
+                        <p className="truncate text-xs text-muted-foreground">
+                            {currentUser?.email}
+                        </p>
+                    </div>
                 </button>
             </Popover.Trigger>
             <Popover.Portal>
                 <Popover.Content
-                    align="end"
+                    align="start"
+                    side="top"
                     sideOffset={8}
                     data-testid="user-menu-content"
-                    className="z-10 w-56 rounded-lg border border-border bg-surface p-1 shadow-lg"
+                    className="z-30 w-56 rounded-lg border border-border bg-surface p-1 shadow-lg"
                 >
+                    <div className="flex items-center gap-3 px-3 py-2">
+                        <Avatar name={currentUser?.name ?? ''} />
+                        <div className="min-w-0">
+                            <p className="truncate text-sm font-medium text-surface-foreground">
+                                {currentUser?.name}
+                            </p>
+                            <p className="truncate text-xs text-muted-foreground">
+                                {currentUser?.email}
+                            </p>
+                        </div>
+                    </div>
+                    <div className="my-1 h-px bg-border" />
                     <MenuItem icon={UserRound} label="My account" />
                     <MenuItem icon={Settings} label="Settings" />
                     <ThemeToggleRow />

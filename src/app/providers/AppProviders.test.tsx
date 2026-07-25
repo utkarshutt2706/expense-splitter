@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { AppProviders } from './providers';
+import { AppProviders } from './AppProviders';
 
 describe('AppProviders', () => {
     it('renders its children', () => {
