@@ -3,7 +3,11 @@ import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
+    // GitHub Pages serves the production build as a project site
+    // (username.github.io/expense-splitter/), not at the domain root, so only the
+    // actual build needs this prefix — applying it to dev/test would break both.
+    base: command === 'build' ? '/expense-splitter/' : '/',
     plugins: [react(), tailwindcss()],
     test: {
         environment: 'jsdom',
@@ -25,4 +29,4 @@ export default defineConfig({
             },
         },
     },
-});
+}));
