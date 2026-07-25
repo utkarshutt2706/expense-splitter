@@ -1,18 +1,18 @@
 import { render, screen } from '@testing-library/react';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
-import { App } from './App';
+import { AppLayout } from './AppLayout';
 
-vi.mock('./useCurrentUser', () => ({
+vi.mock('../hooks/useCurrentUser', () => ({
     useCurrentUser: () => ({ data: { id: 'current-user', name: 'Alex Morgan', email: '' } }),
 }));
 
-describe('App', () => {
+describe('AppLayout', () => {
     it('renders the matched child route through the outlet', () => {
         const router = createMemoryRouter([
             {
                 path: '/',
-                element: <App />,
+                element: <AppLayout />,
                 children: [{ index: true, element: <p>child route content</p> }],
             },
         ]);

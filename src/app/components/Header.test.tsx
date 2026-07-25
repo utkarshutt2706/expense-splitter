@@ -3,7 +3,7 @@ import { MemoryRouter } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
 import { Header } from './Header';
 
-vi.mock('./useCurrentUser', () => ({
+vi.mock('../hooks/useCurrentUser', () => ({
     useCurrentUser: () => ({ data: { id: 'current-user', name: 'Alex Morgan', email: '' } }),
 }));
 

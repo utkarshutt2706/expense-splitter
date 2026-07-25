@@ -3,7 +3,7 @@ import { RouterProvider } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
 import { router } from './router';
 
-vi.mock('./useCurrentUser', () => ({
+vi.mock('./hooks/useCurrentUser', () => ({
     useCurrentUser: () => ({ data: { id: 'current-user', name: 'Alex Morgan', email: '' } }),
 }));
 

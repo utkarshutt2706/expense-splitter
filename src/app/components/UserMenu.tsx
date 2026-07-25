@@ -1,8 +1,8 @@
 import * as Popover from '@radix-ui/react-popover';
 import { LogOut, Settings, SunMoon, UserRound } from 'lucide-react';
 import { useState } from 'react';
-import { Avatar } from '../shared/Avatar';
-import { useCurrentUser } from './useCurrentUser';
+import { Avatar } from '../../shared/Avatar';
+import { useCurrentUser } from '../hooks/useCurrentUser';
 
 function MenuItem({ icon: Icon, label }: { icon: typeof UserRound; label: string }) {
     return (
