@@ -1,0 +1,20 @@
+import { render, screen } from '@testing-library/react';
+import { createMemoryRouter, RouterProvider } from 'react-router';
+import { describe, expect, it } from 'vitest';
+import { App } from './App';
+
+describe('App', () => {
+    it('renders the matched child route through the outlet', () => {
+        const router = createMemoryRouter([
+            {
+                path: '/',
+                element: <App />,
+                children: [{ index: true, element: <p>child route content</p> }],
+            },
+        ]);
+
+        render(<RouterProvider router={router} />);
+
+        expect(screen.getByText('child route content')).toBeInTheDocument();
+    });
+});
