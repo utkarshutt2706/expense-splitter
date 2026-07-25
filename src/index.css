@@ -24,9 +24,25 @@
        figures given how number-heavy balances and expense amounts will be. */
     --font-display: 'Fraunces Variable', ui-serif, Georgia, serif;
     --font-sans: 'IBM Plex Sans Variable', system-ui, 'Segoe UI', Roboto, sans-serif;
+
+    /* Semantic surface/text/border tokens for real components (Phase 3+) to
+       build on, aliasing CSS variables that flip value under dark mode below
+       — bg-surface, text-surface-foreground, etc. stay correct in both
+       modes without every component needing its own dark: variant. */
+    --color-surface: var(--surface);
+    --color-surface-foreground: var(--surface-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-border: var(--border-color);
 }
 
 :root {
+    --surface: #ffffff;
+    --surface-foreground: #1c1917;
+    --muted: #f5f3f0;
+    --muted-foreground: #6b6560;
+    --border-color: #e7e2dc;
+
     --text: #6b6375;
     --text-h: #08060d;
     --bg: #fff;
@@ -59,6 +75,12 @@
 
 @media (prefers-color-scheme: dark) {
     :root {
+        --surface: #1c1a17;
+        --surface-foreground: #f5f1ec;
+        --muted: #29261f;
+        --muted-foreground: #a39d94;
+        --border-color: #3a352c;
+
         --text: #9ca3af;
         --text-h: #f3f4f6;
         --bg: #16171d;
