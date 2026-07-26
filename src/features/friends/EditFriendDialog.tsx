@@ -1,32 +1,28 @@
 import * as Dialog from '@radix-ui/react-dialog';
-import { UserPlus, X } from 'lucide-react';
-import { useState } from 'react';
+import { X } from 'lucide-react';
 import { FriendForm, type FriendFormValues } from './FriendForm';
 
-interface AddFriendDialogProps {
+interface EditFriendDialogProps {
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    initialValues: FriendFormValues;
     onSubmit: (values: FriendFormValues) => void;
 }
 
-export function AddFriendDialog({ onSubmit }: AddFriendDialogProps) {
-    const [open, setOpen] = useState(false);
-
+export function EditFriendDialog({
+    open,
+    onOpenChange,
+    initialValues,
+    onSubmit,
+}: EditFriendDialogProps) {
     return (
-        <Dialog.Root open={open} onOpenChange={setOpen}>
-            <Dialog.Trigger asChild>
-                <button
-                    type="button"
-                    className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-border px-4 py-2 text-sm font-medium text-surface-foreground hover:bg-muted"
-                >
-                    <UserPlus className="size-4" />
-                    Add friend
-                </button>
-            </Dialog.Trigger>
+        <Dialog.Root open={open} onOpenChange={onOpenChange}>
             <Dialog.Portal>
                 <Dialog.Overlay className="fixed inset-0 z-40 bg-black/50" />
                 <Dialog.Content className="fixed top-1/2 left-1/2 z-50 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-lg border border-border bg-surface p-6 shadow-lg">
                     <div className="mb-4 flex items-center justify-between">
                         <Dialog.Title className="font-display text-lg font-medium text-surface-foreground">
-                            Add a friend
+                            Edit friend
                         </Dialog.Title>
                         <Dialog.Close asChild>
                             <button
@@ -39,15 +35,16 @@ export function AddFriendDialog({ onSubmit }: AddFriendDialogProps) {
                         </Dialog.Close>
                     </div>
                     <Dialog.Description className="sr-only">
-                        Enter your friend's name and email to add them to your friends list.
+                        Update your friend's name and email.
                     </Dialog.Description>
                     <FriendForm
-                        mode="add"
+                        mode="edit"
+                        initialValues={initialValues}
                         onSubmit={(values) => {
-                            setOpen(false);
+                            onOpenChange(false);
                             onSubmit(values);
                         }}
-                        onCancel={() => setOpen(false)}
+                        onCancel={() => onOpenChange(false)}
                     />
                 </Dialog.Content>
             </Dialog.Portal>
