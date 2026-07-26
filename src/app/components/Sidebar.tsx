@@ -18,9 +18,9 @@ export function Sidebar() {
                 />
             )}
             <aside
-                className={`fixed inset-y-0 left-0 z-20 flex ${isExpanded ? 'w-72' : 'w-16'} shrink-0 flex-col gap-1 border-r border-border bg-muted px-2 py-4 transition-all md:static md:w-64 md:px-4`}
+                className={`fixed inset-y-0 left-0 z-20 flex ${isExpanded ? 'w-72' : 'w-16'} shrink-0 flex-col gap-1 overflow-hidden border-r border-border bg-muted px-2 py-4 transition-all md:static md:w-64 md:px-4`}
             >
-                <div className="mb-4 flex items-center justify-between gap-2 px-2">
+                <div className="mb-4 flex shrink-0 items-center justify-between gap-2 px-2">
                     <Link
                         to="/"
                         className={`min-w-0 items-center gap-2 ${isExpanded ? 'flex' : 'hidden'} md:flex`}
@@ -39,7 +39,7 @@ export function Sidebar() {
                         {isExpanded ? <X className="size-6" /> : <Menu className="size-6" />}
                     </button>
                 </div>
-                <nav className="flex flex-1 flex-col gap-1">
+                <nav className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto">
                     {navItems.map(({ to, label, icon: Icon }) => (
                         <NavLink
                             key={to}
@@ -64,7 +64,7 @@ export function Sidebar() {
                     ))}
                 </nav>
                 <div
-                    className={`${isExpanded ? 'mt-1 border-t border-border pt-3' : ''} md:mt-1 md:border-t md:border-border md:pt-3`}
+                    className={`shrink-0 ${isExpanded ? 'mt-1 border-t border-border pt-4' : ''} md:mt-1 md:border-t md:border-border md:pt-4`}
                 >
                     <UserMenu expanded={isExpanded} />
                 </div>

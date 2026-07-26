@@ -7,11 +7,11 @@ export function AppLayout() {
     useThemeAttribute();
 
     return (
-        <div className="flex min-h-svh bg-surface text-surface-foreground">
+        <div className="flex h-svh bg-surface text-surface-foreground">
             <Sidebar />
-            <div className="flex flex-1 flex-col overflow-y-auto pl-16 md:pl-0">
+            <div className="flex flex-1 flex-col overflow-hidden pl-16 md:pl-0">
                 <Header />
-                <main className="p-4 md:p-6 flex-1">
+                <main className="flex-1 overflow-y-auto p-4 md:p-6">
                     <Outlet />
                 </main>
             </div>
