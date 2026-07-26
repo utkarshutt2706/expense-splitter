@@ -217,10 +217,10 @@ describe('FriendsPage', () => {
             expect(toast.success).toHaveBeenCalledWith('Friend added', { id: 'toast-id' });
         });
 
-        it('updates the loading toast to an error toast when the mutation fails', () => {
-            let onError: (() => void) | undefined;
+        it('updates the loading toast to an error toast with the error message when it fails', () => {
+            let onError: ((error: Error) => void) | undefined;
             vi.mocked(useCreateFriend).mockReturnValue({
-                mutate: vi.fn((_values, options: { onError?: () => void }) => {
+                mutate: vi.fn((_values, options: { onError?: (error: Error) => void }) => {
                     onError = options.onError;
                 }),
             } as unknown as ReturnType<typeof useCreateFriend>);
@@ -229,9 +229,12 @@ describe('FriendsPage', () => {
 
             fireEvent.click(screen.getByRole('button', { name: /^add friend$/i }));
             fireEvent.click(screen.getByText(/fake add submit/i));
-            onError?.();
+            onError?.(new Error('A friend with this email or phone number already exists'));
 
-            expect(toast.error).toHaveBeenCalledWith("Couldn't add friend", { id: 'toast-id' });
+            expect(toast.error).toHaveBeenCalledWith(
+                'A friend with this email or phone number already exists',
+                { id: 'toast-id' },
+            );
         });
     });
 
@@ -283,10 +286,10 @@ describe('FriendsPage', () => {
             expect(toast.success).toHaveBeenCalledWith('Friend updated', { id: 'toast-id' });
         });
 
-        it('updates the loading toast to an error toast when the mutation fails', () => {
-            let onError: (() => void) | undefined;
+        it('updates the loading toast to an error toast with the error message when it fails', () => {
+            let onError: ((error: Error) => void) | undefined;
             vi.mocked(useUpdateFriend).mockReturnValue({
-                mutate: vi.fn((_values, options: { onError?: () => void }) => {
+                mutate: vi.fn((_values, options: { onError?: (error: Error) => void }) => {
                     onError = options.onError;
                 }),
             } as unknown as ReturnType<typeof useUpdateFriend>);
@@ -295,9 +298,12 @@ describe('FriendsPage', () => {
 
             fireEvent.click(screen.getByRole('button', { name: /fake edit priya sharma/i }));
             fireEvent.click(screen.getByText(/fake edit submit/i));
-            onError?.();
+            onError?.(new Error('A friend with this email or phone number already exists'));
 
-            expect(toast.error).toHaveBeenCalledWith("Couldn't update friend", { id: 'toast-id' });
+            expect(toast.error).toHaveBeenCalledWith(
+                'A friend with this email or phone number already exists',
+                { id: 'toast-id' },
+            );
         });
     });
 

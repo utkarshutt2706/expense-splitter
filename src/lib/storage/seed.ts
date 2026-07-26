@@ -9,8 +9,13 @@ const WEEKEND_TRIP_GROUP_ID = 'group-weekend-trip';
 
 const seedUsers: User[] = [
     { id: CURRENT_USER_ID, name: 'Alex Morgan', email: 'alex@example.com' },
-    { id: FRIEND_PRIYA_ID, name: 'Priya Sharma', email: 'priya@example.com' },
-    { id: FRIEND_JORDAN_ID, name: 'Jordan Lee', email: 'jordan@example.com' },
+    {
+        id: FRIEND_PRIYA_ID,
+        name: 'Priya Sharma',
+        email: 'priya@example.com',
+        phone: '+1 555-010-2020',
+    },
+    { id: FRIEND_JORDAN_ID, name: 'Jordan Lee', phone: '+1 555-010-3030' },
 ];
 
 const seedGroups: Group[] = [

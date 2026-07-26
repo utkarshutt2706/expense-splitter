@@ -3,16 +3,34 @@ import { Check, UserPlus } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
-const friendFormSchema = z.object({
-    name: z.string().trim().min(1, 'Name is required'),
-    email: z
-        .string()
-        .trim()
-        .min(1, 'Email is required')
-        .email({ message: 'Enter a valid email address' }),
-});
+const friendFormSchema = z
+    .object({
+        name: z.string().trim().min(1, 'Name is required'),
+        email: z.string().trim(),
+        phone: z.string().trim(),
+    })
+    .superRefine((values, ctx) => {
+        if (values.email && !z.email().safeParse(values.email).success) {
+            ctx.addIssue({
+                code: 'custom',
+                message: 'Enter a valid email address',
+                path: ['email'],
+            });
+        }
+        if (!values.email && !values.phone) {
+            const message = 'Enter an email or phone number';
+            ctx.addIssue({ code: 'custom', message, path: ['email'] });
+            ctx.addIssue({ code: 'custom', message, path: ['phone'] });
+        }
+    });
 
-export type FriendFormValues = z.infer<typeof friendFormSchema>;
+type FriendFormInput = z.infer<typeof friendFormSchema>;
+
+export interface FriendFormValues {
+    name: string;
+    email?: string;
+    phone?: string;
+}
 
 interface FriendFormProps {
     mode: 'add' | 'edit';
@@ -26,13 +44,21 @@ export function FriendForm({ mode, initialValues, onSubmit, onCancel }: FriendFo
         register,
         handleSubmit,
         formState: { errors },
-    } = useForm<FriendFormValues>({
+    } = useForm<FriendFormInput>({
         resolver: zodResolver(friendFormSchema),
-        defaultValues: initialValues,
+        defaultValues: {
+            name: initialValues?.name ?? '',
+            email: initialValues?.email ?? '',
+            phone: initialValues?.phone ?? '',
+        },
     });
 
     const submit = handleSubmit((values) => {
-        onSubmit(values);
+        onSubmit({
+            name: values.name,
+            email: values.email || undefined,
+            phone: values.phone || undefined,
+        });
     });
 
     return (
@@ -68,6 +94,22 @@ export function FriendForm({ mode, initialValues, onSubmit, onCancel }: FriendFo
                     className="rounded-md border border-border bg-surface px-3 py-2 text-sm text-surface-foreground outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
                 />
                 {errors.email && <p className="text-xs text-red-600">{errors.email.message}</p>}
+            </div>
+            <div className="flex flex-col gap-1">
+                <label
+                    htmlFor="friend-phone"
+                    className="text-sm font-medium text-surface-foreground"
+                >
+                    Phone
+                </label>
+                <input
+                    id="friend-phone"
+                    type="tel"
+                    placeholder="Enter friend's phone number"
+                    {...register('phone')}
+                    className="rounded-md border border-border bg-surface px-3 py-2 text-sm text-surface-foreground outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                />
+                {errors.phone && <p className="text-xs text-red-600">{errors.phone.message}</p>}
             </div>
             <div className="flex justify-end gap-2">
                 <button

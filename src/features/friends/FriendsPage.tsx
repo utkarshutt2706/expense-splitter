@@ -26,7 +26,7 @@ export function FriendsPage() {
         const toastId = toast.loading('Friend is being added…');
         createFriend.mutate(values, {
             onSuccess: () => toast.success('Friend added', { id: toastId }),
-            onError: () => toast.error("Couldn't add friend", { id: toastId }),
+            onError: (error) => toast.error(error.message, { id: toastId }),
         });
     };
 
@@ -37,7 +37,7 @@ export function FriendsPage() {
             { id: editingFriend.id, ...values },
             {
                 onSuccess: () => toast.success('Friend updated', { id: toastId }),
-                onError: () => toast.error("Couldn't update friend", { id: toastId }),
+                onError: (error) => toast.error(error.message, { id: toastId }),
             },
         );
     };
@@ -80,7 +80,9 @@ export function FriendsPage() {
                             <Avatar name={friend.name} />
                             <div className="flex-1">
                                 <p className="font-medium text-surface-foreground">{friend.name}</p>
-                                <p className="text-sm text-muted-foreground">{friend.email}</p>
+                                <p className="text-sm text-muted-foreground">
+                                    {[friend.email, friend.phone].filter(Boolean).join(' · ')}
+                                </p>
                             </div>
                             <FriendRowMenu
                                 friendName={friend.name}
@@ -107,7 +109,8 @@ export function FriendsPage() {
                 }}
                 initialValues={{
                     name: editingFriend?.name ?? '',
-                    email: editingFriend?.email ?? '',
+                    email: editingFriend?.email,
+                    phone: editingFriend?.phone,
                 }}
                 onSubmit={handleEditFriend}
             />
