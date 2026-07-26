@@ -188,4 +188,75 @@ describe('GroupsPage', () => {
             expect(toast.error).toHaveBeenCalledWith('Something went wrong', { id: 'toast-id' });
         });
     });
+
+    describe('search', () => {
+        beforeEach(() => {
+            vi.mocked(useGroups).mockReturnValue({
+                data: groups,
+                isLoading: false,
+                isError: false,
+            } as unknown as ReturnType<typeof useGroups>);
+            vi.mocked(useFriends).mockReturnValue({
+                data: [
+                    { id: 'friend-1', name: 'Priya Sharma', email: 'priya@example.com' },
+                    { id: 'friend-2', name: 'Jordan Lee', phone: '5551234567' },
+                ],
+            } as unknown as ReturnType<typeof useFriends>);
+        });
+
+        it('filters groups by group name', () => {
+            renderPage();
+
+            fireEvent.change(screen.getByRole('searchbox', { name: /search groups/i }), {
+                target: { value: 'weekend' },
+            });
+
+            expect(screen.getByText('Weekend Trip')).toBeInTheDocument();
+            expect(screen.queryByText('Roommates')).not.toBeInTheDocument();
+        });
+
+        it('filters groups by member name', () => {
+            renderPage();
+
+            fireEvent.change(screen.getByRole('searchbox', { name: /search groups/i }), {
+                target: { value: 'priya' },
+            });
+
+            expect(screen.getByText('Weekend Trip')).toBeInTheDocument();
+            expect(screen.queryByText('Roommates')).not.toBeInTheDocument();
+        });
+
+        it('is case-insensitive', () => {
+            renderPage();
+
+            fireEvent.change(screen.getByRole('searchbox', { name: /search groups/i }), {
+                target: { value: 'PRIYA' },
+            });
+
+            expect(screen.getByText('Weekend Trip')).toBeInTheDocument();
+        });
+
+        it('shows a no-match message when nothing matches the search', () => {
+            renderPage();
+
+            fireEvent.change(screen.getByRole('searchbox', { name: /search groups/i }), {
+                target: { value: 'nobody' },
+            });
+
+            expect(screen.getByText(/no groups match your search/i)).toBeInTheDocument();
+            expect(screen.queryByText('Weekend Trip')).not.toBeInTheDocument();
+            expect(screen.queryByText('Roommates')).not.toBeInTheDocument();
+        });
+
+        it('shows every group again once the search is cleared', () => {
+            renderPage();
+
+            const searchBox = screen.getByRole('searchbox', { name: /search groups/i });
+            fireEvent.change(searchBox, { target: { value: 'priya' } });
+            fireEvent.change(searchBox, { target: { value: '' } });
+
+            expect(screen.getByText('Weekend Trip')).toBeInTheDocument();
+            expect(screen.getByText('Roommates')).toBeInTheDocument();
+        });
+    });
 });
