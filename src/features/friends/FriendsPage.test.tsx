@@ -99,7 +99,7 @@ vi.mock('./FriendRowMenu', () => ({
 
 const friends = [
     { id: 'friend-1', name: 'Priya Sharma', email: 'priya@example.com' },
-    { id: 'friend-2', name: 'Jordan Lee', email: 'jordan@example.com' },
+    { id: 'friend-2', name: 'Jordan Lee', phone: '5551234567' },
 ];
 
 describe('FriendsPage', () => {
@@ -151,7 +151,7 @@ describe('FriendsPage', () => {
         expect(screen.getByText(/no friends yet/i)).toBeInTheDocument();
     });
 
-    it('renders each friend with their name and email', () => {
+    it('renders each friend with their name and contact info', () => {
         vi.mocked(useFriends).mockReturnValue({
             data: friends,
             isLoading: false,
@@ -163,7 +163,7 @@ describe('FriendsPage', () => {
         expect(screen.getByText('Priya Sharma')).toBeInTheDocument();
         expect(screen.getByText('priya@example.com')).toBeInTheDocument();
         expect(screen.getByText('Jordan Lee')).toBeInTheDocument();
-        expect(screen.getByText('jordan@example.com')).toBeInTheDocument();
+        expect(screen.getByText('5551234567')).toBeInTheDocument();
     });
 
     it('renders the add friend trigger', () => {
@@ -176,6 +176,82 @@ describe('FriendsPage', () => {
         render(<FriendsPage />);
 
         expect(screen.getByRole('button', { name: /^add friend$/i })).toBeInTheDocument();
+    });
+
+    describe('search', () => {
+        beforeEach(() => {
+            vi.mocked(useFriends).mockReturnValue({
+                data: friends,
+                isLoading: false,
+                isError: false,
+            } as unknown as ReturnType<typeof useFriends>);
+        });
+
+        it('filters friends by name', () => {
+            render(<FriendsPage />);
+
+            fireEvent.change(screen.getByRole('searchbox', { name: /search friends/i }), {
+                target: { value: 'priya' },
+            });
+
+            expect(screen.getByText('Priya Sharma')).toBeInTheDocument();
+            expect(screen.queryByText('Jordan Lee')).not.toBeInTheDocument();
+        });
+
+        it('filters friends by email', () => {
+            render(<FriendsPage />);
+
+            fireEvent.change(screen.getByRole('searchbox', { name: /search friends/i }), {
+                target: { value: 'priya@example.com' },
+            });
+
+            expect(screen.getByText('Priya Sharma')).toBeInTheDocument();
+            expect(screen.queryByText('Jordan Lee')).not.toBeInTheDocument();
+        });
+
+        it('filters friends by phone number', () => {
+            render(<FriendsPage />);
+
+            fireEvent.change(screen.getByRole('searchbox', { name: /search friends/i }), {
+                target: { value: '5551234567' },
+            });
+
+            expect(screen.getByText('Jordan Lee')).toBeInTheDocument();
+            expect(screen.queryByText('Priya Sharma')).not.toBeInTheDocument();
+        });
+
+        it('is case-insensitive', () => {
+            render(<FriendsPage />);
+
+            fireEvent.change(screen.getByRole('searchbox', { name: /search friends/i }), {
+                target: { value: 'PRIYA' },
+            });
+
+            expect(screen.getByText('Priya Sharma')).toBeInTheDocument();
+        });
+
+        it('shows a no-match message when nothing matches the search', () => {
+            render(<FriendsPage />);
+
+            fireEvent.change(screen.getByRole('searchbox', { name: /search friends/i }), {
+                target: { value: 'nobody' },
+            });
+
+            expect(screen.getByText(/no friends match your search/i)).toBeInTheDocument();
+            expect(screen.queryByText('Priya Sharma')).not.toBeInTheDocument();
+            expect(screen.queryByText('Jordan Lee')).not.toBeInTheDocument();
+        });
+
+        it('shows every friend again once the search is cleared', () => {
+            render(<FriendsPage />);
+
+            const searchBox = screen.getByRole('searchbox', { name: /search friends/i });
+            fireEvent.change(searchBox, { target: { value: 'priya' } });
+            fireEvent.change(searchBox, { target: { value: '' } });
+
+            expect(screen.getByText('Priya Sharma')).toBeInTheDocument();
+            expect(screen.getByText('Jordan Lee')).toBeInTheDocument();
+        });
     });
 
     describe('add flow', () => {
