@@ -140,3 +140,8 @@
 body {
     margin: 0;
 }
+
+/* Chromium/Safari default this native clear button to an arrow cursor; Firefox doesn't render it at all. */
+input[type='search']::-webkit-search-cancel-button {
+    cursor: pointer;
+}

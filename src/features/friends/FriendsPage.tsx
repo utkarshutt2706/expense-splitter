@@ -1,4 +1,4 @@
-import { UserPlus } from 'lucide-react';
+import { Mail, Phone, Search, UserPlus } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import type { User } from '../../lib/storage/models';
@@ -21,6 +21,16 @@ export function FriendsPage() {
     const [addDialogOpen, setAddDialogOpen] = useState(false);
     const [editingFriend, setEditingFriend] = useState<User | null>(null);
     const [removingFriend, setRemovingFriend] = useState<User | null>(null);
+    const [search, setSearch] = useState('');
+
+    const query = search.trim().toLowerCase();
+    const filteredFriends = friends?.filter(
+        (friend) =>
+            !query ||
+            friend.name.toLowerCase().includes(query) ||
+            friend.email?.toLowerCase().includes(query) ||
+            friend.phone?.toLowerCase().includes(query),
+    );
 
     const handleAddFriend = (values: FriendFormValues) => {
         const toastId = toast.loading('Friend is being added…');
@@ -53,11 +63,22 @@ export function FriendsPage() {
 
     return (
         <div>
-            <div className="mb-4 flex justify-end">
+            <div className="mb-4 flex items-center justify-between gap-3">
+                <div className="relative w-full max-w-xs">
+                    <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                    <input
+                        type="search"
+                        value={search}
+                        onChange={(event) => setSearch(event.target.value)}
+                        placeholder="Search friends…"
+                        aria-label="Search friends"
+                        className="w-full rounded-md border border-border bg-surface py-2 pr-3 pl-9 text-sm text-surface-foreground outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                    />
+                </div>
                 <button
                     type="button"
                     onClick={() => setAddDialogOpen(true)}
-                    className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-border px-4 py-2 text-sm font-medium text-surface-foreground hover:bg-muted"
+                    className="inline-flex shrink-0 cursor-pointer items-center gap-1 rounded-md border border-border px-4 py-2 text-sm font-medium text-surface-foreground hover:bg-muted"
                 >
                     <UserPlus className="size-4" />
                     Add friend
@@ -70,9 +91,11 @@ export function FriendsPage() {
                 <div className="text-red-600">Couldn't load friends.</div>
             ) : !friends || friends.length === 0 ? (
                 <div className="text-muted-foreground">No friends yet.</div>
+            ) : !filteredFriends || filteredFriends.length === 0 ? (
+                <div className="text-muted-foreground">No friends match your search.</div>
             ) : (
                 <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {friends.map((friend) => (
+                    {filteredFriends.map((friend) => (
                         <li
                             key={friend.id}
                             className="flex items-center gap-3 rounded-lg border border-border p-3"
@@ -80,9 +103,20 @@ export function FriendsPage() {
                             <Avatar name={friend.name} />
                             <div className="flex-1">
                                 <p className="font-medium text-surface-foreground">{friend.name}</p>
-                                <p className="text-sm text-muted-foreground">
-                                    {[friend.email, friend.phone].filter(Boolean).join(' · ')}
-                                </p>
+                                <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-sm text-muted-foreground">
+                                    {friend.email && (
+                                        <span className="inline-flex items-center gap-1">
+                                            <Mail className="size-3.5" />
+                                            {friend.email}
+                                        </span>
+                                    )}
+                                    {friend.phone && (
+                                        <span className="inline-flex items-center gap-1">
+                                            <Phone className="size-3.5" />
+                                            {friend.phone}
+                                        </span>
+                                    )}
+                                </div>
                             </div>
                             <FriendRowMenu
                                 friendName={friend.name}
