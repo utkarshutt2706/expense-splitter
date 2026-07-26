@@ -1,10 +1,11 @@
-import { Mail, Phone, Search, UserPlus } from 'lucide-react';
+import { Mail, Phone, UserPlus } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import type { User } from '../../lib/storage/models';
 import { Avatar } from '../../shared/Avatar';
 import { ConfirmationDialog } from '../../shared/ConfirmationDialog';
+import { SearchInput } from '../../shared/SearchInput';
 import type { FriendFormValues } from './FriendForm';
 import { FriendRowMenu } from './FriendRowMenu';
 import { UpsertFriendDialog } from './UpsertFriendDialog';
@@ -111,17 +112,12 @@ export function FriendsPage() {
     return (
         <div>
             <div className="mb-4 flex items-center justify-between gap-3">
-                <div className="relative w-full max-w-xs">
-                    <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-                    <input
-                        type="search"
-                        value={search}
-                        onChange={(event) => setSearch(event.target.value)}
-                        placeholder="Search friends…"
-                        aria-label="Search friends"
-                        className="w-full rounded-md border border-border bg-surface py-2 pr-3 pl-9 text-sm text-surface-foreground outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
-                    />
-                </div>
+                <SearchInput
+                    value={search}
+                    onChange={setSearch}
+                    placeholder="Search friends…"
+                    ariaLabel="Search friends"
+                />
                 <button
                     type="button"
                     onClick={() => setAddDialogOpen(true)}

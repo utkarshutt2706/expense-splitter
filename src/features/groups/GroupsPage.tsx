@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { Link } from 'react-router';
 import { toast } from 'sonner';
+import { SearchInput } from '../../shared/SearchInput';
 import { useFriends } from '../friends/useFriends';
 import { CreateGroupDialog } from './CreateGroupDialog';
 import type { CreateGroupFormValues } from './CreateGroupForm';
@@ -15,6 +16,19 @@ export function GroupsPage() {
     const createGroup = useCreateGroup();
 
     const [addDialogOpen, setAddDialogOpen] = useState(false);
+    const [search, setSearch] = useState('');
+
+    const friendNameById = new Map((friends ?? []).map((friend) => [friend.id, friend.name]));
+
+    const query = search.trim().toLowerCase();
+    const filteredGroups = groups?.filter(
+        (group) =>
+            !query ||
+            group.name.toLowerCase().includes(query) ||
+            group.memberIds.some((memberId) =>
+                friendNameById.get(memberId)?.toLowerCase().includes(query),
+            ),
+    );
 
     const handleCreateGroup = (values: CreateGroupFormValues) => {
         const toastId = toast.loading('Group is being created…');
@@ -31,10 +45,12 @@ export function GroupsPage() {
         content = <div className="text-red-600">Couldn't load groups.</div>;
     } else if (!groups || groups.length === 0) {
         content = <div className="text-muted-foreground">No groups yet.</div>;
+    } else if (!filteredGroups || filteredGroups.length === 0) {
+        content = <div className="text-muted-foreground">No groups match your search.</div>;
     } else {
         content = (
             <ul className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                {groups.map((group) => (
+                {filteredGroups.map((group) => (
                     <li key={group.id}>
                         <Link
                             to={`/groups/${group.id}`}
@@ -59,11 +75,17 @@ export function GroupsPage() {
 
     return (
         <div>
-            <div className="mb-4 flex justify-end">
+            <div className="mb-4 flex items-center justify-between gap-3">
+                <SearchInput
+                    value={search}
+                    onChange={setSearch}
+                    placeholder="Search groups…"
+                    ariaLabel="Search groups"
+                />
                 <button
                     type="button"
                     onClick={() => setAddDialogOpen(true)}
-                    className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-border px-4 py-2 text-sm font-medium text-surface-foreground hover:bg-muted"
+                    className="inline-flex shrink-0 cursor-pointer items-center gap-1 rounded-md border border-border px-4 py-2 text-sm font-medium text-surface-foreground hover:bg-muted"
                 >
                     <Plus className="size-4" />
                     Create group
