@@ -1,5 +1,6 @@
-import { act, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { toast } from 'sonner';
 import { FriendsPage } from './FriendsPage';
 import { useCreateFriend } from './useCreateFriend';
 import { useFriends } from './useFriends';
@@ -10,6 +11,14 @@ vi.mock('./useFriends', () => ({
 
 vi.mock('./useCreateFriend', () => ({
     useCreateFriend: vi.fn(),
+}));
+
+vi.mock('sonner', () => ({
+    toast: {
+        loading: vi.fn(() => 'toast-id'),
+        success: vi.fn(),
+        error: vi.fn(),
+    },
 }));
 
 vi.mock('./AddFriendDialog', () => ({
@@ -102,7 +111,6 @@ describe('FriendsPage', () => {
 
     describe('toast behavior', () => {
         beforeEach(() => {
-            vi.useFakeTimers();
             vi.mocked(useFriends).mockReturnValue({
                 data: [],
                 isLoading: false,
@@ -110,11 +118,7 @@ describe('FriendsPage', () => {
             } as unknown as ReturnType<typeof useFriends>);
         });
 
-        afterEach(() => {
-            vi.useRealTimers();
-        });
-
-        it('shows a progress toast immediately, then a success toast that auto-dismisses', async () => {
+        it('shows a loading toast immediately, then updates it to success', () => {
             let onSuccess: (() => void) | undefined;
             vi.mocked(useCreateFriend).mockReturnValue({
                 mutate: vi.fn((_values, options: { onSuccess?: () => void }) => {
@@ -126,22 +130,14 @@ describe('FriendsPage', () => {
 
             fireEvent.click(screen.getByRole('button', { name: /fake add friend dialog/i }));
 
-            expect(screen.getByText(/friend is being added/i)).toBeInTheDocument();
+            expect(toast.loading).toHaveBeenCalledWith('Friend is being added…');
 
-            act(() => {
-                onSuccess?.();
-            });
+            onSuccess?.();
 
-            expect(screen.getByText(/^friend added$/i)).toBeInTheDocument();
-
-            await act(async () => {
-                await vi.advanceTimersByTimeAsync(2500);
-            });
-
-            expect(screen.queryByText(/friend added/i)).not.toBeInTheDocument();
+            expect(toast.success).toHaveBeenCalledWith('Friend added', { id: 'toast-id' });
         });
 
-        it('shows an error toast that auto-dismisses when the mutation fails', async () => {
+        it('updates the loading toast to an error toast when the mutation fails', () => {
             let onError: (() => void) | undefined;
             vi.mocked(useCreateFriend).mockReturnValue({
                 mutate: vi.fn((_values, options: { onError?: () => void }) => {
@@ -152,17 +148,9 @@ describe('FriendsPage', () => {
             render(<FriendsPage />);
 
             fireEvent.click(screen.getByRole('button', { name: /fake add friend dialog/i }));
-            act(() => {
-                onError?.();
-            });
+            onError?.();
 
-            expect(screen.getByText(/couldn't add friend/i)).toBeInTheDocument();
-
-            await act(async () => {
-                await vi.advanceTimersByTimeAsync(2500);
-            });
-
-            expect(screen.queryByText(/couldn't add friend/i)).not.toBeInTheDocument();
+            expect(toast.error).toHaveBeenCalledWith("Couldn't add friend", { id: 'toast-id' });
         });
     });
 });
