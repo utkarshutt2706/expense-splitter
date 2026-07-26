@@ -1,9 +1,9 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { UserPlus } from 'lucide-react';
+import { Check, UserPlus } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
-const addFriendSchema = z.object({
+const friendFormSchema = z.object({
     name: z.string().trim().min(1, 'Name is required'),
     email: z
         .string()
@@ -12,19 +12,24 @@ const addFriendSchema = z.object({
         .email({ message: 'Enter a valid email address' }),
 });
 
-export type AddFriendFormValues = z.infer<typeof addFriendSchema>;
+export type FriendFormValues = z.infer<typeof friendFormSchema>;
 
-interface AddFriendFormProps {
-    onSubmit: (values: AddFriendFormValues) => void;
+interface FriendFormProps {
+    mode: 'add' | 'edit';
+    initialValues?: FriendFormValues;
+    onSubmit: (values: FriendFormValues) => void;
     onCancel: () => void;
 }
 
-export function AddFriendForm({ onSubmit, onCancel }: AddFriendFormProps) {
+export function FriendForm({ mode, initialValues, onSubmit, onCancel }: FriendFormProps) {
     const {
         register,
         handleSubmit,
         formState: { errors },
-    } = useForm<AddFriendFormValues>({ resolver: zodResolver(addFriendSchema) });
+    } = useForm<FriendFormValues>({
+        resolver: zodResolver(friendFormSchema),
+        defaultValues: initialValues,
+    });
 
     const submit = handleSubmit((values) => {
         onSubmit(values);
@@ -76,8 +81,12 @@ export function AddFriendForm({ onSubmit, onCancel }: AddFriendFormProps) {
                     type="submit"
                     className="inline-flex cursor-pointer items-center gap-1 rounded-md bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700"
                 >
-                    <UserPlus className="size-4" />
-                    Add friend
+                    {mode === 'add' ? (
+                        <UserPlus className="size-4" />
+                    ) : (
+                        <Check className="size-4" />
+                    )}
+                    {mode === 'add' ? 'Add friend' : 'Save changes'}
                 </button>
             </div>
         </form>
