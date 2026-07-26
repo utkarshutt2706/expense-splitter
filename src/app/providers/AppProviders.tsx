@@ -4,7 +4,7 @@ import { Toaster } from 'sonner';
 import { queryClient } from './queryClient';
 
 interface AppProvidersProps {
-    children: ReactNode;
+    readonly children: ReactNode;
 }
 
 export function AppProviders({ children }: AppProvidersProps) {

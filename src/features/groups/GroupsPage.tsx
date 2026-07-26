@@ -1,4 +1,5 @@
 import { Plus, UsersRound } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { Link } from 'react-router';
 import { toast } from 'sonner';
@@ -23,6 +24,39 @@ export function GroupsPage() {
         });
     };
 
+    let content: ReactNode;
+    if (isLoading) {
+        content = <div className="text-muted-foreground">Loading groups…</div>;
+    } else if (isError) {
+        content = <div className="text-red-600">Couldn't load groups.</div>;
+    } else if (!groups || groups.length === 0) {
+        content = <div className="text-muted-foreground">No groups yet.</div>;
+    } else {
+        content = (
+            <ul className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                {groups.map((group) => (
+                    <li key={group.id}>
+                        <Link
+                            to={`/groups/${group.id}`}
+                            className="flex items-center gap-3 rounded-lg border border-border p-3 hover:bg-muted"
+                        >
+                            <span className="flex size-9 items-center justify-center rounded-full bg-brand-600 text-white">
+                                <UsersRound className="size-4" />
+                            </span>
+                            <div className="flex-1">
+                                <p className="font-medium text-surface-foreground">{group.name}</p>
+                                <p className="text-sm text-muted-foreground">
+                                    {group.memberIds.length}{' '}
+                                    {group.memberIds.length === 1 ? 'member' : 'members'}
+                                </p>
+                            </div>
+                        </Link>
+                    </li>
+                ))}
+            </ul>
+        );
+    }
+
     return (
         <div>
             <div className="mb-4 flex justify-end">
@@ -36,37 +70,7 @@ export function GroupsPage() {
                 </button>
             </div>
 
-            {isLoading ? (
-                <div className="text-muted-foreground">Loading groups…</div>
-            ) : isError ? (
-                <div className="text-red-600">Couldn't load groups.</div>
-            ) : !groups || groups.length === 0 ? (
-                <div className="text-muted-foreground">No groups yet.</div>
-            ) : (
-                <ul className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                    {groups.map((group) => (
-                        <li key={group.id}>
-                            <Link
-                                to={`/groups/${group.id}`}
-                                className="flex items-center gap-3 rounded-lg border border-border p-3 hover:bg-muted"
-                            >
-                                <span className="flex size-9 items-center justify-center rounded-full bg-brand-600 text-white">
-                                    <UsersRound className="size-4" />
-                                </span>
-                                <div className="flex-1">
-                                    <p className="font-medium text-surface-foreground">
-                                        {group.name}
-                                    </p>
-                                    <p className="text-sm text-muted-foreground">
-                                        {group.memberIds.length}{' '}
-                                        {group.memberIds.length === 1 ? 'member' : 'members'}
-                                    </p>
-                                </div>
-                            </Link>
-                        </li>
-                    ))}
-                </ul>
-            )}
+            {content}
 
             <CreateGroupDialog
                 open={addDialogOpen}

@@ -1,5 +1,5 @@
 interface PlaceholderPageProps {
-    title: string;
+    readonly title: string;
 }
 
 export function PlaceholderPage({ title }: PlaceholderPageProps) {

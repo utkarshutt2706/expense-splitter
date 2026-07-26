@@ -9,20 +9,16 @@ import { expenseRepository, groupRepository, userRepository } from './lib/storag
 import { seedDatabase } from './lib/storage/seed.ts';
 import './index.css';
 
-async function main() {
-    await seedDatabase({
-        users: userRepository,
-        groups: groupRepository,
-        expenses: expenseRepository,
-    });
+await seedDatabase({
+    users: userRepository,
+    groups: groupRepository,
+    expenses: expenseRepository,
+});
 
-    createRoot(document.getElementById('root')!).render(
-        <StrictMode>
-            <AppProviders>
-                <RouterProvider router={router} />
-            </AppProviders>
-        </StrictMode>,
-    );
-}
-
-main();
+createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+        <AppProviders>
+            <RouterProvider router={router} />
+        </AppProviders>
+    </StrictMode>,
+);

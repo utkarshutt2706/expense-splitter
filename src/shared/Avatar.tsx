@@ -2,7 +2,7 @@ import { CircleUserRound } from 'lucide-react';
 import { getInitials } from '../lib/initials';
 
 interface AvatarProps {
-    name: string;
+    readonly name: string;
 }
 
 export function Avatar({ name }: AvatarProps) {

@@ -1,4 +1,5 @@
 import { Mail, Phone, Search, UserPlus } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import type { User } from '../../lib/storage/models';
@@ -61,6 +62,52 @@ export function FriendsPage() {
         });
     };
 
+    let content: ReactNode;
+    if (isLoading) {
+        content = <div className="text-muted-foreground">Loading friends…</div>;
+    } else if (isError) {
+        content = <div className="text-red-600">Couldn't load friends.</div>;
+    } else if (!friends || friends.length === 0) {
+        content = <div className="text-muted-foreground">No friends yet.</div>;
+    } else if (!filteredFriends || filteredFriends.length === 0) {
+        content = <div className="text-muted-foreground">No friends match your search.</div>;
+    } else {
+        content = (
+            <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {filteredFriends.map((friend) => (
+                    <li
+                        key={friend.id}
+                        className="flex items-center gap-3 rounded-lg border border-border p-3"
+                    >
+                        <Avatar name={friend.name} />
+                        <div className="flex-1">
+                            <p className="font-medium text-surface-foreground">{friend.name}</p>
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-sm text-muted-foreground">
+                                {friend.email && (
+                                    <span className="inline-flex items-center gap-1">
+                                        <Mail className="size-3.5" />
+                                        {friend.email}
+                                    </span>
+                                )}
+                                {friend.phone && (
+                                    <span className="inline-flex items-center gap-1">
+                                        <Phone className="size-3.5" />
+                                        {friend.phone}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                        <FriendRowMenu
+                            friendName={friend.name}
+                            onEdit={() => setEditingFriend(friend)}
+                            onRemove={() => setRemovingFriend(friend)}
+                        />
+                    </li>
+                ))}
+            </ul>
+        );
+    }
+
     return (
         <div>
             <div className="mb-4 flex items-center justify-between gap-3">
@@ -85,48 +132,7 @@ export function FriendsPage() {
                 </button>
             </div>
 
-            {isLoading ? (
-                <div className="text-muted-foreground">Loading friends…</div>
-            ) : isError ? (
-                <div className="text-red-600">Couldn't load friends.</div>
-            ) : !friends || friends.length === 0 ? (
-                <div className="text-muted-foreground">No friends yet.</div>
-            ) : !filteredFriends || filteredFriends.length === 0 ? (
-                <div className="text-muted-foreground">No friends match your search.</div>
-            ) : (
-                <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {filteredFriends.map((friend) => (
-                        <li
-                            key={friend.id}
-                            className="flex items-center gap-3 rounded-lg border border-border p-3"
-                        >
-                            <Avatar name={friend.name} />
-                            <div className="flex-1">
-                                <p className="font-medium text-surface-foreground">{friend.name}</p>
-                                <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-sm text-muted-foreground">
-                                    {friend.email && (
-                                        <span className="inline-flex items-center gap-1">
-                                            <Mail className="size-3.5" />
-                                            {friend.email}
-                                        </span>
-                                    )}
-                                    {friend.phone && (
-                                        <span className="inline-flex items-center gap-1">
-                                            <Phone className="size-3.5" />
-                                            {friend.phone}
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
-                            <FriendRowMenu
-                                friendName={friend.name}
-                                onEdit={() => setEditingFriend(friend)}
-                                onRemove={() => setRemovingFriend(friend)}
-                            />
-                        </li>
-                    ))}
-                </ul>
-            )}
+            {content}
 
             <UpsertFriendDialog
                 mode="add"

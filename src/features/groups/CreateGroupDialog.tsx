@@ -4,10 +4,10 @@ import { FormDialog } from '../../shared/FormDialog';
 import { CreateGroupForm, type CreateGroupFormValues } from './CreateGroupForm';
 
 interface CreateGroupDialogProps {
-    open: boolean;
-    onOpenChange: (open: boolean) => void;
-    friends: User[];
-    onSubmit: (values: CreateGroupFormValues) => void;
+    readonly open: boolean;
+    readonly onOpenChange: (open: boolean) => void;
+    readonly friends: User[];
+    readonly onSubmit: (values: CreateGroupFormValues) => void;
 }
 
 export function CreateGroupDialog({
