@@ -2,9 +2,9 @@ import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { MoreVertical, Pencil, Trash2 } from 'lucide-react';
 
 interface FriendRowMenuProps {
-    friendName: string;
-    onEdit: () => void;
-    onRemove: () => void;
+    readonly friendName: string;
+    readonly onEdit: () => void;
+    readonly onRemove: () => void;
 }
 
 export function FriendRowMenu({ friendName, onEdit, onRemove }: FriendRowMenuProps) {

@@ -1,13 +1,13 @@
 import * as AlertDialog from '@radix-ui/react-alert-dialog';
 
 interface ConfirmationDialogProps {
-    open: boolean;
-    onOpenChange: (open: boolean) => void;
-    title: string;
-    description: string;
-    confirmLabel: string;
-    onConfirm: () => void;
-    destructive?: boolean;
+    readonly open: boolean;
+    readonly onOpenChange: (open: boolean) => void;
+    readonly title: string;
+    readonly description: string;
+    readonly confirmLabel: string;
+    readonly onConfirm: () => void;
+    readonly destructive?: boolean;
 }
 
 export function ConfirmationDialog({

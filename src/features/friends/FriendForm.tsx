@@ -33,10 +33,10 @@ export interface FriendFormValues {
 }
 
 interface FriendFormProps {
-    mode: 'add' | 'edit';
-    initialValues?: FriendFormValues;
-    onSubmit: (values: FriendFormValues) => void;
-    onCancel: () => void;
+    readonly mode: 'add' | 'edit';
+    readonly initialValues?: FriendFormValues;
+    readonly onSubmit: (values: FriendFormValues) => void;
+    readonly onCancel: () => void;
 }
 
 export function FriendForm({ mode, initialValues, onSubmit, onCancel }: FriendFormProps) {

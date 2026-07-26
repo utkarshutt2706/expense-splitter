@@ -4,7 +4,12 @@ import { useState } from 'react';
 import { Avatar } from '../../shared/Avatar';
 import { useCurrentUser } from '../hooks/useCurrentUser';
 
-function MenuItem({ icon: Icon, label }: { icon: typeof UserRound; label: string }) {
+interface MenuItemProps {
+    readonly icon: typeof UserRound;
+    readonly label: string;
+}
+
+function MenuItem({ icon: Icon, label }: MenuItemProps) {
     return (
         <button
             type="button"
@@ -45,7 +50,7 @@ function ThemeToggleRow() {
 }
 
 interface UserMenuProps {
-    expanded: boolean;
+    readonly expanded: boolean;
 }
 
 export function UserMenu({ expanded }: UserMenuProps) {

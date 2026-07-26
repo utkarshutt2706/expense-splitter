@@ -3,11 +3,11 @@ import { FormDialog } from '../../shared/FormDialog';
 import { FriendForm, type FriendFormValues } from './FriendForm';
 
 interface UpsertFriendDialogProps {
-    mode: 'add' | 'edit';
-    open: boolean;
-    onOpenChange: (open: boolean) => void;
-    initialValues?: FriendFormValues;
-    onSubmit: (values: FriendFormValues) => void;
+    readonly mode: 'add' | 'edit';
+    readonly open: boolean;
+    readonly onOpenChange: (open: boolean) => void;
+    readonly initialValues?: FriendFormValues;
+    readonly onSubmit: (values: FriendFormValues) => void;
 }
 
 export function UpsertFriendDialog({

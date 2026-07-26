@@ -18,9 +18,9 @@ export interface CreateGroupFormValues {
 }
 
 interface CreateGroupFormProps {
-    friends: User[];
-    onSubmit: (values: CreateGroupFormValues) => void;
-    onCancel: () => void;
+    readonly friends: User[];
+    readonly onSubmit: (values: CreateGroupFormValues) => void;
+    readonly onCancel: () => void;
 }
 
 export function CreateGroupForm({ friends, onSubmit, onCancel }: CreateGroupFormProps) {

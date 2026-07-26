@@ -4,22 +4,19 @@ import type { User } from '../../lib/storage/models';
 import { Avatar } from '../../shared/Avatar';
 
 interface GroupMembersStackProps {
-    members: User[];
-    maxVisible?: number;
-    maxVisibleMobile?: number;
+    readonly members: User[];
+    readonly maxVisible?: number;
+    readonly maxVisibleMobile?: number;
 }
 
-function AvatarRow({
-    members,
-    maxVisible,
-    className,
-    testId,
-}: {
-    members: User[];
-    maxVisible: number;
-    className: string;
-    testId: string;
-}) {
+interface AvatarRowProps {
+    readonly members: User[];
+    readonly maxVisible: number;
+    readonly className: string;
+    readonly testId: string;
+}
+
+function AvatarRow({ members, maxVisible, className, testId }: AvatarRowProps) {
     const visible = members.slice(0, maxVisible);
     const overflowCount = members.length - visible.length;
 

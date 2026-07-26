@@ -3,11 +3,11 @@ import { X } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 interface FormDialogProps {
-    open: boolean;
-    onOpenChange: (open: boolean) => void;
-    title: string;
-    description: string;
-    children: ReactNode;
+    readonly open: boolean;
+    readonly onOpenChange: (open: boolean) => void;
+    readonly title: string;
+    readonly description: string;
+    readonly children: ReactNode;
 }
 
 export function FormDialog({ open, onOpenChange, title, description, children }: FormDialogProps) {
