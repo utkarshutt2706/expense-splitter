@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import { EditFriendDialog } from './EditFriendDialog';
+import { UpsertFriendDialog } from './UpsertFriendDialog';
 
 vi.mock('./FriendForm', () => ({
     FriendForm: ({
@@ -14,7 +14,7 @@ vi.mock('./FriendForm', () => ({
         <div data-testid="friend-form">
             <button
                 type="button"
-                onClick={() => onSubmit({ name: 'Priya S.', email: 'priya@example.com' })}
+                onClick={() => onSubmit({ name: 'Priya Sharma', email: 'priya@example.com' })}
             >
                 Fake submit
             </button>
@@ -25,29 +25,13 @@ vi.mock('./FriendForm', () => ({
     ),
 }));
 
-const initialValues = { name: 'Priya Sharma', email: 'priya@example.com' };
-
-describe('EditFriendDialog', () => {
-    it('renders the form when open', () => {
-        render(
-            <EditFriendDialog
-                open
-                onOpenChange={vi.fn()}
-                initialValues={initialValues}
-                onSubmit={vi.fn()}
-            />,
-        );
-
-        expect(screen.getByTestId('friend-form')).toBeInTheDocument();
-        expect(screen.getByText(/edit friend/i)).toBeInTheDocument();
-    });
-
+describe('UpsertFriendDialog', () => {
     it('does not render the form when closed', () => {
         render(
-            <EditFriendDialog
+            <UpsertFriendDialog
+                mode="add"
                 open={false}
                 onOpenChange={vi.fn()}
-                initialValues={initialValues}
                 onSubmit={vi.fn()}
             />,
         );
@@ -55,16 +39,25 @@ describe('EditFriendDialog', () => {
         expect(screen.queryByTestId('friend-form')).not.toBeInTheDocument();
     });
 
+    it('renders the add-mode title when open', () => {
+        render(<UpsertFriendDialog mode="add" open onOpenChange={vi.fn()} onSubmit={vi.fn()} />);
+
+        expect(screen.getByTestId('friend-form')).toBeInTheDocument();
+        expect(screen.getByText(/add a friend/i)).toBeInTheDocument();
+    });
+
+    it('renders the edit-mode title when open', () => {
+        render(<UpsertFriendDialog mode="edit" open onOpenChange={vi.fn()} onSubmit={vi.fn()} />);
+
+        expect(screen.getByTestId('friend-form')).toBeInTheDocument();
+        expect(screen.getByText(/edit friend/i)).toBeInTheDocument();
+    });
+
     it('reports closed when the close button is clicked', async () => {
         const onOpenChange = vi.fn();
         const user = userEvent.setup();
         render(
-            <EditFriendDialog
-                open
-                onOpenChange={onOpenChange}
-                initialValues={initialValues}
-                onSubmit={vi.fn()}
-            />,
+            <UpsertFriendDialog mode="add" open onOpenChange={onOpenChange} onSubmit={vi.fn()} />,
         );
 
         await user.click(screen.getByRole('button', { name: /close/i }));
@@ -76,12 +69,7 @@ describe('EditFriendDialog', () => {
         const onOpenChange = vi.fn();
         const user = userEvent.setup();
         render(
-            <EditFriendDialog
-                open
-                onOpenChange={onOpenChange}
-                initialValues={initialValues}
-                onSubmit={vi.fn()}
-            />,
+            <UpsertFriendDialog mode="add" open onOpenChange={onOpenChange} onSubmit={vi.fn()} />,
         );
 
         await user.click(screen.getByRole('button', { name: /fake cancel/i }));
@@ -94,17 +82,12 @@ describe('EditFriendDialog', () => {
         const onSubmit = vi.fn();
         const user = userEvent.setup();
         render(
-            <EditFriendDialog
-                open
-                onOpenChange={onOpenChange}
-                initialValues={initialValues}
-                onSubmit={onSubmit}
-            />,
+            <UpsertFriendDialog mode="edit" open onOpenChange={onOpenChange} onSubmit={onSubmit} />,
         );
 
         await user.click(screen.getByRole('button', { name: /fake submit/i }));
 
         expect(onOpenChange).toHaveBeenCalledWith(false);
-        expect(onSubmit).toHaveBeenCalledWith({ name: 'Priya S.', email: 'priya@example.com' });
+        expect(onSubmit).toHaveBeenCalledWith({ name: 'Priya Sharma', email: 'priya@example.com' });
     });
 });

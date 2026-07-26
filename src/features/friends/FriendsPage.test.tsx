@@ -31,27 +31,14 @@ vi.mock('sonner', () => ({
     },
 }));
 
-vi.mock('./AddFriendDialog', () => ({
-    AddFriendDialog: ({
-        onSubmit,
-    }: {
-        onSubmit: (values: { name: string; email: string }) => void;
-    }) => (
-        <button
-            type="button"
-            onClick={() => onSubmit({ name: 'Priya Sharma', email: 'priya@example.com' })}
-        >
-            Fake add friend dialog
-        </button>
-    ),
-}));
-
-vi.mock('./EditFriendDialog', () => ({
-    EditFriendDialog: ({
+vi.mock('./UpsertFriendDialog', () => ({
+    UpsertFriendDialog: ({
+        mode,
         open,
         onSubmit,
         onOpenChange,
     }: {
+        mode: 'add' | 'edit';
         open: boolean;
         onSubmit: (values: { name: string; email: string }) => void;
         onOpenChange: (open: boolean) => void;
@@ -60,12 +47,12 @@ vi.mock('./EditFriendDialog', () => ({
             <div>
                 <button
                     type="button"
-                    onClick={() => onSubmit({ name: 'Priya S.', email: 'priya@example.com' })}
+                    onClick={() => onSubmit({ name: 'Priya Sharma', email: 'priya@example.com' })}
                 >
-                    Fake edit submit
+                    {`Fake ${mode} submit`}
                 </button>
                 <button type="button" onClick={() => onOpenChange(false)}>
-                    Fake edit cancel
+                    {`Fake ${mode} close`}
                 </button>
             </div>
         ) : null,
@@ -179,7 +166,7 @@ describe('FriendsPage', () => {
         expect(screen.getByText('jordan@example.com')).toBeInTheDocument();
     });
 
-    it('renders the add friend dialog trigger', () => {
+    it('renders the add friend trigger', () => {
         vi.mocked(useFriends).mockReturnValue({
             data: [],
             isLoading: false,
@@ -188,16 +175,26 @@ describe('FriendsPage', () => {
 
         render(<FriendsPage />);
 
-        expect(screen.getByRole('button', { name: /fake add friend dialog/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /^add friend$/i })).toBeInTheDocument();
     });
 
-    describe('add toast behavior', () => {
+    describe('add flow', () => {
         beforeEach(() => {
             vi.mocked(useFriends).mockReturnValue({
                 data: [],
                 isLoading: false,
                 isError: false,
             } as unknown as ReturnType<typeof useFriends>);
+        });
+
+        it('opens the add dialog when the trigger is clicked', () => {
+            render(<FriendsPage />);
+
+            expect(screen.queryByText(/fake add submit/i)).not.toBeInTheDocument();
+
+            fireEvent.click(screen.getByRole('button', { name: /^add friend$/i }));
+
+            expect(screen.getByText(/fake add submit/i)).toBeInTheDocument();
         });
 
         it('shows a loading toast immediately, then updates it to success', () => {
@@ -210,7 +207,8 @@ describe('FriendsPage', () => {
 
             render(<FriendsPage />);
 
-            fireEvent.click(screen.getByRole('button', { name: /fake add friend dialog/i }));
+            fireEvent.click(screen.getByRole('button', { name: /^add friend$/i }));
+            fireEvent.click(screen.getByText(/fake add submit/i));
 
             expect(toast.loading).toHaveBeenCalledWith('Friend is being added…');
 
@@ -229,7 +227,8 @@ describe('FriendsPage', () => {
 
             render(<FriendsPage />);
 
-            fireEvent.click(screen.getByRole('button', { name: /fake add friend dialog/i }));
+            fireEvent.click(screen.getByRole('button', { name: /^add friend$/i }));
+            fireEvent.click(screen.getByText(/fake add submit/i));
             onError?.();
 
             expect(toast.error).toHaveBeenCalledWith("Couldn't add friend", { id: 'toast-id' });
@@ -255,11 +254,11 @@ describe('FriendsPage', () => {
             expect(screen.getByText(/fake edit submit/i)).toBeInTheDocument();
         });
 
-        it('closes the edit dialog on cancel', () => {
+        it('closes the edit dialog without submitting when it reports closed', () => {
             render(<FriendsPage />);
 
             fireEvent.click(screen.getByRole('button', { name: /fake edit priya sharma/i }));
-            fireEvent.click(screen.getByRole('button', { name: /fake edit cancel/i }));
+            fireEvent.click(screen.getByRole('button', { name: /fake edit close/i }));
 
             expect(screen.queryByText(/fake edit submit/i)).not.toBeInTheDocument();
         });
@@ -275,7 +274,7 @@ describe('FriendsPage', () => {
             render(<FriendsPage />);
 
             fireEvent.click(screen.getByRole('button', { name: /fake edit priya sharma/i }));
-            fireEvent.click(screen.getByRole('button', { name: /fake edit submit/i }));
+            fireEvent.click(screen.getByText(/fake edit submit/i));
 
             expect(toast.loading).toHaveBeenCalledWith('Friend is being updated…');
 
@@ -295,7 +294,7 @@ describe('FriendsPage', () => {
             render(<FriendsPage />);
 
             fireEvent.click(screen.getByRole('button', { name: /fake edit priya sharma/i }));
-            fireEvent.click(screen.getByRole('button', { name: /fake edit submit/i }));
+            fireEvent.click(screen.getByText(/fake edit submit/i));
             onError?.();
 
             expect(toast.error).toHaveBeenCalledWith("Couldn't update friend", { id: 'toast-id' });

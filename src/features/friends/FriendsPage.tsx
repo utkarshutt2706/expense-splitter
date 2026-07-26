@@ -1,12 +1,12 @@
+import { UserPlus } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import type { User } from '../../lib/storage/models';
 import { Avatar } from '../../shared/Avatar';
 import { ConfirmationDialog } from '../../shared/ConfirmationDialog';
-import type { User } from '../../lib/storage/models';
-import { AddFriendDialog } from './AddFriendDialog';
-import { EditFriendDialog } from './EditFriendDialog';
 import type { FriendFormValues } from './FriendForm';
 import { FriendRowMenu } from './FriendRowMenu';
+import { UpsertFriendDialog } from './UpsertFriendDialog';
 import { useCreateFriend } from './useCreateFriend';
 import { useFriends } from './useFriends';
 import { useRemoveFriend } from './useRemoveFriend';
@@ -18,6 +18,7 @@ export function FriendsPage() {
     const updateFriend = useUpdateFriend();
     const removeFriend = useRemoveFriend();
 
+    const [addDialogOpen, setAddDialogOpen] = useState(false);
     const [editingFriend, setEditingFriend] = useState<User | null>(null);
     const [removingFriend, setRemovingFriend] = useState<User | null>(null);
 
@@ -53,7 +54,14 @@ export function FriendsPage() {
     return (
         <div>
             <div className="mb-4 flex justify-end">
-                <AddFriendDialog onSubmit={handleAddFriend} />
+                <button
+                    type="button"
+                    onClick={() => setAddDialogOpen(true)}
+                    className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-border px-4 py-2 text-sm font-medium text-surface-foreground hover:bg-muted"
+                >
+                    <UserPlus className="size-4" />
+                    Add friend
+                </button>
             </div>
 
             {isLoading ? (
@@ -63,7 +71,7 @@ export function FriendsPage() {
             ) : !friends || friends.length === 0 ? (
                 <div className="text-muted-foreground">No friends yet.</div>
             ) : (
-                <ul className="flex flex-col gap-3">
+                <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {friends.map((friend) => (
                         <li
                             key={friend.id}
@@ -84,33 +92,40 @@ export function FriendsPage() {
                 </ul>
             )}
 
-            {editingFriend && (
-                <EditFriendDialog
-                    open={editingFriend !== null}
-                    onOpenChange={(open) => {
-                        if (!open) setEditingFriend(null);
-                    }}
-                    initialValues={{ name: editingFriend.name, email: editingFriend.email }}
-                    onSubmit={handleEditFriend}
-                />
-            )}
+            <UpsertFriendDialog
+                mode="add"
+                open={addDialogOpen}
+                onOpenChange={setAddDialogOpen}
+                onSubmit={handleAddFriend}
+            />
 
-            {removingFriend && (
-                <ConfirmationDialog
-                    open={removingFriend !== null}
-                    onOpenChange={(open) => {
-                        if (!open) setRemovingFriend(null);
-                    }}
-                    title={`Remove ${removingFriend.name}?`}
-                    description="This removes them from your friends list. You can add them again later."
-                    confirmLabel="Remove"
-                    destructive
-                    onConfirm={() => {
-                        setRemovingFriend(null);
-                        handleRemoveFriend();
-                    }}
-                />
-            )}
+            <UpsertFriendDialog
+                mode="edit"
+                open={editingFriend !== null}
+                onOpenChange={(open) => {
+                    if (!open) setEditingFriend(null);
+                }}
+                initialValues={{
+                    name: editingFriend?.name ?? '',
+                    email: editingFriend?.email ?? '',
+                }}
+                onSubmit={handleEditFriend}
+            />
+
+            <ConfirmationDialog
+                open={removingFriend !== null}
+                onOpenChange={(open) => {
+                    if (!open) setRemovingFriend(null);
+                }}
+                title={`Remove ${removingFriend?.name ?? ''}?`}
+                description="This removes them from your friends list. You can add them again later."
+                confirmLabel="Remove"
+                destructive
+                onConfirm={() => {
+                    setRemovingFriend(null);
+                    handleRemoveFriend();
+                }}
+            />
         </div>
     );
 }

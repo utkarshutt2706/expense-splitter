@@ -9,7 +9,7 @@ interface FriendRowMenuProps {
 
 export function FriendRowMenu({ friendName, onEdit, onRemove }: FriendRowMenuProps) {
     return (
-        <DropdownMenu.Root>
+        <DropdownMenu.Root modal={false}>
             <DropdownMenu.Trigger asChild>
                 <button
                     type="button"
