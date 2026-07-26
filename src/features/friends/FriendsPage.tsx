@@ -1,42 +1,24 @@
-import { useRef, useState } from 'react';
+import { toast } from 'sonner';
 import { Avatar } from '../../shared/Avatar';
 import { AddFriendDialog } from './AddFriendDialog';
 import type { AddFriendFormValues } from './AddFriendForm';
 import { useCreateFriend } from './useCreateFriend';
 import { useFriends } from './useFriends';
 
-const TOAST_DISMISS_MS = 2500;
-
 export function FriendsPage() {
     const { data: friends, isLoading, isError } = useFriends();
     const createFriend = useCreateFriend();
-    const [toast, setToast] = useState<string | null>('test');
-    const dismissTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
-
-    const showToast = (message: string, autoDismiss: boolean) => {
-        clearTimeout(dismissTimeoutRef.current);
-        setToast(message);
-        if (autoDismiss) {
-            dismissTimeoutRef.current = setTimeout(() => setToast(null), TOAST_DISMISS_MS);
-        }
-    };
 
     const handleAddFriend = (values: AddFriendFormValues) => {
-        showToast('Friend is being added…', false);
+        const toastId = toast.loading('Friend is being added…');
         createFriend.mutate(values, {
-            onSuccess: () => showToast('Friend added', true),
-            onError: () => showToast("Couldn't add friend", true),
+            onSuccess: () => toast.success('Friend added', { id: toastId }),
+            onError: () => toast.error("Couldn't add friend", { id: toastId }),
         });
     };
 
     return (
         <div>
-            {toast && (
-                <div className="fixed right-4 top-11 z-50 rounded-md bg-surface-foreground px-4 py-2 text-sm text-surface shadow-lg">
-                    {toast}
-                </div>
-            )}
-
             <div className="mb-4 flex justify-end">
                 <AddFriendDialog onSubmit={handleAddFriend} />
             </div>

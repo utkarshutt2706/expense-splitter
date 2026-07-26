@@ -19,6 +19,18 @@
     --color-owed: var(--color-green-600);
     --color-settled: var(--color-gray-500);
 
+    /* Toast status colors — deliberately plain industry-standard hues
+       (green/blue/red/amber), not brand-tinted, so they stay universally
+       recognizable regardless of the Ember palette. */
+    --color-toast-success-bg: var(--toast-success-bg);
+    --color-toast-success-text: var(--toast-success-text);
+    --color-toast-progress-bg: var(--toast-progress-bg);
+    --color-toast-progress-text: var(--toast-progress-text);
+    --color-toast-error-bg: var(--toast-error-bg);
+    --color-toast-error-text: var(--toast-error-text);
+    --color-toast-warning-bg: var(--toast-warning-bg);
+    --color-toast-warning-text: var(--toast-warning-text);
+
     /* Fraunces for headings (warm, editorial character, ties into the Ember
        theme); IBM Plex Sans for body/UI, chosen partly for its tabular
        figures given how number-heavy balances and expense amounts will be. */
@@ -43,6 +55,15 @@
     --muted-foreground: #6b6560;
     --border-color: #e7e2dc;
 
+    --toast-success-bg: var(--color-green-50);
+    --toast-success-text: var(--color-green-700);
+    --toast-progress-bg: var(--color-sky-50);
+    --toast-progress-text: var(--color-sky-700);
+    --toast-error-bg: var(--color-red-50);
+    --toast-error-text: var(--color-red-700);
+    --toast-warning-bg: var(--color-amber-50);
+    --toast-warning-text: var(--color-amber-800);
+
     font: 18px/145% var(--font-sans);
     letter-spacing: 0.18px;
     color-scheme: light dark;
@@ -65,6 +86,15 @@
         --muted: #29261f;
         --muted-foreground: #a39d94;
         --border-color: #3a352c;
+
+        --toast-success-bg: var(--color-green-950);
+        --toast-success-text: var(--color-green-400);
+        --toast-progress-bg: var(--color-sky-950);
+        --toast-progress-text: var(--color-sky-400);
+        --toast-error-bg: var(--color-red-950);
+        --toast-error-text: var(--color-red-400);
+        --toast-warning-bg: var(--color-amber-950);
+        --toast-warning-text: var(--color-amber-400);
     }
 }
 
@@ -78,6 +108,15 @@
     --muted: #f5f3f0;
     --muted-foreground: #6b6560;
     --border-color: #e7e2dc;
+
+    --toast-success-bg: var(--color-green-50);
+    --toast-success-text: var(--color-green-700);
+    --toast-progress-bg: var(--color-sky-50);
+    --toast-progress-text: var(--color-sky-700);
+    --toast-error-bg: var(--color-red-50);
+    --toast-error-text: var(--color-red-700);
+    --toast-warning-bg: var(--color-amber-50);
+    --toast-warning-text: var(--color-amber-800);
 }
 
 :root[data-theme='dark'] {
@@ -87,6 +126,15 @@
     --muted: #29261f;
     --muted-foreground: #a39d94;
     --border-color: #3a352c;
+
+    --toast-success-bg: var(--color-green-950);
+    --toast-success-text: var(--color-green-400);
+    --toast-progress-bg: var(--color-sky-950);
+    --toast-progress-text: var(--color-sky-400);
+    --toast-error-bg: var(--color-red-950);
+    --toast-error-text: var(--color-red-400);
+    --toast-warning-bg: var(--color-amber-950);
+    --toast-warning-text: var(--color-amber-400);
 }
 
 body {
