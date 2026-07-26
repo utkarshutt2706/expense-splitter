@@ -1,4 +1,4 @@
-import { Activity, LayoutDashboard, Users, UsersRound } from 'lucide-react';
+import { Activity, Handshake, LayoutDashboard, UsersRound } from 'lucide-react';
 import type { ComponentType } from 'react';
 
 export interface NavItem {
@@ -9,7 +9,7 @@ export interface NavItem {
 
 export const navItems: NavItem[] = [
     { to: '/', label: 'Dashboard', icon: LayoutDashboard },
-    { to: '/friends', label: 'Friends', icon: Users },
+    { to: '/friends', label: 'Friends', icon: Handshake },
     { to: '/groups', label: 'Groups', icon: UsersRound },
     { to: '/activity', label: 'Activity', icon: Activity },
 ];
