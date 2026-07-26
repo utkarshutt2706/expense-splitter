@@ -14,7 +14,7 @@ describe('FriendForm', () => {
             await user.click(screen.getByRole('button', { name: /add friend/i }));
 
             expect(await screen.findByText(/name is required/i)).toBeInTheDocument();
-            expect(await screen.findByText(/email is required/i)).toBeInTheDocument();
+            expect(await screen.findAllByText(/enter an email or phone number/i)).toHaveLength(2);
             expect(onSubmit).not.toHaveBeenCalled();
         });
 
@@ -32,7 +32,7 @@ describe('FriendForm', () => {
             expect(onSubmit).not.toHaveBeenCalled();
         });
 
-        it('calls onSubmit with the entered values once valid', async () => {
+        it('calls onSubmit with only an email when phone is left blank', async () => {
             const onSubmit = vi.fn();
 
             const user = userEvent.setup();
@@ -45,6 +45,24 @@ describe('FriendForm', () => {
             expect(onSubmit).toHaveBeenCalledWith({
                 name: 'Priya Sharma',
                 email: 'priya@example.com',
+                phone: undefined,
+            });
+        });
+
+        it('calls onSubmit with only a phone number when email is left blank', async () => {
+            const onSubmit = vi.fn();
+
+            const user = userEvent.setup();
+            render(<FriendForm mode="add" onSubmit={onSubmit} onCancel={vi.fn()} />);
+
+            await user.type(screen.getByLabelText(/name/i), 'Priya Sharma');
+            await user.type(screen.getByLabelText(/phone/i), '5551234567');
+            await user.click(screen.getByRole('button', { name: /add friend/i }));
+
+            expect(onSubmit).toHaveBeenCalledWith({
+                name: 'Priya Sharma',
+                email: undefined,
+                phone: '5551234567',
             });
         });
 
@@ -65,7 +83,11 @@ describe('FriendForm', () => {
             render(
                 <FriendForm
                     mode="edit"
-                    initialValues={{ name: 'Priya Sharma', email: 'priya@example.com' }}
+                    initialValues={{
+                        name: 'Priya Sharma',
+                        email: 'priya@example.com',
+                        phone: '5551234567',
+                    }}
                     onSubmit={vi.fn()}
                     onCancel={vi.fn()}
                 />,
@@ -73,6 +95,7 @@ describe('FriendForm', () => {
 
             expect(screen.getByLabelText(/name/i)).toHaveValue('Priya Sharma');
             expect(screen.getByLabelText(/email/i)).toHaveValue('priya@example.com');
+            expect(screen.getByLabelText(/phone/i)).toHaveValue('5551234567');
         });
 
         it('shows a save-changes submit button', () => {
@@ -108,6 +131,7 @@ describe('FriendForm', () => {
             expect(onSubmit).toHaveBeenCalledWith({
                 name: 'Priya S.',
                 email: 'priya@example.com',
+                phone: undefined,
             });
         });
     });

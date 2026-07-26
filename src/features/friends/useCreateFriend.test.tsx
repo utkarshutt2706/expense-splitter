@@ -1,19 +1,36 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { User } from '../../lib/storage/models';
+import { DuplicateFriendError } from './duplicateFriend';
 import { useCreateFriend } from './useCreateFriend';
 
 vi.mock('../../lib/services', () => ({
     userService: {
+        getAll: vi.fn(),
         create: vi.fn(),
     },
 }));
 
+function renderCreateFriend() {
+    const queryClient = new QueryClient();
+    const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
+    const wrapper = ({ children }: { children: ReactNode }) => (
+        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    );
+
+    return { ...renderHook(() => useCreateFriend(), { wrapper }), invalidateSpy };
+}
+
 describe('useCreateFriend', () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+    });
+
     it('creates a user with a generated id and invalidates the friends list', async () => {
         const { userService } = await import('../../lib/services');
+        vi.mocked(userService.getAll).mockResolvedValue([]);
         const created: User = {
             id: 'generated-id',
             name: 'Priya Sharma',
@@ -21,13 +38,7 @@ describe('useCreateFriend', () => {
         };
         vi.mocked(userService.create).mockResolvedValue(created);
 
-        const queryClient = new QueryClient();
-        const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
-        const wrapper = ({ children }: { children: ReactNode }) => (
-            <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-        );
-
-        const { result } = renderHook(() => useCreateFriend(), { wrapper });
+        const { result, invalidateSpy } = renderCreateFriend();
 
         result.current.mutate({ name: 'Priya Sharma', email: 'priya@example.com' });
 
@@ -37,5 +48,43 @@ describe('useCreateFriend', () => {
             expect.objectContaining({ name: 'Priya Sharma', email: 'priya@example.com' }),
         );
         expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['users', 'friends'] });
+    });
+
+    it('blocks creation when a friend already exists with the same email', async () => {
+        const { userService } = await import('../../lib/services');
+        const existing: User = {
+            id: 'friend-1',
+            name: 'Priya Sharma',
+            email: 'priya@example.com',
+        };
+        vi.mocked(userService.getAll).mockResolvedValue([existing]);
+
+        const { result } = renderCreateFriend();
+
+        result.current.mutate({ name: 'Someone Else', email: 'priya@example.com' });
+
+        await waitFor(() => expect(result.current.isError).toBe(true));
+
+        expect(result.current.error).toBeInstanceOf(DuplicateFriendError);
+        expect(userService.create).not.toHaveBeenCalled();
+    });
+
+    it('blocks creation when a friend already exists with the same phone number', async () => {
+        const { userService } = await import('../../lib/services');
+        const existing: User = {
+            id: 'friend-1',
+            name: 'Priya Sharma',
+            phone: '5551234567',
+        };
+        vi.mocked(userService.getAll).mockResolvedValue([existing]);
+
+        const { result } = renderCreateFriend();
+
+        result.current.mutate({ name: 'Someone Else', phone: '5551234567' });
+
+        await waitFor(() => expect(result.current.isError).toBe(true));
+
+        expect(result.current.error).toBeInstanceOf(DuplicateFriendError);
+        expect(userService.create).not.toHaveBeenCalled();
     });
 });
