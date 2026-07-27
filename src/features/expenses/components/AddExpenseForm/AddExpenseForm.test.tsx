@@ -3,10 +3,11 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { User } from '@data/entities';
+import { CURRENT_USER_ID } from '@data/seed';
 import { AddExpenseForm } from './AddExpenseForm';
 
 const members: User[] = [
-    { id: 'user-1', name: 'Alex Morgan', email: 'alex@example.com' },
+    { id: CURRENT_USER_ID, name: 'Alex Morgan', email: 'alex@example.com' },
     { id: 'user-2', name: 'Priya Sharma', email: 'priya@example.com' },
 ];
 
@@ -54,8 +55,23 @@ describe('AddExpenseForm', () => {
     it('defaults to splitting between every group member', () => {
         render(<AddExpenseForm members={members} onSubmit={vi.fn()} onCancel={vi.fn()} />);
 
-        expect(screen.getByRole('checkbox', { name: /alex morgan/i })).toBeChecked();
+        expect(screen.getByRole('checkbox', { name: 'You' })).toBeChecked();
         expect(screen.getByRole('checkbox', { name: /priya sharma/i })).toBeChecked();
+    });
+
+    it('allows unchecking the current user as a participant', async () => {
+        const onSubmit = vi.fn();
+        const user = userEvent.setup();
+        render(<AddExpenseForm members={members} onSubmit={onSubmit} onCancel={vi.fn()} />);
+
+        await user.type(screen.getByLabelText(/description/i), 'Groceries');
+        await user.type(screen.getByLabelText(/amount/i), '42.50');
+        await user.click(screen.getByRole('checkbox', { name: 'You' }));
+        await user.click(screen.getByRole('button', { name: /add expense/i }));
+
+        expect(onSubmit).toHaveBeenCalledWith(
+            expect.objectContaining({ participantUserIds: ['user-2'] }),
+        );
     });
 
     it('calls onSubmit with the entered values and default participants', async () => {
@@ -70,7 +86,8 @@ describe('AddExpenseForm', () => {
         expect(onSubmit).toHaveBeenCalledWith({
             description: 'Groceries',
             amount: 42.5,
-            participantUserIds: ['user-1', 'user-2'],
+            paidByUserId: CURRENT_USER_ID,
+            participantUserIds: [CURRENT_USER_ID, 'user-2'],
         });
     });
 
@@ -87,7 +104,8 @@ describe('AddExpenseForm', () => {
         expect(onSubmit).toHaveBeenCalledWith({
             description: 'Groceries',
             amount: 42.5,
-            participantUserIds: ['user-1'],
+            paidByUserId: CURRENT_USER_ID,
+            participantUserIds: [CURRENT_USER_ID],
         });
     });
 
@@ -98,7 +116,7 @@ describe('AddExpenseForm', () => {
 
         await user.type(screen.getByLabelText(/description/i), 'Groceries');
         await user.type(screen.getByLabelText(/amount/i), '42.50');
-        await user.click(screen.getByRole('checkbox', { name: /alex morgan/i }));
+        await user.click(screen.getByRole('checkbox', { name: 'You' }));
         await user.click(screen.getByRole('checkbox', { name: /priya sharma/i }));
         await user.click(screen.getByRole('button', { name: /add expense/i }));
 
@@ -114,5 +132,29 @@ describe('AddExpenseForm', () => {
         await user.click(screen.getByRole('button', { name: /cancel/i }));
 
         expect(onCancel).toHaveBeenCalled();
+    });
+
+    describe('paid by', () => {
+        it('defaults the payer to the current user, labeled "You"', () => {
+            render(<AddExpenseForm members={members} onSubmit={vi.fn()} onCancel={vi.fn()} />);
+
+            expect(screen.getByRole('button', { name: 'Paid by' })).toHaveTextContent('You');
+        });
+
+        it('submits the selected payer when changed', async () => {
+            const onSubmit = vi.fn();
+            const user = userEvent.setup();
+            render(<AddExpenseForm members={members} onSubmit={onSubmit} onCancel={vi.fn()} />);
+
+            await user.type(screen.getByLabelText(/description/i), 'Groceries');
+            await user.type(screen.getByLabelText(/amount/i), '42.50');
+            await user.click(screen.getByRole('button', { name: 'Paid by' }));
+            await user.click(screen.getByRole('menuitemradio', { name: /priya sharma/i }));
+            await user.click(screen.getByRole('button', { name: /add expense/i }));
+
+            expect(onSubmit).toHaveBeenCalledWith(
+                expect.objectContaining({ paidByUserId: 'user-2' }),
+            );
+        });
     });
 });

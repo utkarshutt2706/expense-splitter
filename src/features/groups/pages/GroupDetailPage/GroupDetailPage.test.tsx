@@ -26,6 +26,7 @@ vi.mock('@features/expenses', () => ({
         onSubmit: (values: {
             description: string;
             amount: number;
+            paidByUserId: string;
             participantUserIds: string[];
         }) => void;
     }) => (
@@ -36,6 +37,7 @@ vi.mock('@features/expenses', () => ({
                     onSubmit({
                         description: 'Groceries',
                         amount: 42.5,
+                        paidByUserId: 'current-user',
                         participantUserIds: ['friend-1'],
                     })
                 }
@@ -117,6 +119,7 @@ describe('GroupDetailPage', () => {
         renderPage();
 
         expect(screen.getByRole('status', { name: /loading group/i })).toBeInTheDocument();
+        expect(screen.queryByRole('button', { name: 'Add expense' })).not.toBeInTheDocument();
     });
 
     it('shows an error message when the group fails to load', () => {
@@ -452,7 +455,7 @@ describe('GroupDetailPage', () => {
                 isError: false,
             } as unknown as ReturnType<typeof useGroup>);
             vi.mocked(useGroupMembers).mockReturnValue({
-                data: [],
+                data: [{ id: 'current-user', name: 'Alex Morgan', email: 'alex@example.com' }],
             } as unknown as ReturnType<typeof useGroupMembers>);
         });
 
@@ -460,6 +463,26 @@ describe('GroupDetailPage', () => {
             renderPage();
 
             expect(screen.getByRole('button', { name: 'Add expense' })).toBeInTheDocument();
+        });
+
+        it('shows the add expense button even when the current user is the only member', () => {
+            vi.mocked(useGroupMembers).mockReturnValue({
+                data: [{ id: 'current-user', name: 'Alex Morgan', email: 'alex@example.com' }],
+            } as unknown as ReturnType<typeof useGroupMembers>);
+
+            renderPage();
+
+            expect(screen.getByRole('button', { name: 'Add expense' })).toBeInTheDocument();
+        });
+
+        it('hides the add expense button when the group has no members', () => {
+            vi.mocked(useGroupMembers).mockReturnValue({
+                data: [],
+            } as unknown as ReturnType<typeof useGroupMembers>);
+
+            renderPage();
+
+            expect(screen.queryByRole('button', { name: 'Add expense' })).not.toBeInTheDocument();
         });
 
         it('adds an expense and shows a loading toast, then success', async () => {
@@ -482,6 +505,7 @@ describe('GroupDetailPage', () => {
                     groupId: 'group-1',
                     description: 'Groceries',
                     amount: 42.5,
+                    paidByUserId: 'current-user',
                     participantUserIds: ['friend-1'],
                 },
                 expect.anything(),

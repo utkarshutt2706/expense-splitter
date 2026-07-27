@@ -49,7 +49,7 @@ describe('MemberCheckboxList', () => {
     });
 
     describe('current user row', () => {
-        it('labels the current user as "You" and shows their checkbox as checked and disabled', () => {
+        it('labels the current user as "You" without affecting their checked/disabled state by default', () => {
             render(
                 <MemberCheckboxList
                     users={users}
@@ -61,12 +61,11 @@ describe('MemberCheckboxList', () => {
 
             expect(screen.queryByText('Priya Sharma')).not.toBeInTheDocument();
             const currentUserCheckbox = screen.getByRole('checkbox', { name: 'You' });
-            expect(currentUserCheckbox).toBeChecked();
-            expect(currentUserCheckbox).toBeDisabled();
-            expect(screen.getByRole('checkbox', { name: /jordan lee/i })).not.toBeDisabled();
+            expect(currentUserCheckbox).not.toBeChecked();
+            expect(currentUserCheckbox).not.toBeDisabled();
         });
 
-        it('does not call onToggle when the disabled current user checkbox is clicked', async () => {
+        it('still calls onToggle for the current user row when not locked', async () => {
             const onToggle = vi.fn();
             const user = userEvent.setup();
             render(
@@ -75,6 +74,41 @@ describe('MemberCheckboxList', () => {
                     selectedIds={[]}
                     onToggle={onToggle}
                     currentUserId="user-1"
+                />,
+            );
+
+            await user.click(screen.getByRole('checkbox', { name: 'You' }));
+
+            expect(onToggle).toHaveBeenCalledWith('user-1');
+        });
+
+        it('shows the current user checkbox as checked and disabled when locked', () => {
+            render(
+                <MemberCheckboxList
+                    users={users}
+                    selectedIds={[]}
+                    onToggle={vi.fn()}
+                    currentUserId="user-1"
+                    lockCurrentUser
+                />,
+            );
+
+            const currentUserCheckbox = screen.getByRole('checkbox', { name: 'You' });
+            expect(currentUserCheckbox).toBeChecked();
+            expect(currentUserCheckbox).toBeDisabled();
+            expect(screen.getByRole('checkbox', { name: /jordan lee/i })).not.toBeDisabled();
+        });
+
+        it('does not call onToggle when the locked current user checkbox is clicked', async () => {
+            const onToggle = vi.fn();
+            const user = userEvent.setup();
+            render(
+                <MemberCheckboxList
+                    users={users}
+                    selectedIds={[]}
+                    onToggle={onToggle}
+                    currentUserId="user-1"
+                    lockCurrentUser
                 />,
             );
 

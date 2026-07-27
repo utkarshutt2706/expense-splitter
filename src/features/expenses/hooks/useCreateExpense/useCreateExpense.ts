@@ -1,6 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { CURRENT_USER_ID } from '@data/seed';
 import { calculateEqualSplit } from '@features/expenses';
 import { expenseService } from '@services/instances';
 
@@ -8,6 +7,7 @@ interface CreateExpenseInput {
     groupId: string;
     description: string;
     amount: number;
+    paidByUserId: string;
     participantUserIds: string[];
 }
 
@@ -15,13 +15,19 @@ export function useCreateExpense() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({ groupId, description, amount, participantUserIds }: CreateExpenseInput) =>
+        mutationFn: ({
+            groupId,
+            description,
+            amount,
+            paidByUserId,
+            participantUserIds,
+        }: CreateExpenseInput) =>
             expenseService.create({
                 id: crypto.randomUUID(),
                 groupId,
                 description,
                 amount,
-                paidByUserId: CURRENT_USER_ID,
+                paidByUserId,
                 splitType: 'equal',
                 splits: calculateEqualSplit({ amount, participantUserIds }),
                 createdAt: new Date().toISOString(),

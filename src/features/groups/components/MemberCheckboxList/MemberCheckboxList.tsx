@@ -7,6 +7,7 @@ interface MemberCheckboxListProps {
     readonly onToggle: (id: string) => void;
     readonly emptyMessage?: string;
     readonly currentUserId?: string;
+    readonly lockCurrentUser?: boolean;
 }
 
 export function MemberCheckboxList({
@@ -15,6 +16,7 @@ export function MemberCheckboxList({
     onToggle,
     emptyMessage = "You don't have any friends yet — you can add members later.",
     currentUserId,
+    lockCurrentUser = false,
 }: MemberCheckboxListProps) {
     if (users.length === 0) {
         return <p className="text-sm text-muted-foreground">{emptyMessage}</p>;
@@ -30,14 +32,15 @@ export function MemberCheckboxList({
         <ul className="flex max-h-48 flex-col gap-1 overflow-y-auto">
             {orderedUsers.map((user) => {
                 const isCurrentUser = user.id === currentUserId;
+                const isLocked = isCurrentUser && lockCurrentUser;
 
                 return (
                     <li key={user.id}>
                         <label className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted">
                             <input
                                 type="checkbox"
-                                checked={isCurrentUser || selectedIds.includes(user.id)}
-                                disabled={isCurrentUser}
+                                checked={isLocked || selectedIds.includes(user.id)}
+                                disabled={isLocked}
                                 onChange={() => onToggle(user.id)}
                                 className="size-4 cursor-pointer accent-brand-600 disabled:cursor-not-allowed"
                             />

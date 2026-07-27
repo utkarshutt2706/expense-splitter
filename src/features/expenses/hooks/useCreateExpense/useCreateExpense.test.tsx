@@ -4,7 +4,6 @@ import type { ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { Expense } from '@data/entities';
-import { CURRENT_USER_ID } from '@data/seed';
 import { useCreateExpense } from './useCreateExpense';
 
 vi.mock('@services/instances', () => ({
@@ -14,14 +13,14 @@ vi.mock('@services/instances', () => ({
 }));
 
 describe('useCreateExpense', () => {
-    it('creates an expense with an equal split, paid by the current user', async () => {
+    it('creates an expense with an equal split, paid by whoever is passed in', async () => {
         const { expenseService } = await import('@services/instances');
         const created: Expense = {
             id: 'generated-id',
             groupId: 'group-1',
             description: 'Groceries',
             amount: 90,
-            paidByUserId: CURRENT_USER_ID,
+            paidByUserId: 'user-2',
             splitType: 'equal',
             splits: [
                 { userId: 'user-1', amount: 30 },
@@ -44,6 +43,7 @@ describe('useCreateExpense', () => {
             groupId: 'group-1',
             description: 'Groceries',
             amount: 90,
+            paidByUserId: 'user-2',
             participantUserIds: ['user-1', 'user-2', 'user-3'],
         });
 
@@ -54,7 +54,7 @@ describe('useCreateExpense', () => {
                 groupId: 'group-1',
                 description: 'Groceries',
                 amount: 90,
-                paidByUserId: CURRENT_USER_ID,
+                paidByUserId: 'user-2',
                 splitType: 'equal',
                 splits: [
                     { userId: 'user-1', amount: 30 },

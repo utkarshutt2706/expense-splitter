@@ -1,11 +1,13 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Receipt } from 'lucide-react';
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 import type { User } from '@data/entities';
+import { CURRENT_USER_ID } from '@data/seed';
 import { MemberCheckboxList } from '@features/groups';
+import { PaidByPicker } from '../PaidByPicker';
 
 const addExpenseSchema = z.object({
     description: z.string().trim().min(1, 'Description is required'),
@@ -14,6 +16,7 @@ const addExpenseSchema = z.object({
             error: 'Amount is required',
         })
         .positive('Amount must be greater than zero'),
+    paidByUserId: z.string().min(1, 'Select who paid'),
 });
 
 type AddExpenseInput = z.infer<typeof addExpenseSchema>;
@@ -21,6 +24,7 @@ type AddExpenseInput = z.infer<typeof addExpenseSchema>;
 export interface AddExpenseFormValues {
     description: string;
     amount: number;
+    paidByUserId: string;
     participantUserIds: string[];
 }
 
@@ -34,8 +38,12 @@ export function AddExpenseForm({ members, onSubmit, onCancel }: AddExpenseFormPr
     const {
         register,
         handleSubmit,
+        control,
         formState: { errors },
-    } = useForm<AddExpenseInput>({ resolver: zodResolver(addExpenseSchema) });
+    } = useForm<AddExpenseInput>({
+        resolver: zodResolver(addExpenseSchema),
+        defaultValues: { paidByUserId: CURRENT_USER_ID },
+    });
     const [participantUserIds, setParticipantUserIds] = useState<string[]>(
         members.map((member) => member.id),
     );
@@ -57,6 +65,7 @@ export function AddExpenseForm({ members, onSubmit, onCancel }: AddExpenseFormPr
         onSubmit({
             description: values.description,
             amount: values.amount,
+            paidByUserId: values.paidByUserId,
             participantUserIds,
         });
     });
@@ -102,6 +111,24 @@ export function AddExpenseForm({ members, onSubmit, onCancel }: AddExpenseFormPr
             </div>
 
             <div className="flex flex-col gap-1">
+                <span className="text-sm font-medium text-surface-foreground">Paid by</span>
+                <Controller
+                    name="paidByUserId"
+                    control={control}
+                    render={({ field }) => (
+                        <PaidByPicker
+                            members={members}
+                            value={field.value}
+                            onChange={field.onChange}
+                        />
+                    )}
+                />
+                {errors.paidByUserId && (
+                    <p className="text-xs text-red-600">{errors.paidByUserId.message}</p>
+                )}
+            </div>
+
+            <div className="flex flex-col gap-1">
                 <span className="text-sm font-medium text-surface-foreground">
                     Split equally between
                 </span>
@@ -110,6 +137,7 @@ export function AddExpenseForm({ members, onSubmit, onCancel }: AddExpenseFormPr
                     selectedIds={participantUserIds}
                     onToggle={toggleParticipant}
                     emptyMessage="This group has no members to split with."
+                    currentUserId={CURRENT_USER_ID}
                 />
                 {participantsError && <p className="text-xs text-red-600">{participantsError}</p>}
             </div>
