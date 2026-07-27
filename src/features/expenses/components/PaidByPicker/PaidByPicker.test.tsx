@@ -31,9 +31,7 @@ describe('PaidByPicker', () => {
         await user.click(screen.getByRole('button', { name: 'Paid by' }));
 
         expect(screen.getByRole('menuitemradio', { name: 'You' })).toBeInTheDocument();
-        expect(
-            screen.getByRole('menuitemradio', { name: /priya sharma/i }),
-        ).toBeInTheDocument();
+        expect(screen.getByRole('menuitemradio', { name: /priya sharma/i })).toBeInTheDocument();
     });
 
     it('calls onChange with the selected member id', async () => {
