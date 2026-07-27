@@ -30,14 +30,19 @@ export function GroupDetailPage() {
 
     const rename = () => {
         const trimmedName = nameInput.trim();
-        setIsEditingName(false);
-        if (!group || !trimmedName || trimmedName === group.name) return;
+        if (!group || !trimmedName || trimmedName === group.name) {
+            setIsEditingName(false);
+            return;
+        }
 
         const toastId = toast.loading('Group is being renamed…');
         renameGroup.mutate(
             { id: group.id, name: trimmedName },
             {
-                onSuccess: () => toast.success('Group renamed', { id: toastId }),
+                onSuccess: () => {
+                    toast.success('Group renamed', { id: toastId });
+                    setIsEditingName(false);
+                },
                 onError: (error) => toast.error(error.message, { id: toastId }),
             },
         );
@@ -87,8 +92,9 @@ export function GroupDetailPage() {
                                 if (event.key === 'Enter') rename();
                                 if (event.key === 'Escape') cancelRename();
                             }}
+                            disabled={renameGroup.isPending}
                             aria-label="Group name"
-                            className="rounded-md border border-border bg-surface px-2 py-1 font-display text-xl font-medium text-surface-foreground outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                            className="rounded-md border border-border bg-surface px-2 py-1 font-display text-xl font-medium text-surface-foreground outline-none focus-visible:ring-2 focus-visible:ring-brand-500 disabled:opacity-60"
                         />
                         <div className="flex items-center">
                             <button
@@ -96,7 +102,8 @@ export function GroupDetailPage() {
                                 aria-label="Rename"
                                 title="Rename"
                                 onClick={rename}
-                                className="cursor-pointer rounded-md p-1.5 text-green-600 hover:bg-muted"
+                                disabled={renameGroup.isPending}
+                                className="cursor-pointer rounded-md p-1.5 text-green-600 hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
                             >
                                 <Check className="size-4" />
                             </button>
@@ -105,7 +112,8 @@ export function GroupDetailPage() {
                                 aria-label="Cancel"
                                 title="Cancel"
                                 onClick={cancelRename}
-                                className="cursor-pointer rounded-md p-1.5 text-muted-foreground hover:bg-muted"
+                                disabled={renameGroup.isPending}
+                                className="cursor-pointer rounded-md p-1.5 text-muted-foreground hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
                             >
                                 <X className="size-4" />
                             </button>
@@ -128,13 +136,12 @@ export function GroupDetailPage() {
                     </>
                 )}
 
-                <div className={isEditingName ? 'hidden md:block' : undefined}>
-                    {isMembersLoading ? (
+                {!isEditingName &&
+                    (isMembersLoading ? (
                         memberAvatarsSkeleton
                     ) : (
                         <GroupMembersStack members={members ?? []} />
-                    )}
-                </div>
+                    ))}
 
                 <button
                     type="button"
