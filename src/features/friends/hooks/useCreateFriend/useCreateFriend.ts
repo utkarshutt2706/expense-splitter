@@ -1,0 +1,27 @@
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+
+import { DuplicateFriendError, findDuplicateFriend } from '@features/friends';
+import { userService } from '@services/instances';
+
+interface CreateFriendInput {
+    name: string;
+    email?: string;
+    phone?: string;
+}
+
+export function useCreateFriend() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (input: CreateFriendInput) => {
+            const friends = await userService.getAll();
+            if (findDuplicateFriend(friends, input)) {
+                throw new DuplicateFriendError();
+            }
+            return userService.create({ id: crypto.randomUUID(), ...input });
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['users', 'friends'] });
+        },
+    });
+}
