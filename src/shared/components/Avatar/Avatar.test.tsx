@@ -15,4 +15,22 @@ describe('Avatar', () => {
 
         expect(container.querySelector('svg')).toBeInTheDocument();
     });
+
+    it('renders at the default medium size', () => {
+        render(<Avatar name="Alex Morgan" />);
+
+        expect(screen.getByText('AM')).toHaveClass('size-9');
+    });
+
+    it('renders at the small size when requested', () => {
+        render(<Avatar name="Alex Morgan" size="sm" />);
+
+        expect(screen.getByText('AM')).toHaveClass('size-6');
+    });
+
+    it('renders the fallback icon at the small size when requested', () => {
+        const { container } = render(<Avatar name="" size="sm" />);
+
+        expect(container.querySelector('svg')).toHaveClass('size-6');
+    });
 });

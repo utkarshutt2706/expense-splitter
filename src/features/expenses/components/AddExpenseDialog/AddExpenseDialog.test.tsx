@@ -12,6 +12,7 @@ vi.mock('../AddExpenseForm', () => ({
         onSubmit: (values: {
             description: string;
             amount: number;
+            paidByUserId: string;
             participantUserIds: string[];
         }) => void;
         onCancel: () => void;
@@ -23,6 +24,7 @@ vi.mock('../AddExpenseForm', () => ({
                     onSubmit({
                         description: 'Groceries',
                         amount: 42.5,
+                        paidByUserId: 'user-1',
                         participantUserIds: ['user-1'],
                     })
                 }
@@ -95,6 +97,7 @@ describe('AddExpenseDialog', () => {
         expect(onSubmit).toHaveBeenCalledWith({
             description: 'Groceries',
             amount: 42.5,
+            paidByUserId: 'user-1',
             participantUserIds: ['user-1'],
         });
     });

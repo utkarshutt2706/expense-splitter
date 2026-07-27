@@ -96,13 +96,14 @@ export function GroupDetailPage() {
     const handleAddExpense = ({
         description,
         amount,
+        paidByUserId,
         participantUserIds,
     }: AddExpenseFormValues) => {
         if (!group) return;
 
         const toastId = toast.loading('Expense is being added…');
         createExpense.mutate(
-            { groupId: group.id, description, amount, participantUserIds },
+            { groupId: group.id, description, amount, paidByUserId, participantUserIds },
             {
                 onSuccess: () => toast.success('Expense added', { id: toastId }),
                 onError: (error) => toast.error(error.message, { id: toastId }),
@@ -252,16 +253,18 @@ export function GroupDetailPage() {
                 </>
             )}
 
-            <button
-                type="button"
-                aria-label="Add expense"
-                title="Add expense"
-                onClick={() => setIsAddingExpense(true)}
-                className="absolute bottom-0 right-0 inline-flex cursor-pointer items-center gap-1 rounded-md capitalize bg-brand-600 p-2 text-sm font-medium text-white hover:bg-brand-700 md:px-3 md:py-1.5"
-            >
-                <ReceiptIndianRupee className="size-4" />
-                <span className="hidden md:inline">Add expense</span>
-            </button>
+            {group && members && members.length > 0 && (
+                <button
+                    type="button"
+                    aria-label="Add expense"
+                    title="Add expense"
+                    onClick={() => setIsAddingExpense(true)}
+                    className="absolute bottom-0 right-0 inline-flex cursor-pointer items-center gap-1 rounded-md capitalize bg-brand-600 py-2 px-4 text-sm font-medium text-white hover:bg-brand-700"
+                >
+                    <ReceiptIndianRupee className="size-4" />
+                    Add expense
+                </button>
+            )}
         </div>
     );
 }

@@ -48,6 +48,7 @@ export function EditGroupMembersForm({
                     onToggle={toggleMember}
                     emptyMessage="No members to show."
                     currentUserId={CURRENT_USER_ID}
+                    lockCurrentUser
                 />
             </div>
 
