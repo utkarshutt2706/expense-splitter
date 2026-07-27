@@ -1,9 +1,9 @@
 import { createBrowserRouter } from 'react-router';
-import { FriendsPage } from '../features/friends/FriendsPage';
-import { GroupDetailPage } from '../features/groups/GroupDetailPage';
-import { GroupsPage } from '../features/groups/GroupsPage';
-import { AppLayout } from './layouts/AppLayout';
-import { PlaceholderPage } from './pages/PlaceholderPage';
+
+import { AppLayout } from '@app/layouts';
+import { PlaceholderPage } from '@app/pages/PlaceholderPage';
+import { FriendsPage } from '@features/friends/pages/FriendsPage';
+import { GroupDetailPage, GroupsPage } from '@features/groups';
 
 export const router = createBrowserRouter(
     [

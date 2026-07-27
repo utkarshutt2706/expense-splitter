@@ -1,0 +1,1 @@
+export { useRemoveFriend } from './useRemoveFriend';

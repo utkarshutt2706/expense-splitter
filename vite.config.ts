@@ -1,7 +1,10 @@
 /// <reference types="vitest/config" />
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
+import { fileURLToPath, URL } from 'node:url';
 import { defineConfig } from 'vite';
+
+const resolvePath = (path: string) => fileURLToPath(new URL(path, import.meta.url));
 
 export default defineConfig(({ command }) => ({
     // GitHub Pages serves the production build as a project site
@@ -9,6 +12,17 @@ export default defineConfig(({ command }) => ({
     // actual build needs this prefix — applying it to dev/test would break both.
     base: command === 'build' ? '/expense-splitter/' : '/',
     plugins: [react(), tailwindcss()],
+    resolve: {
+        alias: {
+            '@app': resolvePath('./src/app'),
+            '@assets': resolvePath('./src/assets'),
+            '@data': resolvePath('./src/data'),
+            '@features': resolvePath('./src/features'),
+            '@lib': resolvePath('./src/lib'),
+            '@services': resolvePath('./src/services'),
+            '@shared': resolvePath('./src/shared'),
+        },
+    },
     test: {
         environment: 'jsdom',
         setupFiles: ['./src/test/setup.ts'],
