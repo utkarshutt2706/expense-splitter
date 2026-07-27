@@ -9,6 +9,8 @@ on:
 jobs:
   sonar:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     # Forked PRs don't get repo secrets under the pull_request trigger, so SONAR_TOKEN
     # wouldn't be available; skip analysis there rather than fail on a missing secret.
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
