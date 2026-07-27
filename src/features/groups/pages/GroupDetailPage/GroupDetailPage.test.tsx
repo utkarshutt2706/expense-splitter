@@ -4,6 +4,7 @@ import { MemoryRouter } from 'react-router';
 import { toast } from 'sonner';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { useCreateExpense } from '@features/expenses';
 import { useFriends } from '@features/friends';
 import { useGroup, useGroupMembers, useRenameGroup, useUpdateGroupMembers } from '@features/groups';
 import { GroupDetailPage } from './GroupDetailPage';
@@ -15,6 +16,34 @@ vi.mock('react-router', async () => {
 
 vi.mock('@features/friends', () => ({
     useFriends: vi.fn(),
+}));
+
+vi.mock('@features/expenses', () => ({
+    useCreateExpense: vi.fn(),
+    AddExpenseDialog: ({
+        onSubmit,
+    }: {
+        onSubmit: (values: {
+            description: string;
+            amount: number;
+            participantUserIds: string[];
+        }) => void;
+    }) => (
+        <div data-testid="add-expense-dialog">
+            <button
+                type="button"
+                onClick={() =>
+                    onSubmit({
+                        description: 'Groceries',
+                        amount: 42.5,
+                        participantUserIds: ['friend-1'],
+                    })
+                }
+            >
+                Fake add expense submit
+            </button>
+        </div>
+    ),
 }));
 
 vi.mock('@features/groups', () => ({
@@ -70,6 +99,9 @@ describe('GroupDetailPage', () => {
         vi.mocked(useFriends).mockReturnValue({
             data: [],
         } as unknown as ReturnType<typeof useFriends>);
+        vi.mocked(useCreateExpense).mockReturnValue({
+            mutate: vi.fn(),
+        } as unknown as ReturnType<typeof useCreateExpense>);
     });
 
     it('shows a loading message while fetching', () => {
@@ -409,6 +441,73 @@ describe('GroupDetailPage', () => {
             renderPage();
 
             expect(screen.queryByTestId('group-members-stack')).not.toBeInTheDocument();
+        });
+    });
+
+    describe('add expense flow', () => {
+        beforeEach(() => {
+            vi.mocked(useGroup).mockReturnValue({
+                data: group,
+                isLoading: false,
+                isError: false,
+            } as unknown as ReturnType<typeof useGroup>);
+            vi.mocked(useGroupMembers).mockReturnValue({
+                data: [],
+            } as unknown as ReturnType<typeof useGroupMembers>);
+        });
+
+        it('renders an add expense button', () => {
+            renderPage();
+
+            expect(screen.getByRole('button', { name: 'Add expense' })).toBeInTheDocument();
+        });
+
+        it('adds an expense and shows a loading toast, then success', async () => {
+            let onSuccess: (() => void) | undefined;
+            const mutate = vi.fn((_values, options: { onSuccess?: () => void }) => {
+                onSuccess = options.onSuccess;
+            });
+            vi.mocked(useCreateExpense).mockReturnValue({
+                mutate,
+            } as unknown as ReturnType<typeof useCreateExpense>);
+
+            const user = userEvent.setup();
+            renderPage();
+
+            await user.click(screen.getByRole('button', { name: /fake add expense submit/i }));
+
+            expect(toast.loading).toHaveBeenCalledWith('Expense is being added…');
+            expect(mutate).toHaveBeenCalledWith(
+                {
+                    groupId: 'group-1',
+                    description: 'Groceries',
+                    amount: 42.5,
+                    participantUserIds: ['friend-1'],
+                },
+                expect.anything(),
+            );
+
+            act(() => onSuccess?.());
+
+            expect(toast.success).toHaveBeenCalledWith('Expense added', { id: 'toast-id' });
+        });
+
+        it('shows an error toast when adding an expense fails', async () => {
+            let onError: ((error: Error) => void) | undefined;
+            const mutate = vi.fn((_values, options: { onError?: (error: Error) => void }) => {
+                onError = options.onError;
+            });
+            vi.mocked(useCreateExpense).mockReturnValue({
+                mutate,
+            } as unknown as ReturnType<typeof useCreateExpense>);
+
+            const user = userEvent.setup();
+            renderPage();
+
+            await user.click(screen.getByRole('button', { name: /fake add expense submit/i }));
+            onError?.(new Error('Something went wrong'));
+
+            expect(toast.error).toHaveBeenCalledWith('Something went wrong', { id: 'toast-id' });
         });
     });
 });

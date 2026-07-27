@@ -1,9 +1,10 @@
-import { ArrowLeft, Check, Pencil, Trash2, X } from 'lucide-react';
+import { ArrowLeft, Check, Pencil, ReceiptIndianRupee, Trash2, X } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { toast } from 'sonner';
 
+import { AddExpenseDialog, type AddExpenseFormValues, useCreateExpense } from '@features/expenses';
 import { useFriends } from '@features/friends';
 import {
     EditGroupMembersDialog,
@@ -31,11 +32,13 @@ export function GroupDetailPage() {
     const { data: friends } = useFriends();
     const renameGroup = useRenameGroup();
     const updateMembers = useUpdateGroupMembers();
+    const createExpense = useCreateExpense();
 
     const [isEditingName, setIsEditingName] = useState(false);
     const [nameInput, setNameInput] = useState('');
     const nameInputRef = useRef<HTMLInputElement>(null);
     const [isEditingMembers, setIsEditingMembers] = useState(false);
+    const [isAddingExpense, setIsAddingExpense] = useState(false);
 
     const displayedName = group?.name ?? '';
 
@@ -85,6 +88,23 @@ export function GroupDetailPage() {
             { id: group.id, memberIds },
             {
                 onSuccess: () => toast.success('Group members updated', { id: toastId }),
+                onError: (error) => toast.error(error.message, { id: toastId }),
+            },
+        );
+    };
+
+    const handleAddExpense = ({
+        description,
+        amount,
+        participantUserIds,
+    }: AddExpenseFormValues) => {
+        if (!group) return;
+
+        const toastId = toast.loading('Expense is being added…');
+        createExpense.mutate(
+            { groupId: group.id, description, amount, participantUserIds },
+            {
+                onSuccess: () => toast.success('Expense added', { id: toastId }),
                 onError: (error) => toast.error(error.message, { id: toastId }),
             },
         );
@@ -203,7 +223,7 @@ export function GroupDetailPage() {
     }
 
     return (
-        <div>
+        <div className="relative h-full">
             <Link
                 to="/groups"
                 className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-surface-foreground"
@@ -215,14 +235,33 @@ export function GroupDetailPage() {
             {content}
 
             {group && (
-                <EditGroupMembersDialog
-                    open={isEditingMembers}
-                    onOpenChange={setIsEditingMembers}
-                    users={editableUsers}
-                    initialMemberIds={group.memberIds}
-                    onSubmit={handleUpdateMembers}
-                />
+                <>
+                    <EditGroupMembersDialog
+                        open={isEditingMembers}
+                        onOpenChange={setIsEditingMembers}
+                        users={editableUsers}
+                        initialMemberIds={group.memberIds}
+                        onSubmit={handleUpdateMembers}
+                    />
+                    <AddExpenseDialog
+                        open={isAddingExpense}
+                        onOpenChange={setIsAddingExpense}
+                        members={members ?? []}
+                        onSubmit={handleAddExpense}
+                    />
+                </>
             )}
+
+            <button
+                type="button"
+                aria-label="Add expense"
+                title="Add expense"
+                onClick={() => setIsAddingExpense(true)}
+                className="absolute bottom-0 right-0 inline-flex cursor-pointer items-center gap-1 rounded-md capitalize bg-brand-600 p-2 text-sm font-medium text-white hover:bg-brand-700 md:px-3 md:py-1.5"
+            >
+                <ReceiptIndianRupee className="size-4" />
+                <span className="hidden md:inline">Add expense</span>
+            </button>
         </div>
     );
 }
