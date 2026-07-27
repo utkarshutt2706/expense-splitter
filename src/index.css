@@ -46,6 +46,46 @@
     --color-muted: var(--muted);
     --color-muted-foreground: var(--muted-foreground);
     --color-border: var(--border-color);
+
+    --animate-progress-fill: progress-fill 1.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Grows toward, but never reaches, 100% — real completion time is unknown, so it
+   holds at 90% until the Suspense boundary unmounts it rather than looping. */
+@keyframes progress-fill {
+    0% {
+        transform: scaleX(0);
+    }
+    8% {
+        transform: scaleX(0.12);
+    }
+    18% {
+        transform: scaleX(0.26);
+    }
+    30% {
+        transform: scaleX(0.4);
+    }
+    43% {
+        transform: scaleX(0.52);
+    }
+    58% {
+        transform: scaleX(0.63);
+    }
+    72% {
+        transform: scaleX(0.72);
+    }
+    85% {
+        transform: scaleX(0.8);
+    }
+    94% {
+        transform: scaleX(0.86);
+    }
+    97% {
+        transform: scaleX(0.9);
+    }
+    100% {
+        transform: scaleX(0.97);
+    }
 }
 
 :root {
