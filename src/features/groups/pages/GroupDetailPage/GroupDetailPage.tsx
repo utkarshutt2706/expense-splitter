@@ -1,18 +1,15 @@
-import { ArrowLeft, Check, Pencil, ReceiptIndianRupee, Trash2, X } from 'lucide-react';
+import { ArrowLeft, Trash2 } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { Link, useParams } from 'react-router';
-import { toast } from 'sonner';
 
-import { AddExpenseDialog, type AddExpenseFormValues, useCreateExpense } from '@features/expenses';
-import { useFriends } from '@features/friends';
+import { AddExpenseAction } from '@features/expenses';
 import {
-    EditGroupMembersDialog,
-    GroupMembersStack,
+    GroupMembersSection,
+    GroupNameEditor,
+    MemberAvatarsSkeleton,
     useGroup,
     useGroupMembers,
-    useRenameGroup,
-    useUpdateGroupMembers,
 } from '@features/groups';
 import { Skeleton } from '@shared/components';
 
@@ -29,114 +26,15 @@ export function GroupDetailPage() {
         isLoading: isMembersLoading,
         isFetching: isMembersFetching,
     } = useGroupMembers(group?.memberIds ?? []);
-    const { data: friends } = useFriends();
-    const renameGroup = useRenameGroup();
-    const updateMembers = useUpdateGroupMembers();
-    const createExpense = useCreateExpense();
 
     const [isEditingName, setIsEditingName] = useState(false);
-    const [nameInput, setNameInput] = useState('');
-    const nameInputRef = useRef<HTMLInputElement>(null);
-    const [isEditingMembers, setIsEditingMembers] = useState(false);
-    const [isAddingExpense, setIsAddingExpense] = useState(false);
-
-    const displayedName = group?.name ?? '';
-
-    useEffect(() => {
-        if (isEditingName) nameInputRef.current?.focus();
-    }, [isEditingName]);
-
-    const startRenaming = () => {
-        setNameInput(displayedName);
-        setIsEditingName(true);
-    };
-
-    const rename = () => {
-        const trimmedName = nameInput.trim();
-        if (!group || !trimmedName || trimmedName === group.name) {
-            setIsEditingName(false);
-            return;
-        }
-
-        const toastId = toast.loading('Group is being renamed…');
-        renameGroup.mutate(
-            { id: group.id, name: trimmedName },
-            {
-                onSuccess: () => {
-                    toast.success('Group renamed', { id: toastId });
-                    setIsEditingName(false);
-                },
-                onError: (error) => toast.error(error.message, { id: toastId }),
-            },
-        );
-    };
-
-    const cancelRename = () => {
-        setIsEditingName(false);
-    };
-
-    const editableUsersById = new Map(
-        [...(friends ?? []), ...(members ?? [])].map((user) => [user.id, user]),
-    );
-    const editableUsers = Array.from(editableUsersById.values());
-
-    const handleUpdateMembers = ({ memberIds }: { memberIds: string[] }) => {
-        if (!group) return;
-
-        const toastId = toast.loading('Group members are being updated…');
-        updateMembers.mutate(
-            { id: group.id, memberIds },
-            {
-                onSuccess: () => toast.success('Group members updated', { id: toastId }),
-                onError: (error) => toast.error(error.message, { id: toastId }),
-            },
-        );
-    };
-
-    const handleAddExpense = ({
-        description,
-        amount,
-        paidByUserId,
-        participantUserIds,
-    }: AddExpenseFormValues) => {
-        if (!group) return;
-
-        const toastId = toast.loading('Expense is being added…');
-        createExpense.mutate(
-            { groupId: group.id, description, amount, paidByUserId, participantUserIds },
-            {
-                onSuccess: () => toast.success('Expense added', { id: toastId }),
-                onError: (error) => toast.error(error.message, { id: toastId }),
-            },
-        );
-    };
-
-    const isMembersRefreshing =
-        isMembersLoading || isMembersFetching || isGroupFetching || updateMembers.isPending;
-
-    const avatarSkeletonCircle = (key: number) => (
-        <Skeleton key={key} className="size-9 rounded-full ring-2 ring-surface" />
-    );
-
-    // Mirrors GroupMembersStack's default maxVisibleMobile/maxVisible (2 vs 5), so
-    // whichever row a breakpoint shows already has the right placeholder count.
-    const memberAvatarsSkeleton = (
-        <div aria-hidden="true">
-            <div className="flex -space-x-3 md:hidden">
-                {Array.from({ length: 3 }, (_, index) => avatarSkeletonCircle(index))}
-            </div>
-            <div className="hidden -space-x-3 md:flex">
-                {Array.from({ length: 6 }, (_, index) => avatarSkeletonCircle(index))}
-            </div>
-        </div>
-    );
 
     let content: ReactNode;
     if (isLoading) {
         content = (
             <output aria-label="Loading group…" className="flex items-center gap-3">
                 <Skeleton className="h-9 w-40" />
-                {memberAvatarsSkeleton}
+                <MemberAvatarsSkeleton />
                 <Skeleton className="ml-auto h-9 w-9 rounded-md md:w-32" />
             </output>
         );
@@ -145,70 +43,21 @@ export function GroupDetailPage() {
     } else {
         content = (
             <div className="flex items-center gap-3">
-                {isEditingName ? (
-                    <>
-                        <input
-                            ref={nameInputRef}
-                            type="text"
-                            value={nameInput}
-                            onChange={(event) => setNameInput(event.target.value)}
-                            onKeyDown={(event) => {
-                                if (event.key === 'Enter') rename();
-                                if (event.key === 'Escape') cancelRename();
-                            }}
-                            disabled={renameGroup.isPending}
-                            aria-label="Group name"
-                            className="rounded-md border border-border bg-surface px-2 py-1 font-display text-xl font-medium text-surface-foreground outline-none focus-visible:ring-2 focus-visible:ring-brand-500 disabled:opacity-60"
-                        />
-                        <div className="flex items-center">
-                            <button
-                                type="button"
-                                aria-label="Rename"
-                                title="Rename"
-                                onClick={rename}
-                                disabled={renameGroup.isPending}
-                                className="cursor-pointer rounded-md p-1.5 text-green-600 hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
-                            >
-                                <Check className="size-4" />
-                            </button>
-                            <button
-                                type="button"
-                                aria-label="Cancel"
-                                title="Cancel"
-                                onClick={cancelRename}
-                                disabled={renameGroup.isPending}
-                                className="cursor-pointer rounded-md p-1.5 text-muted-foreground hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
-                            >
-                                <X className="size-4" />
-                            </button>
-                        </div>
-                    </>
-                ) : (
-                    <>
-                        <h1 className="font-display text-xl font-medium text-surface-foreground">
-                            {displayedName}
-                        </h1>
-                        <button
-                            type="button"
-                            aria-label={`Edit ${displayedName}`}
-                            title={`Rename ${displayedName}`}
-                            onClick={startRenaming}
-                            className="cursor-pointer rounded-md p-1.5 text-muted-foreground hover:bg-muted"
-                        >
-                            <Pencil className="size-4" />
-                        </button>
-                    </>
-                )}
+                <GroupNameEditor
+                    group={group}
+                    isEditing={isEditingName}
+                    onEditingChange={setIsEditingName}
+                />
 
-                {!isEditingName &&
-                    (isMembersRefreshing ? (
-                        memberAvatarsSkeleton
-                    ) : (
-                        <GroupMembersStack
-                            members={members ?? []}
-                            onEditMembers={() => setIsEditingMembers(true)}
-                        />
-                    ))}
+                {!isEditingName && (
+                    <GroupMembersSection
+                        group={group}
+                        members={members ?? []}
+                        isMembersLoading={isMembersLoading}
+                        isMembersFetching={isMembersFetching}
+                        isGroupFetching={isGroupFetching}
+                    />
+                )}
 
                 <button
                     type="button"
@@ -235,36 +84,7 @@ export function GroupDetailPage() {
 
             {content}
 
-            {group && (
-                <>
-                    <EditGroupMembersDialog
-                        open={isEditingMembers}
-                        onOpenChange={setIsEditingMembers}
-                        users={editableUsers}
-                        initialMemberIds={group.memberIds}
-                        onSubmit={handleUpdateMembers}
-                    />
-                    <AddExpenseDialog
-                        open={isAddingExpense}
-                        onOpenChange={setIsAddingExpense}
-                        members={members ?? []}
-                        onSubmit={handleAddExpense}
-                    />
-                </>
-            )}
-
-            {group && members && members.length > 0 && (
-                <button
-                    type="button"
-                    aria-label="Add expense"
-                    title="Add expense"
-                    onClick={() => setIsAddingExpense(true)}
-                    className="absolute bottom-0 right-0 inline-flex cursor-pointer items-center gap-1 rounded-md capitalize bg-brand-600 py-2 px-4 text-sm font-medium text-white hover:bg-brand-700"
-                >
-                    <ReceiptIndianRupee className="size-4" />
-                    Add expense
-                </button>
-            )}
+            {group && <AddExpenseAction groupId={group.id} members={members ?? []} />}
         </div>
     );
 }

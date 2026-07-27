@@ -2,5 +2,8 @@ export { CreateGroupDialog } from './CreateGroupDialog';
 export { CreateGroupForm, type CreateGroupFormValues } from './CreateGroupForm';
 export { EditGroupMembersDialog } from './EditGroupMembersDialog';
 export { EditGroupMembersForm, type EditGroupMembersFormValues } from './EditGroupMembersForm';
+export { GroupMembersSection } from './GroupMembersSection';
 export { GroupMembersStack } from './GroupMembersStack';
+export { GroupNameEditor } from './GroupNameEditor';
+export { MemberAvatarsSkeleton } from './MemberAvatarsSkeleton';
 export { MemberCheckboxList } from './MemberCheckboxList';
