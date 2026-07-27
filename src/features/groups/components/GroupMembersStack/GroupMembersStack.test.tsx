@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { User } from '@data/entities';
+import { CURRENT_USER_ID } from '@data/seed';
 import { GroupMembersStack } from './GroupMembersStack';
 
 const members: User[] = [
@@ -76,5 +77,41 @@ describe('GroupMembersStack', () => {
         await user.click(screen.getByRole('button', { name: /add\/remove members/i }));
 
         expect(onEditMembers).toHaveBeenCalled();
+    });
+
+    describe('current user', () => {
+        const membersWithCurrentUserLast: User[] = [
+            { id: 'user-2', name: 'Priya Sharma', email: 'priya@example.com' },
+            { id: 'user-3', name: 'Jordan Lee', phone: '5551234567' },
+            { id: CURRENT_USER_ID, name: 'Alex Morgan', email: 'alex@example.com' },
+        ];
+
+        it('labels the current user as "You" in the popover, regardless of input order', async () => {
+            const user = userEvent.setup();
+            render(<GroupMembersStack members={membersWithCurrentUserLast} />);
+
+            await user.click(screen.getByRole('button', { name: /show all 3 members/i }));
+
+            expect(screen.getByText('You')).toBeInTheDocument();
+            expect(screen.queryByText('Alex Morgan')).not.toBeInTheDocument();
+        });
+
+        it('always shows the current user first in the popover list', async () => {
+            const user = userEvent.setup();
+            render(<GroupMembersStack members={membersWithCurrentUserLast} />);
+
+            await user.click(screen.getByRole('button', { name: /show all 3 members/i }));
+
+            const names = screen.getAllByRole('listitem').map((item) => item.textContent);
+            expect(names[0]).toContain('You');
+        });
+
+        it('always shows the current user first in the avatar rows', () => {
+            render(<GroupMembersStack members={membersWithCurrentUserLast} maxVisible={1} />);
+
+            const desktopRow = within(screen.getByTestId('members-desktop'));
+            expect(desktopRow.getByText('AM')).toBeInTheDocument();
+            expect(desktopRow.queryByText('PS')).not.toBeInTheDocument();
+        });
     });
 });

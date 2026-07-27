@@ -6,6 +6,7 @@ interface MemberCheckboxListProps {
     readonly selectedIds: string[];
     readonly onToggle: (id: string) => void;
     readonly emptyMessage?: string;
+    readonly currentUserId?: string;
 }
 
 export function MemberCheckboxList({
@@ -13,27 +14,43 @@ export function MemberCheckboxList({
     selectedIds,
     onToggle,
     emptyMessage = "You don't have any friends yet — you can add members later.",
+    currentUserId,
 }: MemberCheckboxListProps) {
     if (users.length === 0) {
         return <p className="text-sm text-muted-foreground">{emptyMessage}</p>;
     }
 
+    const orderedUsers = [...users].sort((a, b) => {
+        if (a.id === currentUserId) return -1;
+        if (b.id === currentUserId) return 1;
+        return 0;
+    });
+
     return (
         <ul className="flex max-h-48 flex-col gap-1 overflow-y-auto">
-            {users.map((user) => (
-                <li key={user.id}>
-                    <label className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted">
-                        <input
-                            type="checkbox"
-                            checked={selectedIds.includes(user.id)}
-                            onChange={() => onToggle(user.id)}
-                            className="size-4 cursor-pointer accent-brand-600"
-                        />
-                        <Avatar name={user.name} />
-                        <span className="text-sm text-surface-foreground">{user.name}</span>
-                    </label>
-                </li>
-            ))}
+            {orderedUsers.map((user) => {
+                const isCurrentUser = user.id === currentUserId;
+
+                return (
+                    <li key={user.id}>
+                        <label className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted">
+                            <input
+                                type="checkbox"
+                                checked={isCurrentUser || selectedIds.includes(user.id)}
+                                disabled={isCurrentUser}
+                                onChange={() => onToggle(user.id)}
+                                className="size-4 cursor-pointer accent-brand-600 disabled:cursor-not-allowed"
+                            />
+                            <span aria-hidden="true">
+                                <Avatar name={user.name} />
+                            </span>
+                            <span className="text-sm text-surface-foreground">
+                                {isCurrentUser ? 'You' : user.name}
+                            </span>
+                        </label>
+                    </li>
+                );
+            })}
         </ul>
     );
 }
