@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { toast } from 'sonner';
@@ -169,7 +169,7 @@ describe('GroupDetailPage', () => {
             expect(screen.queryByRole('textbox', { name: /group name/i })).not.toBeInTheDocument();
         });
 
-        it('renames the group and shows a loading toast immediately, then updates it to success', async () => {
+        it('renames the group, keeping edit mode open until the mutation succeeds', async () => {
             let onSuccess: (() => void) | undefined;
             vi.mocked(useRenameGroup).mockReturnValue({
                 mutate: vi.fn((_values, options: { onSuccess?: () => void }) => {
@@ -186,13 +186,15 @@ describe('GroupDetailPage', () => {
             await user.click(screen.getByRole('button', { name: /^rename$/i }));
 
             expect(toast.loading).toHaveBeenCalledWith('Group is being renamed…');
+            expect(screen.getByRole('textbox', { name: /group name/i })).toBeInTheDocument();
 
-            onSuccess?.();
+            act(() => onSuccess?.());
 
             expect(toast.success).toHaveBeenCalledWith('Group renamed', { id: 'toast-id' });
+            expect(screen.queryByRole('textbox', { name: /group name/i })).not.toBeInTheDocument();
         });
 
-        it('updates the loading toast to an error toast with the error message when it fails', async () => {
+        it('updates the loading toast to an error toast and keeps edit mode open when it fails', async () => {
             let onError: ((error: Error) => void) | undefined;
             vi.mocked(useRenameGroup).mockReturnValue({
                 mutate: vi.fn((_values, options: { onError?: (error: Error) => void }) => {
@@ -210,6 +212,23 @@ describe('GroupDetailPage', () => {
             onError?.(new Error('Something went wrong'));
 
             expect(toast.error).toHaveBeenCalledWith('Something went wrong', { id: 'toast-id' });
+            expect(screen.getByRole('textbox', { name: /group name/i })).toBeInTheDocument();
+        });
+
+        it('disables the input and rename/cancel buttons while a rename is pending', async () => {
+            vi.mocked(useRenameGroup).mockReturnValue({
+                mutate: vi.fn(),
+                isPending: true,
+            } as unknown as ReturnType<typeof useRenameGroup>);
+
+            const user = userEvent.setup();
+            renderPage();
+
+            await user.click(screen.getByRole('button', { name: /edit weekend trip/i }));
+
+            expect(screen.getByRole('textbox', { name: /group name/i })).toBeDisabled();
+            expect(screen.getByRole('button', { name: /^rename$/i })).toBeDisabled();
+            expect(screen.getByRole('button', { name: /^cancel$/i })).toBeDisabled();
         });
 
         it('discards the edit when cancelled, without renaming', async () => {
@@ -232,9 +251,11 @@ describe('GroupDetailPage', () => {
         });
 
         it('renames when Enter is pressed in the input', async () => {
-            const mutate = vi.fn();
+            let onSuccess: (() => void) | undefined;
             vi.mocked(useRenameGroup).mockReturnValue({
-                mutate,
+                mutate: vi.fn((_values, options: { onSuccess?: () => void }) => {
+                    onSuccess = options.onSuccess;
+                }),
             } as unknown as ReturnType<typeof useRenameGroup>);
 
             const user = userEvent.setup();
@@ -247,10 +268,10 @@ describe('GroupDetailPage', () => {
                 'Ski Trip{Enter}',
             );
 
-            expect(mutate).toHaveBeenCalledWith(
-                { id: 'group-1', name: 'Ski Trip' },
-                expect.anything(),
-            );
+            expect(screen.getByRole('textbox', { name: /group name/i })).toBeInTheDocument();
+
+            act(() => onSuccess?.());
+
             expect(screen.queryByRole('textbox', { name: /group name/i })).not.toBeInTheDocument();
         });
 
