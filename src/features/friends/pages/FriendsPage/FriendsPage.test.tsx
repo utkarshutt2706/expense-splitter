@@ -108,7 +108,20 @@ describe('FriendsPage', () => {
 
         render(<FriendsPage />);
 
-        expect(screen.getByText(/loading friends/i)).toBeInTheDocument();
+        expect(screen.getByRole('status', { name: /loading friends/i })).toBeInTheDocument();
+    });
+
+    it('does not render the search box or add friend trigger while fetching', () => {
+        vi.mocked(useFriends).mockReturnValue({
+            data: undefined,
+            isLoading: true,
+            isError: false,
+        } as unknown as ReturnType<typeof useFriends>);
+
+        render(<FriendsPage />);
+
+        expect(screen.queryByRole('searchbox')).not.toBeInTheDocument();
+        expect(screen.queryByRole('button', { name: /^add friend$/i })).not.toBeInTheDocument();
     });
 
     it('shows an error message when the query fails', () => {
@@ -135,6 +148,19 @@ describe('FriendsPage', () => {
         expect(screen.getByText(/no friends yet/i)).toBeInTheDocument();
     });
 
+    it('hides the search box but still shows the add friend trigger when there are no friends', () => {
+        vi.mocked(useFriends).mockReturnValue({
+            data: [],
+            isLoading: false,
+            isError: false,
+        } as unknown as ReturnType<typeof useFriends>);
+
+        render(<FriendsPage />);
+
+        expect(screen.queryByRole('searchbox')).not.toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /^add friend$/i })).toBeInTheDocument();
+    });
+
     it('renders each friend with their name and contact info', () => {
         vi.mocked(useFriends).mockReturnValue({
             data: friends,
@@ -148,18 +174,6 @@ describe('FriendsPage', () => {
         expect(screen.getByText('priya@example.com')).toBeInTheDocument();
         expect(screen.getByText('Jordan Lee')).toBeInTheDocument();
         expect(screen.getByText('5551234567')).toBeInTheDocument();
-    });
-
-    it('renders the add friend trigger', () => {
-        vi.mocked(useFriends).mockReturnValue({
-            data: [],
-            isLoading: false,
-            isError: false,
-        } as unknown as ReturnType<typeof useFriends>);
-
-        render(<FriendsPage />);
-
-        expect(screen.getByRole('button', { name: /^add friend$/i })).toBeInTheDocument();
     });
 
     describe('search', () => {

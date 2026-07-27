@@ -16,7 +16,7 @@ vi.mock('@features/groups', () => ({
     useGroup: vi.fn(),
     useGroupMembers: vi.fn(),
     useRenameGroup: vi.fn(),
-    GroupMembersStack: () => null,
+    GroupMembersStack: () => <div data-testid="group-members-stack" />,
 }));
 
 vi.mock('sonner', () => ({
@@ -61,7 +61,7 @@ describe('GroupDetailPage', () => {
 
         renderPage();
 
-        expect(screen.getByText(/loading group/i)).toBeInTheDocument();
+        expect(screen.getByRole('status', { name: /loading group/i })).toBeInTheDocument();
     });
 
     it('shows an error message when the group fails to load', () => {
@@ -96,6 +96,23 @@ describe('GroupDetailPage', () => {
             'href',
             '/groups',
         );
+    });
+
+    it('keeps the member avatars skeleton visible when the group loaded but members are still fetching', () => {
+        vi.mocked(useGroup).mockReturnValue({
+            data: group,
+            isLoading: false,
+            isError: false,
+        } as unknown as ReturnType<typeof useGroup>);
+        vi.mocked(useGroupMembers).mockReturnValue({
+            data: undefined,
+            isLoading: true,
+        } as unknown as ReturnType<typeof useGroupMembers>);
+
+        renderPage();
+
+        expect(screen.getByText('Weekend Trip')).toBeInTheDocument();
+        expect(screen.queryByTestId('group-members-stack')).not.toBeInTheDocument();
     });
 
     it('renders a delete group button', () => {

@@ -76,7 +76,20 @@ describe('GroupsPage', () => {
 
         renderPage();
 
-        expect(screen.getByText(/loading groups/i)).toBeInTheDocument();
+        expect(screen.getByRole('status', { name: /loading groups/i })).toBeInTheDocument();
+    });
+
+    it('does not render the search box or create group trigger while fetching', () => {
+        vi.mocked(useGroups).mockReturnValue({
+            data: undefined,
+            isLoading: true,
+            isError: false,
+        } as unknown as ReturnType<typeof useGroups>);
+
+        renderPage();
+
+        expect(screen.queryByRole('searchbox')).not.toBeInTheDocument();
+        expect(screen.queryByRole('button', { name: /create group/i })).not.toBeInTheDocument();
     });
 
     it('shows an error message when the query fails', () => {
@@ -101,6 +114,19 @@ describe('GroupsPage', () => {
         renderPage();
 
         expect(screen.getByText(/no groups yet/i)).toBeInTheDocument();
+    });
+
+    it('hides the search box but still shows the create group trigger when there are no groups', () => {
+        vi.mocked(useGroups).mockReturnValue({
+            data: [],
+            isLoading: false,
+            isError: false,
+        } as unknown as ReturnType<typeof useGroups>);
+
+        renderPage();
+
+        expect(screen.queryByRole('searchbox')).not.toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /create group/i })).toBeInTheDocument();
     });
 
     it('renders each group with its name, pluralized member count, and a link to its detail page', () => {

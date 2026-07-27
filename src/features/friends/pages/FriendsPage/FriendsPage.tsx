@@ -13,7 +13,13 @@ import {
     useUpdateFriend,
     type FriendFormValues,
 } from '@features/friends';
-import { Avatar, ConfirmationDialog, SearchInput } from '@shared/components';
+import {
+    Avatar,
+    ConfirmationDialog,
+    SearchInput,
+    Skeleton,
+    SkeletonList,
+} from '@shared/components';
 
 export function FriendsPage() {
     const { data: friends, isLoading, isError } = useFriends();
@@ -25,6 +31,8 @@ export function FriendsPage() {
     const [editingFriend, setEditingFriend] = useState<User | null>(null);
     const [removingFriend, setRemovingFriend] = useState<User | null>(null);
     const [search, setSearch] = useState('');
+
+    const hasNoFriends = !isLoading && (!friends || friends.length === 0);
 
     const query = search.trim().toLowerCase();
     const filteredFriends = friends?.filter(
@@ -66,7 +74,7 @@ export function FriendsPage() {
 
     let content: ReactNode;
     if (isLoading) {
-        content = <div className="text-muted-foreground">Loading friends…</div>;
+        content = <SkeletonList label="Loading friends…" />;
     } else if (isError) {
         content = <div className="text-red-600">Couldn't load friends.</div>;
     } else if (!friends || friends.length === 0) {
@@ -113,20 +121,31 @@ export function FriendsPage() {
     return (
         <div>
             <div className="mb-4 flex items-center justify-between gap-3">
-                <SearchInput
-                    value={search}
-                    onChange={setSearch}
-                    placeholder="Search friends…"
-                    ariaLabel="Search friends"
-                />
-                <button
-                    type="button"
-                    onClick={() => setAddDialogOpen(true)}
-                    className="inline-flex shrink-0 cursor-pointer items-center gap-1 rounded-md border border-border px-4 py-2 text-sm font-medium text-surface-foreground hover:bg-muted"
-                >
-                    <UserPlus className="size-4" />
-                    Add friend
-                </button>
+                {isLoading ? (
+                    <Skeleton className="h-9 w-full max-w-xs" />
+                ) : (
+                    !hasNoFriends && (
+                        <SearchInput
+                            value={search}
+                            onChange={setSearch}
+                            placeholder="Search friends…"
+                            ariaLabel="Search friends"
+                        />
+                    )
+                )}
+
+                {isLoading ? (
+                    <Skeleton className="ml-auto h-9 w-32 shrink-0" />
+                ) : (
+                    <button
+                        type="button"
+                        onClick={() => setAddDialogOpen(true)}
+                        className="ml-auto inline-flex shrink-0 cursor-pointer items-center gap-1 rounded-md border border-border px-4 py-2 text-sm font-medium text-surface-foreground hover:bg-muted"
+                    >
+                        <UserPlus className="size-4" />
+                        Add friend
+                    </button>
+                )}
             </div>
 
             {content}
