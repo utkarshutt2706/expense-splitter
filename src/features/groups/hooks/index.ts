@@ -3,3 +3,4 @@ export { useGroup } from './useGroup';
 export { useGroupMembers } from './useGroupMembers';
 export { useGroups } from './useGroups';
 export { useRenameGroup } from './useRenameGroup';
+export { useUpdateGroupMembers } from './useUpdateGroupMembers';

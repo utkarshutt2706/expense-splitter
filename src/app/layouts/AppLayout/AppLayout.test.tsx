@@ -9,6 +9,10 @@ vi.mock('@app/hooks', async (importOriginal) => ({
     useCurrentUser: () => ({ data: { id: 'current-user', name: 'Alex Morgan', email: '' } }),
 }));
 
+vi.mock('@features/groups', () => ({
+    useGroup: () => ({ data: undefined }),
+}));
+
 describe('AppLayout', () => {
     it('renders the matched child route through the outlet', () => {
         const router = createMemoryRouter([
