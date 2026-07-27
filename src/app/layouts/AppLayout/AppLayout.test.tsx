@@ -4,7 +4,8 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { AppLayout } from './AppLayout';
 
-vi.mock('../hooks/useCurrentUser', () => ({
+vi.mock('@app/hooks', async (importOriginal) => ({
+    ...(await importOriginal<typeof import('@app/hooks')>()),
     useCurrentUser: () => ({ data: { id: 'current-user', name: 'Alex Morgan', email: '' } }),
 }));
 

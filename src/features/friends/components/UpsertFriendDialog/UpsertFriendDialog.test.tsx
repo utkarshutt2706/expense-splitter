@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { UpsertFriendDialog } from './UpsertFriendDialog';
 
-vi.mock('./FriendForm', () => ({
+vi.mock('../FriendForm', () => ({
     FriendForm: ({
         onSubmit,
         onCancel,

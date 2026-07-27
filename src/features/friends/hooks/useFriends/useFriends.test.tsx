@@ -7,7 +7,7 @@ import type { User } from '@data/entities';
 import { CURRENT_USER_ID } from '@data/seed';
 import { useFriends } from './useFriends';
 
-vi.mock('../../lib/services', () => ({
+vi.mock('@services/instances', () => ({
     userService: {
         getAll: vi.fn(),
     },

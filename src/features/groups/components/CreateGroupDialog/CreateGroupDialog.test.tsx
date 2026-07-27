@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { CreateGroupDialog } from './CreateGroupDialog';
 
-vi.mock('./CreateGroupForm', () => ({
+vi.mock('../CreateGroupForm', () => ({
     CreateGroupForm: ({
         onSubmit,
         onCancel,

@@ -16,6 +16,7 @@ vi.mock('@features/groups', () => ({
     useGroup: vi.fn(),
     useGroupMembers: vi.fn(),
     useRenameGroup: vi.fn(),
+    GroupMembersStack: () => null,
 }));
 
 vi.mock('sonner', () => ({

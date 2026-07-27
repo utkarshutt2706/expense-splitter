@@ -7,7 +7,7 @@ import type { Group } from '@data/entities';
 import { CURRENT_USER_ID } from '@data/seed';
 import { useCreateGroup } from './useCreateGroup';
 
-vi.mock('../../lib/services', () => ({
+vi.mock('@services/instances', () => ({
     groupService: {
         create: vi.fn(),
     },

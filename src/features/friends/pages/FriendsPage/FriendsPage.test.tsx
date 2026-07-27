@@ -5,22 +5,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useCreateFriend, useFriends, useRemoveFriend, useUpdateFriend } from '@features/friends';
 import { FriendsPage } from './FriendsPage';
 
-vi.mock('./useFriends', () => ({
-    useFriends: vi.fn(),
-}));
-
-vi.mock('./useCreateFriend', () => ({
-    useCreateFriend: vi.fn(),
-}));
-
-vi.mock('./useUpdateFriend', () => ({
-    useUpdateFriend: vi.fn(),
-}));
-
-vi.mock('./useRemoveFriend', () => ({
-    useRemoveFriend: vi.fn(),
-}));
-
 vi.mock('sonner', () => ({
     toast: {
         loading: vi.fn(() => 'toast-id'),
@@ -29,7 +13,34 @@ vi.mock('sonner', () => ({
     },
 }));
 
-vi.mock('./UpsertFriendDialog', () => ({
+vi.mock('@shared/components', async (importOriginal) => ({
+    ...(await importOriginal<typeof import('@shared/components')>()),
+    ConfirmationDialog: ({
+        open,
+        onConfirm,
+        onOpenChange,
+    }: {
+        open: boolean;
+        onConfirm: () => void;
+        onOpenChange: (open: boolean) => void;
+    }) =>
+        open ? (
+            <div>
+                <button type="button" onClick={onConfirm}>
+                    Fake remove confirm
+                </button>
+                <button type="button" onClick={() => onOpenChange(false)}>
+                    Fake remove cancel
+                </button>
+            </div>
+        ) : null,
+}));
+
+vi.mock('@features/friends', () => ({
+    useFriends: vi.fn(),
+    useCreateFriend: vi.fn(),
+    useUpdateFriend: vi.fn(),
+    useRemoveFriend: vi.fn(),
     UpsertFriendDialog: ({
         mode,
         open,
@@ -54,31 +65,6 @@ vi.mock('./UpsertFriendDialog', () => ({
                 </button>
             </div>
         ) : null,
-}));
-
-vi.mock('../../shared/ConfirmationDialog', () => ({
-    ConfirmationDialog: ({
-        open,
-        onConfirm,
-        onOpenChange,
-    }: {
-        open: boolean;
-        onConfirm: () => void;
-        onOpenChange: (open: boolean) => void;
-    }) =>
-        open ? (
-            <div>
-                <button type="button" onClick={onConfirm}>
-                    Fake remove confirm
-                </button>
-                <button type="button" onClick={() => onOpenChange(false)}>
-                    Fake remove cancel
-                </button>
-            </div>
-        ) : null,
-}));
-
-vi.mock('./FriendRowMenu', () => ({
     FriendRowMenu: ({
         friendName,
         onEdit,

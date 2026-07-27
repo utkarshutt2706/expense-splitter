@@ -7,7 +7,7 @@ import type { User } from '@data/entities';
 import { DuplicateFriendError } from '@features/friends';
 import { useCreateFriend } from './useCreateFriend';
 
-vi.mock('../../lib/services', () => ({
+vi.mock('@services/instances', () => ({
     userService: {
         getAll: vi.fn(),
         create: vi.fn(),

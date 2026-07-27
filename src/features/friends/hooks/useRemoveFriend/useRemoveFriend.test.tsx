@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Group } from '@data/entities';
 import { FriendInGroupError, useRemoveFriend } from './useRemoveFriend';
 
-vi.mock('../../lib/services', () => ({
+vi.mock('@services/instances', () => ({
     groupService: {
         getAll: vi.fn(),
     },

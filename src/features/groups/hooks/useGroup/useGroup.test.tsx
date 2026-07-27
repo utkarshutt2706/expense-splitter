@@ -6,7 +6,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { Group } from '@data/entities';
 import { useGroup } from './useGroup';
 
-vi.mock('../../lib/services', () => ({
+vi.mock('@services/instances', () => ({
     groupService: {
         getById: vi.fn(),
     },

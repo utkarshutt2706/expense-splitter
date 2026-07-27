@@ -7,14 +7,6 @@ import { useFriends } from '@features/friends';
 import { useCreateGroup, useGroups } from '@features/groups';
 import { GroupsPage } from './GroupsPage';
 
-vi.mock('@features/groups', () => ({
-    useGroups: vi.fn(),
-}));
-
-vi.mock('@features/groups', () => ({
-    useCreateGroup: vi.fn(),
-}));
-
 vi.mock('@features/friends', () => ({
     useFriends: vi.fn(),
 }));
@@ -27,7 +19,9 @@ vi.mock('sonner', () => ({
     },
 }));
 
-vi.mock('./CreateGroupDialog', () => ({
+vi.mock('@features/groups', () => ({
+    useGroups: vi.fn(),
+    useCreateGroup: vi.fn(),
     CreateGroupDialog: ({
         open,
         onSubmit,
