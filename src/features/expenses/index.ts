@@ -1,3 +1,5 @@
+export { AddExpenseDialog, AddExpenseForm, type AddExpenseFormValues } from './components';
+export { useCreateExpense } from './hooks';
 export {
     calculateEqualSplit,
     calculateExactSplit,
