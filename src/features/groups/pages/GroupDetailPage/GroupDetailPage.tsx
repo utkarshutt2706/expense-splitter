@@ -5,11 +5,12 @@ import { Link, useParams } from 'react-router';
 import { toast } from 'sonner';
 
 import { GroupMembersStack, useGroup, useGroupMembers, useRenameGroup } from '@features/groups';
+import { Skeleton } from '@shared/components';
 
 export function GroupDetailPage() {
     const { groupId } = useParams<{ groupId: string }>();
     const { data: group, isLoading, isError } = useGroup(groupId ?? '');
-    const { data: members } = useGroupMembers(group?.memberIds ?? []);
+    const { data: members, isLoading: isMembersLoading } = useGroupMembers(group?.memberIds ?? []);
     const renameGroup = useRenameGroup();
 
     const [isEditingName, setIsEditingName] = useState(false);
@@ -46,9 +47,30 @@ export function GroupDetailPage() {
         setIsEditingName(false);
     };
 
+    const avatarSkeletonCircle = <Skeleton className="size-9 rounded-full ring-2 ring-surface" />;
+
+    // Mirrors GroupMembersStack's default maxVisibleMobile/maxVisible (2 vs 5), so
+    // whichever row a breakpoint shows already has the right placeholder count.
+    const memberAvatarsSkeleton = (
+        <div aria-hidden="true">
+            <div className="flex -space-x-3 md:hidden">
+                {Array.from({ length: 3 }, () => avatarSkeletonCircle)}
+            </div>
+            <div className="hidden -space-x-3 md:flex">
+                {Array.from({ length: 6 }, () => avatarSkeletonCircle)}
+            </div>
+        </div>
+    );
+
     let content: ReactNode;
     if (isLoading) {
-        content = <div className="text-muted-foreground">Loading group…</div>;
+        content = (
+            <output aria-label="Loading group…" className="flex items-center gap-3">
+                <Skeleton className="h-9 w-40" />
+                {memberAvatarsSkeleton}
+                <Skeleton className="ml-auto h-9 w-9 rounded-md md:w-32" />
+            </output>
+        );
     } else if (isError || !group) {
         content = <div className="text-red-600">Couldn't load this group.</div>;
     } else {
@@ -107,7 +129,11 @@ export function GroupDetailPage() {
                 )}
 
                 <div className={isEditingName ? 'hidden md:block' : undefined}>
-                    <GroupMembersStack members={members ?? []} />
+                    {isMembersLoading ? (
+                        memberAvatarsSkeleton
+                    ) : (
+                        <GroupMembersStack members={members ?? []} />
+                    )}
                 </div>
 
                 <button

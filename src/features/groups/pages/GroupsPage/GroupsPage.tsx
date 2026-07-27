@@ -12,6 +12,8 @@ import {
     type CreateGroupFormValues,
 } from '@features/groups';
 import { SearchInput } from '@shared/components/SearchInput';
+import { Skeleton } from '@shared/components/Skeleton';
+import { SkeletonList } from '@shared/components/SkeletonList';
 
 export function GroupsPage() {
     const { data: groups, isLoading, isError } = useGroups();
@@ -20,6 +22,8 @@ export function GroupsPage() {
 
     const [addDialogOpen, setAddDialogOpen] = useState(false);
     const [search, setSearch] = useState('');
+
+    const hasNoGroups = !isLoading && (!groups || groups.length === 0);
 
     const friendNameById = new Map((friends ?? []).map((friend) => [friend.id, friend.name]));
 
@@ -43,7 +47,7 @@ export function GroupsPage() {
 
     let content: ReactNode;
     if (isLoading) {
-        content = <div className="text-muted-foreground">Loading groups…</div>;
+        content = <SkeletonList label="Loading groups…" />;
     } else if (isError) {
         content = <div className="text-red-600">Couldn't load groups.</div>;
     } else if (!groups || groups.length === 0) {
@@ -79,20 +83,31 @@ export function GroupsPage() {
     return (
         <div>
             <div className="mb-4 flex items-center justify-between gap-3">
-                <SearchInput
-                    value={search}
-                    onChange={setSearch}
-                    placeholder="Search groups…"
-                    ariaLabel="Search groups"
-                />
-                <button
-                    type="button"
-                    onClick={() => setAddDialogOpen(true)}
-                    className="inline-flex shrink-0 cursor-pointer items-center gap-1 rounded-md border border-border px-4 py-2 text-sm font-medium text-surface-foreground hover:bg-muted"
-                >
-                    <Plus className="size-4" />
-                    Create group
-                </button>
+                {isLoading ? (
+                    <Skeleton className="h-9 w-full max-w-xs" />
+                ) : (
+                    !hasNoGroups && (
+                        <SearchInput
+                            value={search}
+                            onChange={setSearch}
+                            placeholder="Search groups…"
+                            ariaLabel="Search groups"
+                        />
+                    )
+                )}
+
+                {isLoading ? (
+                    <Skeleton className="ml-auto h-9 w-36 shrink-0" />
+                ) : (
+                    <button
+                        type="button"
+                        onClick={() => setAddDialogOpen(true)}
+                        className="ml-auto inline-flex shrink-0 cursor-pointer items-center gap-1 rounded-md border border-border px-4 py-2 text-sm font-medium text-surface-foreground hover:bg-muted"
+                    >
+                        <Plus className="size-4" />
+                        Create group
+                    </button>
+                )}
             </div>
 
             {content}
