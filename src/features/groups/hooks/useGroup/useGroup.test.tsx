@@ -35,4 +35,15 @@ describe('useGroup', () => {
         expect(result.current.data).toEqual(group);
         expect(groupService.getById).toHaveBeenCalledWith('group-1');
     });
+
+    it('does not fetch when the id is empty', () => {
+        const queryClient = new QueryClient();
+        const wrapper = ({ children }: { children: ReactNode }) => (
+            <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+        );
+
+        const { result } = renderHook(() => useGroup(''), { wrapper });
+
+        expect(result.current.fetchStatus).toBe('idle');
+    });
 });

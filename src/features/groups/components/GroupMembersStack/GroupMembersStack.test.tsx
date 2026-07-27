@@ -1,6 +1,6 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import type { User } from '@data/entities';
 import { GroupMembersStack } from './GroupMembersStack';
@@ -65,5 +65,16 @@ describe('GroupMembersStack', () => {
         await user.click(screen.getByRole('button', { name: /show all 3 members/i }));
 
         expect(screen.getByRole('button', { name: /add\/remove members/i })).toBeInTheDocument();
+    });
+
+    it('calls onEditMembers when add/remove members is clicked', async () => {
+        const onEditMembers = vi.fn();
+        const user = userEvent.setup();
+        render(<GroupMembersStack members={members} onEditMembers={onEditMembers} />);
+
+        await user.click(screen.getByRole('button', { name: /show all 3 members/i }));
+        await user.click(screen.getByRole('button', { name: /add\/remove members/i }));
+
+        expect(onEditMembers).toHaveBeenCalled();
     });
 });

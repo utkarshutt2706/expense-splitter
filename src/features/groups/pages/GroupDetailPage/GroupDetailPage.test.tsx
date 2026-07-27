@@ -4,7 +4,8 @@ import { MemoryRouter } from 'react-router';
 import { toast } from 'sonner';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { useGroup, useGroupMembers, useRenameGroup } from '@features/groups';
+import { useFriends } from '@features/friends';
+import { useGroup, useGroupMembers, useRenameGroup, useUpdateGroupMembers } from '@features/groups';
 import { GroupDetailPage } from './GroupDetailPage';
 
 vi.mock('react-router', async () => {
@@ -12,11 +13,27 @@ vi.mock('react-router', async () => {
     return { ...actual, useParams: () => ({ groupId: 'group-1' }) };
 });
 
+vi.mock('@features/friends', () => ({
+    useFriends: vi.fn(),
+}));
+
 vi.mock('@features/groups', () => ({
     useGroup: vi.fn(),
     useGroupMembers: vi.fn(),
     useRenameGroup: vi.fn(),
+    useUpdateGroupMembers: vi.fn(),
     GroupMembersStack: () => <div data-testid="group-members-stack" />,
+    EditGroupMembersDialog: ({
+        onSubmit,
+    }: {
+        onSubmit: (values: { memberIds: string[] }) => void;
+    }) => (
+        <div data-testid="edit-group-members-dialog">
+            <button type="button" onClick={() => onSubmit({ memberIds: ['friend-2'] })}>
+                Fake edit members submit
+            </button>
+        </div>
+    ),
 }));
 
 vi.mock('sonner', () => ({
@@ -47,6 +64,12 @@ describe('GroupDetailPage', () => {
         vi.mocked(useRenameGroup).mockReturnValue({
             mutate: vi.fn(),
         } as unknown as ReturnType<typeof useRenameGroup>);
+        vi.mocked(useUpdateGroupMembers).mockReturnValue({
+            mutate: vi.fn(),
+        } as unknown as ReturnType<typeof useUpdateGroupMembers>);
+        vi.mocked(useFriends).mockReturnValue({
+            data: [],
+        } as unknown as ReturnType<typeof useFriends>);
     });
 
     it('shows a loading message while fetching', () => {
@@ -294,6 +317,98 @@ describe('GroupDetailPage', () => {
             expect(mutate).not.toHaveBeenCalled();
             expect(screen.getByText('Weekend Trip')).toBeInTheDocument();
             expect(screen.queryByText('Ski Trip')).not.toBeInTheDocument();
+        });
+    });
+
+    describe('member editing flow', () => {
+        beforeEach(() => {
+            vi.mocked(useGroup).mockReturnValue({
+                data: group,
+                isLoading: false,
+                isError: false,
+            } as unknown as ReturnType<typeof useGroup>);
+            vi.mocked(useGroupMembers).mockReturnValue({
+                data: [],
+            } as unknown as ReturnType<typeof useGroupMembers>);
+        });
+
+        it('updates group members and shows a loading toast, then success', async () => {
+            let onSuccess: (() => void) | undefined;
+            const mutate = vi.fn((_values, options: { onSuccess?: () => void }) => {
+                onSuccess = options.onSuccess;
+            });
+            vi.mocked(useUpdateGroupMembers).mockReturnValue({
+                mutate,
+            } as unknown as ReturnType<typeof useUpdateGroupMembers>);
+
+            const user = userEvent.setup();
+            renderPage();
+
+            await user.click(screen.getByRole('button', { name: /fake edit members submit/i }));
+
+            expect(toast.loading).toHaveBeenCalledWith('Group members are being updated…');
+            expect(mutate).toHaveBeenCalledWith(
+                { id: 'group-1', memberIds: ['friend-2'] },
+                expect.anything(),
+            );
+
+            act(() => onSuccess?.());
+
+            expect(toast.success).toHaveBeenCalledWith('Group members updated', { id: 'toast-id' });
+        });
+
+        it('shows an error toast when updating members fails', async () => {
+            let onError: ((error: Error) => void) | undefined;
+            const mutate = vi.fn((_values, options: { onError?: (error: Error) => void }) => {
+                onError = options.onError;
+            });
+            vi.mocked(useUpdateGroupMembers).mockReturnValue({
+                mutate,
+            } as unknown as ReturnType<typeof useUpdateGroupMembers>);
+
+            const user = userEvent.setup();
+            renderPage();
+
+            await user.click(screen.getByRole('button', { name: /fake edit members submit/i }));
+            onError?.(new Error('Something went wrong'));
+
+            expect(toast.error).toHaveBeenCalledWith('Something went wrong', { id: 'toast-id' });
+        });
+
+        it('shows the member avatars skeleton instead of the stack while an update is pending', () => {
+            vi.mocked(useUpdateGroupMembers).mockReturnValue({
+                mutate: vi.fn(),
+                isPending: true,
+            } as unknown as ReturnType<typeof useUpdateGroupMembers>);
+
+            renderPage();
+
+            expect(screen.queryByTestId('group-members-stack')).not.toBeInTheDocument();
+        });
+
+        it('shows the member avatars skeleton while the group is refetching after an update', () => {
+            vi.mocked(useGroup).mockReturnValue({
+                data: group,
+                isLoading: false,
+                isError: false,
+                isFetching: true,
+            } as unknown as ReturnType<typeof useGroup>);
+
+            renderPage();
+
+            expect(screen.queryByTestId('group-members-stack')).not.toBeInTheDocument();
+        });
+
+        it('shows the member avatars skeleton while the member list is refetching after an update', () => {
+            vi.mocked(useGroupMembers).mockReturnValue({
+                data: [],
+                isLoading: false,
+                isFetching: true,
+            } as unknown as ReturnType<typeof useGroupMembers>);
+
+            renderPage();
+
+            expect(screen.queryByTestId('group-members-stack')).not.toBeInTheDocument();
         });
     });
 });

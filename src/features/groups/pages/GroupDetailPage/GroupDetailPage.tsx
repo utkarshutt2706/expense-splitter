@@ -4,18 +4,38 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { toast } from 'sonner';
 
-import { GroupMembersStack, useGroup, useGroupMembers, useRenameGroup } from '@features/groups';
+import { useFriends } from '@features/friends';
+import {
+    EditGroupMembersDialog,
+    GroupMembersStack,
+    useGroup,
+    useGroupMembers,
+    useRenameGroup,
+    useUpdateGroupMembers,
+} from '@features/groups';
 import { Skeleton } from '@shared/components';
 
 export function GroupDetailPage() {
     const { groupId } = useParams<{ groupId: string }>();
-    const { data: group, isLoading, isError } = useGroup(groupId ?? '');
-    const { data: members, isLoading: isMembersLoading } = useGroupMembers(group?.memberIds ?? []);
+    const {
+        data: group,
+        isLoading,
+        isError,
+        isFetching: isGroupFetching,
+    } = useGroup(groupId ?? '');
+    const {
+        data: members,
+        isLoading: isMembersLoading,
+        isFetching: isMembersFetching,
+    } = useGroupMembers(group?.memberIds ?? []);
+    const { data: friends } = useFriends();
     const renameGroup = useRenameGroup();
+    const updateMembers = useUpdateGroupMembers();
 
     const [isEditingName, setIsEditingName] = useState(false);
     const [nameInput, setNameInput] = useState('');
     const nameInputRef = useRef<HTMLInputElement>(null);
+    const [isEditingMembers, setIsEditingMembers] = useState(false);
 
     const displayedName = group?.name ?? '';
 
@@ -52,17 +72,40 @@ export function GroupDetailPage() {
         setIsEditingName(false);
     };
 
-    const avatarSkeletonCircle = <Skeleton className="size-9 rounded-full ring-2 ring-surface" />;
+    const editableUsersById = new Map(
+        [...(friends ?? []), ...(members ?? [])].map((user) => [user.id, user]),
+    );
+    const editableUsers = Array.from(editableUsersById.values());
+
+    const handleUpdateMembers = ({ memberIds }: { memberIds: string[] }) => {
+        if (!group) return;
+
+        const toastId = toast.loading('Group members are being updated…');
+        updateMembers.mutate(
+            { id: group.id, memberIds },
+            {
+                onSuccess: () => toast.success('Group members updated', { id: toastId }),
+                onError: (error) => toast.error(error.message, { id: toastId }),
+            },
+        );
+    };
+
+    const isMembersRefreshing =
+        isMembersLoading || isMembersFetching || isGroupFetching || updateMembers.isPending;
+
+    const avatarSkeletonCircle = (key: number) => (
+        <Skeleton key={key} className="size-9 rounded-full ring-2 ring-surface" />
+    );
 
     // Mirrors GroupMembersStack's default maxVisibleMobile/maxVisible (2 vs 5), so
     // whichever row a breakpoint shows already has the right placeholder count.
     const memberAvatarsSkeleton = (
         <div aria-hidden="true">
             <div className="flex -space-x-3 md:hidden">
-                {Array.from({ length: 3 }, () => avatarSkeletonCircle)}
+                {Array.from({ length: 3 }, (_, index) => avatarSkeletonCircle(index))}
             </div>
             <div className="hidden -space-x-3 md:flex">
-                {Array.from({ length: 6 }, () => avatarSkeletonCircle)}
+                {Array.from({ length: 6 }, (_, index) => avatarSkeletonCircle(index))}
             </div>
         </div>
     );
@@ -137,10 +180,13 @@ export function GroupDetailPage() {
                 )}
 
                 {!isEditingName &&
-                    (isMembersLoading ? (
+                    (isMembersRefreshing ? (
                         memberAvatarsSkeleton
                     ) : (
-                        <GroupMembersStack members={members ?? []} />
+                        <GroupMembersStack
+                            members={members ?? []}
+                            onEditMembers={() => setIsEditingMembers(true)}
+                        />
                     ))}
 
                 <button
@@ -167,6 +213,16 @@ export function GroupDetailPage() {
             </Link>
 
             {content}
+
+            {group && (
+                <EditGroupMembersDialog
+                    open={isEditingMembers}
+                    onOpenChange={setIsEditingMembers}
+                    users={editableUsers}
+                    initialMemberIds={group.memberIds}
+                    onSubmit={handleUpdateMembers}
+                />
+            )}
         </div>
     );
 }

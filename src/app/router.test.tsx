@@ -8,6 +8,10 @@ vi.mock('./hooks/useCurrentUser', () => ({
     useCurrentUser: () => ({ data: { id: 'current-user', name: 'Alex Morgan', email: '' } }),
 }));
 
+vi.mock('@features/groups', () => ({
+    useGroup: () => ({ data: undefined }),
+}));
+
 describe('router', () => {
     it('renders the dashboard at the root path', () => {
         render(<RouterProvider router={router} />);

@@ -8,6 +8,7 @@ interface GroupMembersStackProps {
     readonly members: User[];
     readonly maxVisible?: number;
     readonly maxVisibleMobile?: number;
+    readonly onEditMembers?: () => void;
 }
 
 interface AvatarRowProps {
@@ -41,6 +42,7 @@ export function GroupMembersStack({
     members,
     maxVisible = 5,
     maxVisibleMobile = 2,
+    onEditMembers,
 }: GroupMembersStackProps) {
     return (
         <Popover.Root>
@@ -94,13 +96,16 @@ export function GroupMembersStack({
                         ))}
                     </ul>
                     <div className="mt-1 flex w-full border-t border-border">
-                        <button
-                            type="button"
-                            className="mt-1 flex w-full cursor-pointer items-center gap-2 rounded-md px-2 pt-2 pb-1.5 text-sm font-medium text-brand-600 hover:bg-muted"
-                        >
-                            <UserRoundPlus className="size-4" />
-                            Add/Remove members
-                        </button>
+                        <Popover.Close asChild>
+                            <button
+                                type="button"
+                                onClick={onEditMembers}
+                                className="mt-1 flex w-full cursor-pointer items-center gap-2 rounded-md px-2 pt-2 pb-1.5 text-sm font-medium text-brand-600 hover:bg-muted"
+                            >
+                                <UserRoundPlus className="size-4" />
+                                Add/Remove members
+                            </button>
+                        </Popover.Close>
                     </div>
                 </Popover.Content>
             </Popover.Portal>

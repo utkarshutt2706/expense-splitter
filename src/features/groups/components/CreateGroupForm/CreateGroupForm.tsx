@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 import type { User } from '@data/entities';
-import { Avatar } from '@shared/components';
+import { MemberCheckboxList } from '../MemberCheckboxList';
 
 const createGroupSchema = z.object({
     name: z.string().trim().min(1, 'Group name is required'),
@@ -60,30 +60,11 @@ export function CreateGroupForm({ friends, onSubmit, onCancel }: CreateGroupForm
 
             <div className="flex flex-col gap-1">
                 <span className="text-sm font-medium text-surface-foreground">Members</span>
-                {friends.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">
-                        You don't have any friends yet — you can add members later.
-                    </p>
-                ) : (
-                    <ul className="flex max-h-48 flex-col gap-1 overflow-y-auto">
-                        {friends.map((friend) => (
-                            <li key={friend.id}>
-                                <label className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted">
-                                    <input
-                                        type="checkbox"
-                                        checked={memberIds.includes(friend.id)}
-                                        onChange={() => toggleMember(friend.id)}
-                                        className="size-4 cursor-pointer accent-brand-600"
-                                    />
-                                    <Avatar name={friend.name} />
-                                    <span className="text-sm text-surface-foreground">
-                                        {friend.name}
-                                    </span>
-                                </label>
-                            </li>
-                        ))}
-                    </ul>
-                )}
+                <MemberCheckboxList
+                    users={friends}
+                    selectedIds={memberIds}
+                    onToggle={toggleMember}
+                />
             </div>
 
             <div className="flex justify-end gap-2">
