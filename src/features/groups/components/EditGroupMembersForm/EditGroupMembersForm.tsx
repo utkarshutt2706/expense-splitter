@@ -1,8 +1,9 @@
 import { Check } from 'lucide-react';
-import type { FormEvent } from 'react';
+import type { SubmitEvent } from 'react';
 import { useState } from 'react';
 
 import type { User } from '@data/entities';
+import { CURRENT_USER_ID } from '@data/seed';
 import { MemberCheckboxList } from '../MemberCheckboxList';
 
 export interface EditGroupMembersFormValues {
@@ -23,20 +24,17 @@ export function EditGroupMembersForm({
     onCancel,
 }: EditGroupMembersFormProps) {
     const [memberIds, setMemberIds] = useState<string[]>(initialMemberIds);
-    const [error, setError] = useState<string | undefined>();
 
     const toggleMember = (id: string) => {
+        if (id === CURRENT_USER_ID) return;
+
         setMemberIds((current) =>
             current.includes(id) ? current.filter((memberId) => memberId !== id) : [...current, id],
         );
     };
 
-    const submit = (event: FormEvent) => {
+    const submit = (event: SubmitEvent<HTMLFormElement>) => {
         event.preventDefault();
-        if (memberIds.length === 0) {
-            setError('A group needs at least one member');
-            return;
-        }
         onSubmit({ memberIds });
     };
 
@@ -49,8 +47,8 @@ export function EditGroupMembersForm({
                     selectedIds={memberIds}
                     onToggle={toggleMember}
                     emptyMessage="No members to show."
+                    currentUserId={CURRENT_USER_ID}
                 />
-                {error && <p className="text-xs text-red-600">{error}</p>}
             </div>
 
             <div className="flex justify-end gap-2">

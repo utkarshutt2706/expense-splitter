@@ -2,6 +2,7 @@ import * as Popover from '@radix-ui/react-popover';
 import { UserRoundPlus } from 'lucide-react';
 
 import type { User } from '@data/entities';
+import { CURRENT_USER_ID } from '@data/seed';
 import { Avatar } from '@shared/components';
 
 interface GroupMembersStackProps {
@@ -44,6 +45,12 @@ export function GroupMembersStack({
     maxVisibleMobile = 2,
     onEditMembers,
 }: GroupMembersStackProps) {
+    const orderedMembers = [...members].sort((a, b) => {
+        if (a.id === CURRENT_USER_ID) return -1;
+        if (b.id === CURRENT_USER_ID) return 1;
+        return 0;
+    });
+
     return (
         <Popover.Root>
             <Popover.Trigger asChild>
@@ -54,13 +61,13 @@ export function GroupMembersStack({
                     className="inline-flex cursor-pointer items-center rounded-full"
                 >
                     <AvatarRow
-                        members={members}
+                        members={orderedMembers}
                         maxVisible={maxVisibleMobile}
                         className="flex md:hidden"
                         testId="members-mobile"
                     />
                     <AvatarRow
-                        members={members}
+                        members={orderedMembers}
                         maxVisible={maxVisible}
                         className="hidden md:flex"
                         testId="members-desktop"
@@ -74,7 +81,7 @@ export function GroupMembersStack({
                     className="z-50 w-64 rounded-lg border border-border bg-surface p-2 shadow-lg"
                 >
                     <ul className="flex max-h-64 flex-col gap-1 overflow-y-auto">
-                        {members.map((member) => (
+                        {orderedMembers.map((member) => (
                             <li
                                 key={member.id}
                                 className="flex items-center gap-2 rounded-md px-2 py-1.5"
@@ -82,7 +89,7 @@ export function GroupMembersStack({
                                 <Avatar name={member.name} />
                                 <div>
                                     <p className="text-sm font-medium text-surface-foreground">
-                                        {member.name}
+                                        {member.id === CURRENT_USER_ID ? 'You' : member.name}
                                     </p>
                                     {(member.email || member.phone) && (
                                         <p className="text-xs text-muted-foreground">

@@ -47,4 +47,55 @@ describe('MemberCheckboxList', () => {
 
         expect(onToggle).toHaveBeenCalledWith('user-1');
     });
+
+    describe('current user row', () => {
+        it('labels the current user as "You" and shows their checkbox as checked and disabled', () => {
+            render(
+                <MemberCheckboxList
+                    users={users}
+                    selectedIds={[]}
+                    onToggle={vi.fn()}
+                    currentUserId="user-1"
+                />,
+            );
+
+            expect(screen.queryByText('Priya Sharma')).not.toBeInTheDocument();
+            const currentUserCheckbox = screen.getByRole('checkbox', { name: 'You' });
+            expect(currentUserCheckbox).toBeChecked();
+            expect(currentUserCheckbox).toBeDisabled();
+            expect(screen.getByRole('checkbox', { name: /jordan lee/i })).not.toBeDisabled();
+        });
+
+        it('does not call onToggle when the disabled current user checkbox is clicked', async () => {
+            const onToggle = vi.fn();
+            const user = userEvent.setup();
+            render(
+                <MemberCheckboxList
+                    users={users}
+                    selectedIds={[]}
+                    onToggle={onToggle}
+                    currentUserId="user-1"
+                />,
+            );
+
+            await user.click(screen.getByRole('checkbox', { name: 'You' }));
+
+            expect(onToggle).not.toHaveBeenCalled();
+        });
+
+        it('always renders the current user first, regardless of input order', () => {
+            render(
+                <MemberCheckboxList
+                    users={users}
+                    selectedIds={[]}
+                    onToggle={vi.fn()}
+                    currentUserId="user-2"
+                />,
+            );
+
+            const rows = screen.getAllByRole('checkbox');
+            expect(rows[0]).toHaveAccessibleName('You');
+            expect(rows[1]).toHaveAccessibleName(/priya sharma/i);
+        });
+    });
 });
