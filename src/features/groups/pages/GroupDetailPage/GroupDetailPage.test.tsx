@@ -15,6 +15,9 @@ vi.mock('react-router', async () => {
 vi.mock('@features/groups', () => ({
     useGroup: vi.fn(),
     useGroupMembers: vi.fn(),
+}));
+
+vi.mock('@features/groups/components/GroupNameEditor', () => ({
     GroupNameEditor: ({
         group,
         isEditing,
@@ -31,7 +34,13 @@ vi.mock('@features/groups', () => ({
             </button>
         </div>
     ),
+}));
+
+vi.mock('@features/groups/components/GroupMembersSection', () => ({
     GroupMembersSection: () => <div data-testid="group-members-section" />,
+}));
+
+vi.mock('@features/groups/components/MemberAvatarsSkeleton', () => ({
     MemberAvatarsSkeleton: () => <div data-testid="member-avatars-skeleton" />,
 }));
 

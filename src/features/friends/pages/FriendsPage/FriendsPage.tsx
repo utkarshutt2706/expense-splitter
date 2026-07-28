@@ -4,15 +4,13 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 
 import type { User } from '@data/entities';
-import {
-    FriendRowMenu,
-    UpsertFriendDialog,
-    useCreateFriend,
-    useFriends,
-    useRemoveFriend,
-    useUpdateFriend,
-    type FriendFormValues,
-} from '@features/friends';
+import { useFriends } from '@features/friends';
+import { type FriendFormValues } from '@features/friends/components/FriendForm';
+import { FriendRowMenu } from '@features/friends/components/FriendRowMenu';
+import { UpsertFriendDialog } from '@features/friends/components/UpsertFriendDialog';
+import { useCreateFriend } from '@features/friends/hooks/useCreateFriend';
+import { useRemoveFriend } from '@features/friends/hooks/useRemoveFriend';
+import { useUpdateFriend } from '@features/friends/hooks/useUpdateFriend';
 import {
     Avatar,
     ConfirmationDialog,

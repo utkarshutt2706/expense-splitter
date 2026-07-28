@@ -2,7 +2,10 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { toast } from 'sonner';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { useCreateFriend, useFriends, useRemoveFriend, useUpdateFriend } from '@features/friends';
+import { useFriends } from '@features/friends';
+import { useCreateFriend } from '@features/friends/hooks/useCreateFriend';
+import { useRemoveFriend } from '@features/friends/hooks/useRemoveFriend';
+import { useUpdateFriend } from '@features/friends/hooks/useUpdateFriend';
 import { FriendsPage } from './FriendsPage';
 
 vi.mock('sonner', () => ({
@@ -38,9 +41,21 @@ vi.mock('@shared/components', async (importOriginal) => ({
 
 vi.mock('@features/friends', () => ({
     useFriends: vi.fn(),
+}));
+
+vi.mock('@features/friends/hooks/useCreateFriend', () => ({
     useCreateFriend: vi.fn(),
+}));
+
+vi.mock('@features/friends/hooks/useUpdateFriend', () => ({
     useUpdateFriend: vi.fn(),
+}));
+
+vi.mock('@features/friends/hooks/useRemoveFriend', () => ({
     useRemoveFriend: vi.fn(),
+}));
+
+vi.mock('@features/friends/components/UpsertFriendDialog', () => ({
     UpsertFriendDialog: ({
         mode,
         open,
@@ -65,6 +80,9 @@ vi.mock('@features/friends', () => ({
                 </button>
             </div>
         ) : null,
+}));
+
+vi.mock('@features/friends/components/FriendRowMenu', () => ({
     FriendRowMenu: ({
         friendName,
         onEdit,
