@@ -77,9 +77,7 @@ export function ExpenseList({ groupId, members }: ExpenseListProps) {
                             <p className="font-medium text-surface-foreground">
                                 ₹{expense.amount.toFixed(2)}
                             </p>
-                            <p className={`text-xs ${involvement.className}`}>
-                                {involvement.text}
-                            </p>
+                            <p className={`text-xs ${involvement.className}`}>{involvement.text}</p>
                         </div>
                     </li>
                 );

@@ -1,9 +1,7 @@
 import type { Expense } from '@data/entities';
 
 export type ExpenseInvolvement =
-    | { type: 'lent'; amount: number }
-    | { type: 'owed'; amount: number }
-    | { type: 'uninvolved' };
+    { type: 'lent'; amount: number } | { type: 'owed'; amount: number } | { type: 'uninvolved' };
 
 function toCents(amount: number): number {
     return Math.round(amount * 100);
