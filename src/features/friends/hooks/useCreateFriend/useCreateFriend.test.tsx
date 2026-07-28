@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { User } from '@data/entities';
-import { DuplicateFriendError } from '@features/friends';
+import { DuplicateFriendError } from '@features/friends/utils/duplicateFriend';
 import { useCreateFriend } from './useCreateFriend';
 
 vi.mock('@services/instances', () => ({

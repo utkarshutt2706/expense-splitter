@@ -4,13 +4,10 @@ import { useState } from 'react';
 import { Link, useParams } from 'react-router';
 
 import { AddExpenseAction } from '@features/expenses';
-import {
-    GroupMembersSection,
-    GroupNameEditor,
-    MemberAvatarsSkeleton,
-    useGroup,
-    useGroupMembers,
-} from '@features/groups';
+import { useGroup, useGroupMembers } from '@features/groups';
+import { GroupMembersSection } from '@features/groups/components/GroupMembersSection';
+import { GroupNameEditor } from '@features/groups/components/GroupNameEditor';
+import { MemberAvatarsSkeleton } from '@features/groups/components/MemberAvatarsSkeleton';
 import { Skeleton } from '@shared/components';
 
 export function GroupDetailPage() {

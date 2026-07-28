@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { DuplicateFriendError, findDuplicateFriend } from '@features/friends';
+import { DuplicateFriendError, findDuplicateFriend } from '@features/friends/utils/duplicateFriend';
 import { userService } from '@services/instances';
 
 interface CreateFriendInput {

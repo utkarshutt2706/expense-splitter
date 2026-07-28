@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { calculateEqualSplit } from '@features/expenses';
+import { calculateEqualSplit } from '@features/expenses/utils/splitCalculator';
 import { expenseService } from '@services/instances';
 
 interface CreateExpenseInput {
