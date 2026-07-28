@@ -48,6 +48,9 @@ vi.mock('@features/expenses', () => ({
     AddExpenseAction: ({ groupId, members }: { groupId: string; members: User[] }) => (
         <div data-testid="add-expense-action">{`${groupId}-${members.length}`}</div>
     ),
+    ExpenseList: ({ groupId, members }: { groupId: string; members: User[] }) => (
+        <div data-testid="expense-list">{`${groupId}-${members.length}`}</div>
+    ),
 }));
 
 const group: Group = {
@@ -89,6 +92,7 @@ describe('GroupDetailPage', () => {
         expect(screen.getByRole('status', { name: /loading group/i })).toBeInTheDocument();
         expect(screen.queryByTestId('group-name-editor')).not.toBeInTheDocument();
         expect(screen.queryByTestId('add-expense-action')).not.toBeInTheDocument();
+        expect(screen.queryByTestId('expense-list')).not.toBeInTheDocument();
     });
 
     it('shows an error message when the group fails to load', () => {
@@ -141,12 +145,14 @@ describe('GroupDetailPage', () => {
             } as unknown as ReturnType<typeof useGroupMembers>);
         });
 
-        it('renders the name editor, members section, delete button, and add-expense action', () => {
+        it('renders the name editor, members section, delete button, expense list, and add-expense action', () => {
             renderPage();
 
             expect(screen.getByTestId('group-name-editor')).toHaveTextContent('Weekend Trip');
             expect(screen.getByTestId('group-members-section')).toBeInTheDocument();
             expect(screen.getByRole('button', { name: /delete group/i })).toBeInTheDocument();
+            expect(screen.getByRole('heading', { name: /expenses/i })).toBeInTheDocument();
+            expect(screen.getByTestId('expense-list')).toHaveTextContent('group-1-2');
             expect(screen.getByTestId('add-expense-action')).toHaveTextContent('group-1-2');
         });
 
