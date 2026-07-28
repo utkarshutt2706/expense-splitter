@@ -1,4 +1,9 @@
 export {
+    calculateExpenseInvolvement,
+    type ExpenseInvolvement,
+} from './calculateExpenseInvolvement';
+export { calculateNetBalance } from './calculateNetBalance';
+export {
     calculateEqualSplit,
     calculateExactSplit,
     calculatePercentageSplit,

@@ -1,9 +1,9 @@
-import { ArrowLeft, Trash2 } from 'lucide-react';
+import { ArrowLeft, Settings } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { Link, useParams } from 'react-router';
 
-import { AddExpenseAction, ExpenseList } from '@features/expenses';
+import { AddExpenseAction, ExpenseList, GroupBalanceSummary } from '@features/expenses';
 import { useGroup, useGroupMembers } from '@features/groups';
 import { GroupMembersSection } from '@features/groups/components/GroupMembersSection';
 import { GroupNameEditor } from '@features/groups/components/GroupNameEditor';
@@ -58,12 +58,12 @@ export function GroupDetailPage() {
 
                 <button
                     type="button"
-                    aria-label="Delete group"
-                    title="Delete group"
-                    className={`ml-auto inline-flex cursor-pointer items-center gap-1 rounded-md border border-toast-error-text bg-toast-error-bg p-2 text-sm font-medium text-toast-error-text hover:opacity-80 md:px-3 md:py-1.5 ${isEditingName ? 'hidden md:inline-flex' : ''}`}
+                    aria-label="Group settings"
+                    title="Group settings"
+                    className={`ml-auto inline-flex cursor-pointer items-center gap-1 rounded-md border border-border p-2 text-sm font-medium text-surface-foreground hover:bg-muted md:px-3 md:py-1.5 ${isEditingName ? 'hidden md:inline-flex' : ''}`}
                 >
-                    <Trash2 className="size-4" />
-                    <span className="hidden md:inline">Delete group</span>
+                    <Settings className="size-4" />
+                    <span className="hidden md:inline">Settings</span>
                 </button>
             </div>
         );
@@ -82,11 +82,15 @@ export function GroupDetailPage() {
             {content}
 
             {group && (
-                <div className="mt-6">
-                    <h2 className="mb-3 font-display text-lg font-medium text-surface-foreground">
-                        Expenses
-                    </h2>
-                    <ExpenseList groupId={group.id} members={members ?? []} />
+                <div className="mt-6 flex flex-col gap-6">
+                    <GroupBalanceSummary groupId={group.id} />
+
+                    <div>
+                        <h2 className="mb-3 font-display text-lg font-medium text-surface-foreground">
+                            Expenses
+                        </h2>
+                        <ExpenseList groupId={group.id} members={members ?? []} />
+                    </div>
                 </div>
             )}
 

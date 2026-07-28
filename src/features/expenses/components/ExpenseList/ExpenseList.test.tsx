@@ -93,10 +93,32 @@ describe('ExpenseList', () => {
         expect(screen.getByText('Groceries')).toBeInTheDocument();
         expect(screen.getByText('₹42.50')).toBeInTheDocument();
         expect(screen.getByText(/you paid · jul 1, 2026/i)).toBeInTheDocument();
+        const lentText = screen.getByText('You lent ₹21.25');
+        expect(lentText).toHaveClass('text-owed');
 
         expect(screen.getByText('Taxi')).toBeInTheDocument();
         expect(screen.getByText('₹20.00')).toBeInTheDocument();
         expect(screen.getByText(/priya sharma paid · jul 2, 2026/i)).toBeInTheDocument();
+        const owedText = screen.getByText('You owe ₹10.00');
+        expect(owedText).toHaveClass('text-owe');
+    });
+
+    it('shows "not involved" when the current user has no stake in the expense', () => {
+        vi.mocked(useExpenses).mockReturnValue({
+            data: [
+                {
+                    ...expenses[1]!,
+                    splits: [{ userId: 'friend-1', amount: 20 }],
+                },
+            ],
+            isLoading: false,
+            isError: false,
+        } as unknown as ReturnType<typeof useExpenses>);
+
+        render(<ExpenseList groupId="group-1" members={members} />);
+
+        const notInvolvedText = screen.getByText('You were not involved');
+        expect(notInvolvedText).toHaveClass('text-muted-foreground');
     });
 
     it('falls back to "Someone" when the payer is no longer a resolvable member', () => {
