@@ -40,7 +40,7 @@ export function AddExpenseAction({ groupId, members }: AddExpenseActionProps) {
                     aria-label="Add expense"
                     title="Add expense"
                     onClick={() => setIsAddingExpense(true)}
-                    className="absolute right-0 bottom-0 inline-flex cursor-pointer items-center gap-1 rounded-md bg-brand-600 px-4 py-2 text-sm font-medium text-white capitalize hover:bg-brand-700"
+                    className="fixed right-6 bottom-6 inline-flex cursor-pointer items-center gap-1 rounded-md bg-brand-600 px-4 py-2 text-sm font-medium text-white capitalize shadow-lg hover:bg-brand-700"
                 >
                     <ReceiptIndianRupee className="size-4" />
                     Add expense

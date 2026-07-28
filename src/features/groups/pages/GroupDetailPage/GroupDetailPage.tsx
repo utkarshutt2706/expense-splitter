@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { Link, useParams } from 'react-router';
 
-import { AddExpenseAction } from '@features/expenses';
+import { AddExpenseAction, ExpenseList } from '@features/expenses';
 import { useGroup, useGroupMembers } from '@features/groups';
 import { GroupMembersSection } from '@features/groups/components/GroupMembersSection';
 import { GroupNameEditor } from '@features/groups/components/GroupNameEditor';
@@ -70,7 +70,7 @@ export function GroupDetailPage() {
     }
 
     return (
-        <div className="relative h-full">
+        <div>
             <Link
                 to="/groups"
                 className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-surface-foreground"
@@ -80,6 +80,15 @@ export function GroupDetailPage() {
             </Link>
 
             {content}
+
+            {group && (
+                <div className="mt-6">
+                    <h2 className="mb-3 font-display text-lg font-medium text-surface-foreground">
+                        Expenses
+                    </h2>
+                    <ExpenseList groupId={group.id} members={members ?? []} />
+                </div>
+            )}
 
             {group && <AddExpenseAction groupId={group.id} members={members ?? []} />}
         </div>
