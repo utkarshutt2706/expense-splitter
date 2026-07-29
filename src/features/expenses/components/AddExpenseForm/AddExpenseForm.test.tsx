@@ -134,6 +134,67 @@ describe('AddExpenseForm', () => {
         expect(onCancel).toHaveBeenCalled();
     });
 
+    describe('split type', () => {
+        it('defaults to the equal split type with no trailing inputs', () => {
+            render(<AddExpenseForm members={members} onSubmit={vi.fn()} onCancel={vi.fn()} />);
+
+            expect(screen.getByRole('button', { name: 'Equal' })).toHaveAttribute(
+                'aria-pressed',
+                'true',
+            );
+            expect(screen.queryByRole('spinbutton', { name: /you/i })).not.toBeInTheDocument();
+        });
+
+        it('shows a trailing amount input per participant when Exact is selected', async () => {
+            const user = userEvent.setup();
+            render(<AddExpenseForm members={members} onSubmit={vi.fn()} onCancel={vi.fn()} />);
+
+            await user.click(screen.getByRole('button', { name: 'Exact' }));
+
+            expect(screen.getByRole('spinbutton', { name: 'You amount' })).toBeInTheDocument();
+            expect(
+                screen.getByRole('spinbutton', { name: /priya sharma amount/i }),
+            ).toBeInTheDocument();
+        });
+
+        it('shows a trailing percentage input per participant when Percentage is selected', async () => {
+            const user = userEvent.setup();
+            render(<AddExpenseForm members={members} onSubmit={vi.fn()} onCancel={vi.fn()} />);
+
+            await user.click(screen.getByRole('button', { name: 'Percentage' }));
+
+            expect(screen.getByRole('spinbutton', { name: 'You percentage' })).toBeInTheDocument();
+        });
+
+        it('shows a trailing shares input per participant when Shares is selected', async () => {
+            const user = userEvent.setup();
+            render(<AddExpenseForm members={members} onSubmit={vi.fn()} onCancel={vi.fn()} />);
+
+            await user.click(screen.getByRole('button', { name: 'Shares' }));
+
+            expect(screen.getByRole('spinbutton', { name: 'You shares' })).toBeInTheDocument();
+        });
+
+        it('does not submit exact/percentage/shares split values yet', async () => {
+            const onSubmit = vi.fn();
+            const user = userEvent.setup();
+            render(<AddExpenseForm members={members} onSubmit={onSubmit} onCancel={vi.fn()} />);
+
+            await user.type(screen.getByLabelText(/description/i), 'Groceries');
+            await user.type(screen.getByLabelText(/amount/i), '42.50');
+            await user.click(screen.getByRole('button', { name: 'Exact' }));
+            await user.type(screen.getByRole('spinbutton', { name: 'You amount' }), '20');
+            await user.click(screen.getByRole('button', { name: /add expense/i }));
+
+            expect(onSubmit).toHaveBeenCalledWith({
+                description: 'Groceries',
+                amount: 42.5,
+                paidByUserId: CURRENT_USER_ID,
+                participantUserIds: [CURRENT_USER_ID, 'user-2'],
+            });
+        });
+    });
+
     describe('paid by', () => {
         it('defaults the payer to the current user, labeled "You"', () => {
             render(<AddExpenseForm members={members} onSubmit={vi.fn()} onCancel={vi.fn()} />);

@@ -1,0 +1,1 @@
+export { SplitTypeTabs } from './SplitTypeTabs';
