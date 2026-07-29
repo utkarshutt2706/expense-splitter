@@ -41,7 +41,7 @@ describe('seedDatabase', () => {
         expect(users.create).toHaveBeenCalledTimes(5);
         expect(users.create).toHaveBeenCalledWith(expect.objectContaining({ id: CURRENT_USER_ID }));
         expect(groups.create).toHaveBeenCalledTimes(1);
-        expect(expenses.create).toHaveBeenCalledTimes(1);
+        expect(expenses.create).toHaveBeenCalledTimes(6);
     });
 
     it('includes the current user in the seeded group membership', async () => {
