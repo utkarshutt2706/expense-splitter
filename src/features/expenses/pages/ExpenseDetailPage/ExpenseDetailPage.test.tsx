@@ -1,16 +1,25 @@
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
-import { describe, expect, it, vi } from 'vitest';
+import { toast } from 'sonner';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { Expense, Group, User } from '@data/entities';
 import { CURRENT_USER_ID } from '@data/seed';
+import { useDeleteExpense } from '@features/expenses/hooks/useDeleteExpense';
 import { useExpense } from '@features/expenses/hooks/useExpense';
 import { useGroup, useGroupMembers } from '@features/groups';
 import { ExpenseDetailPage } from './ExpenseDetailPage';
 
+const navigateMock = vi.fn();
+
 vi.mock('react-router', async () => {
     const actual = await vi.importActual('react-router');
-    return { ...actual, useParams: () => ({ groupId: 'group-1', expenseId: 'expense-1' }) };
+    return {
+        ...actual,
+        useParams: () => ({ groupId: 'group-1', expenseId: 'expense-1' }),
+        useNavigate: () => navigateMock,
+    };
 });
 
 vi.mock('@features/groups', () => ({
@@ -20,6 +29,18 @@ vi.mock('@features/groups', () => ({
 
 vi.mock('@features/expenses/hooks/useExpense', () => ({
     useExpense: vi.fn(),
+}));
+
+vi.mock('@features/expenses/hooks/useDeleteExpense', () => ({
+    useDeleteExpense: vi.fn(),
+}));
+
+vi.mock('sonner', () => ({
+    toast: {
+        loading: vi.fn(() => 'toast-id'),
+        success: vi.fn(),
+        error: vi.fn(),
+    },
 }));
 
 const group: Group = {
@@ -56,6 +77,13 @@ function renderPage() {
         </MemoryRouter>,
     );
 }
+
+beforeEach(() => {
+    navigateMock.mockClear();
+    vi.mocked(useDeleteExpense).mockReturnValue({
+        mutate: vi.fn(),
+    } as unknown as ReturnType<typeof useDeleteExpense>);
+});
 
 describe('ExpenseDetailPage', () => {
     it('shows a loading message while fetching', () => {
@@ -206,7 +234,7 @@ describe('ExpenseDetailPage', () => {
         expect(screen.getByRole('button', { name: /edit expense/i })).toBeInTheDocument();
     });
 
-    it('renders a non-functional delete expense button', () => {
+    it('renders a delete expense button', () => {
         vi.mocked(useExpense).mockReturnValue({
             data: expense,
             isLoading: false,
@@ -224,5 +252,90 @@ describe('ExpenseDetailPage', () => {
         renderPage();
 
         expect(screen.getByRole('button', { name: /delete expense/i })).toBeInTheDocument();
+    });
+
+    describe('deleting the expense', () => {
+        beforeEach(() => {
+            vi.mocked(useExpense).mockReturnValue({
+                data: expense,
+                isLoading: false,
+                isError: false,
+            } as unknown as ReturnType<typeof useExpense>);
+            vi.mocked(useGroup).mockReturnValue({
+                data: group,
+                isLoading: false,
+            } as unknown as ReturnType<typeof useGroup>);
+            vi.mocked(useGroupMembers).mockReturnValue({
+                data: members,
+                isLoading: false,
+            } as unknown as ReturnType<typeof useGroupMembers>);
+        });
+
+        it('shows a confirmation dialog when the delete button is clicked', async () => {
+            const user = userEvent.setup();
+            renderPage();
+
+            await user.click(screen.getByRole('button', { name: /delete expense/i }));
+
+            expect(screen.getByText('Delete "Chicken"?')).toBeInTheDocument();
+        });
+
+        it('does not delete when the confirmation is dismissed', async () => {
+            const mutate = vi.fn();
+            vi.mocked(useDeleteExpense).mockReturnValue({
+                mutate,
+            } as unknown as ReturnType<typeof useDeleteExpense>);
+            const user = userEvent.setup();
+            renderPage();
+
+            await user.click(screen.getByRole('button', { name: /delete expense/i }));
+            await user.click(screen.getByRole('button', { name: /cancel/i }));
+
+            expect(mutate).not.toHaveBeenCalled();
+        });
+
+        it('deletes the expense, shows a toast, and navigates back to the group on confirm', async () => {
+            let onSuccess: (() => void) | undefined;
+            const mutate = vi.fn((_values, options: { onSuccess?: () => void }) => {
+                onSuccess = options.onSuccess;
+            });
+            vi.mocked(useDeleteExpense).mockReturnValue({
+                mutate,
+            } as unknown as ReturnType<typeof useDeleteExpense>);
+            const user = userEvent.setup();
+            renderPage();
+
+            await user.click(screen.getByRole('button', { name: /delete expense/i }));
+            await user.click(screen.getByRole('button', { name: 'Delete' }));
+
+            expect(toast.loading).toHaveBeenCalledWith('Expense is being deleted…');
+            expect(mutate).toHaveBeenCalledWith(
+                { id: 'expense-1', groupId: 'group-1' },
+                expect.anything(),
+            );
+
+            onSuccess?.();
+
+            expect(toast.success).toHaveBeenCalledWith('Expense deleted', { id: 'toast-id' });
+            expect(navigateMock).toHaveBeenCalledWith('/groups/group-1');
+        });
+
+        it('shows an error toast when deletion fails', async () => {
+            let onError: ((error: Error) => void) | undefined;
+            const mutate = vi.fn((_values, options: { onError?: (error: Error) => void }) => {
+                onError = options.onError;
+            });
+            vi.mocked(useDeleteExpense).mockReturnValue({
+                mutate,
+            } as unknown as ReturnType<typeof useDeleteExpense>);
+            const user = userEvent.setup();
+            renderPage();
+
+            await user.click(screen.getByRole('button', { name: /delete expense/i }));
+            await user.click(screen.getByRole('button', { name: 'Delete' }));
+            onError?.(new Error('Something went wrong'));
+
+            expect(toast.error).toHaveBeenCalledWith('Something went wrong', { id: 'toast-id' });
+        });
     });
 });
