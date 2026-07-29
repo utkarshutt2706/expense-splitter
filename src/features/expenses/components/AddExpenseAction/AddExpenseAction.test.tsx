@@ -96,6 +96,7 @@ describe('AddExpenseAction', () => {
                 splitType: 'equal',
                 exactSplits: undefined,
                 percentageSplits: undefined,
+                sharesSplits: undefined,
             },
             expect.anything(),
         );

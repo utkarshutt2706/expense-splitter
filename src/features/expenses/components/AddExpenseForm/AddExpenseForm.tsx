@@ -9,6 +9,7 @@ import { CURRENT_USER_ID } from '@data/seed';
 import type {
     ExactSplitEntry,
     PercentageSplitEntry,
+    SharesSplitEntry,
 } from '@features/expenses/utils/splitCalculator';
 import { PaidByPicker } from '../PaidByPicker';
 import { SplitParticipantList } from '../SplitParticipantList';
@@ -36,6 +37,7 @@ export interface AddExpenseFormValues {
     splitType: SplitType;
     exactSplits?: ExactSplitEntry[];
     percentageSplits?: PercentageSplitEntry[];
+    sharesSplits?: SharesSplitEntry[];
 }
 
 interface AddExpenseFormProps {
@@ -125,6 +127,22 @@ export function AddExpenseForm({ members, onSubmit, onCancel }: AddExpenseFormPr
         return percentageSplits;
     };
 
+    const buildSharesSplits = (): SharesSplitEntry[] | undefined => {
+        const sharesSplits: SharesSplitEntry[] = [];
+
+        for (const userId of participantUserIds) {
+            const raw = splitValues[userId];
+            const parsed = raw === undefined || raw === '' ? Number.NaN : Number(raw);
+            if (!Number.isFinite(parsed) || parsed <= 0) {
+                setSplitError('Enter a share count for every participant');
+                return undefined;
+            }
+            sharesSplits.push({ userId, shares: parsed });
+        }
+
+        return sharesSplits;
+    };
+
     const submit = handleSubmit((values) => {
         if (participantUserIds.length === 0) {
             setParticipantsError('Select at least one participant');
@@ -160,6 +178,22 @@ export function AddExpenseForm({ members, onSubmit, onCancel }: AddExpenseFormPr
                 participantUserIds,
                 splitType: 'percentage',
                 percentageSplits,
+            });
+            return;
+        }
+
+        if (splitType === 'shares') {
+            const sharesSplits = buildSharesSplits();
+            if (!sharesSplits) return;
+
+            setSplitError(undefined);
+            onSubmit({
+                description: values.description,
+                amount: values.amount,
+                paidByUserId: values.paidByUserId,
+                participantUserIds,
+                splitType: 'shares',
+                sharesSplits,
             });
             return;
         }
@@ -246,12 +280,6 @@ export function AddExpenseForm({ members, onSubmit, onCancel }: AddExpenseFormPr
                 />
                 {participantsError && <p className="text-xs text-red-600">{participantsError}</p>}
                 {splitError && <p className="text-xs text-red-600">{splitError}</p>}
-                {splitType === 'shares' && (
-                    <p className="text-xs text-muted-foreground">
-                        {splitType} splits aren't supported yet — this expense will still be split
-                        equally until that's wired up.
-                    </p>
-                )}
             </div>
 
             <div className="flex justify-end gap-2">

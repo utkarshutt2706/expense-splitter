@@ -177,7 +177,32 @@ describe('AddExpenseForm', () => {
             expect(screen.getByRole('spinbutton', { name: 'You shares' })).toBeInTheDocument();
         });
 
-        it('does not submit shares split values yet', async () => {
+        it('submits share counts for every participant', async () => {
+            const onSubmit = vi.fn();
+            const user = userEvent.setup();
+            render(<AddExpenseForm members={members} onSubmit={onSubmit} onCancel={vi.fn()} />);
+
+            await user.type(screen.getByLabelText(/description/i), 'Groceries');
+            await user.type(screen.getByLabelText(/amount/i), '42.50');
+            await user.click(screen.getByRole('button', { name: 'Shares' }));
+            await user.type(screen.getByRole('spinbutton', { name: 'You shares' }), '2');
+            await user.type(screen.getByRole('spinbutton', { name: /priya sharma shares/i }), '1');
+            await user.click(screen.getByRole('button', { name: /add expense/i }));
+
+            expect(onSubmit).toHaveBeenCalledWith({
+                description: 'Groceries',
+                amount: 42.5,
+                paidByUserId: CURRENT_USER_ID,
+                participantUserIds: [CURRENT_USER_ID, 'user-2'],
+                splitType: 'shares',
+                sharesSplits: [
+                    { userId: CURRENT_USER_ID, shares: 2 },
+                    { userId: 'user-2', shares: 1 },
+                ],
+            });
+        });
+
+        it('shows an error and does not submit when a share count is left blank', async () => {
             const onSubmit = vi.fn();
             const user = userEvent.setup();
             render(<AddExpenseForm members={members} onSubmit={onSubmit} onCancel={vi.fn()} />);
@@ -188,13 +213,10 @@ describe('AddExpenseForm', () => {
             await user.type(screen.getByRole('spinbutton', { name: 'You shares' }), '2');
             await user.click(screen.getByRole('button', { name: /add expense/i }));
 
-            expect(onSubmit).toHaveBeenCalledWith({
-                description: 'Groceries',
-                amount: 42.5,
-                paidByUserId: CURRENT_USER_ID,
-                participantUserIds: [CURRENT_USER_ID, 'user-2'],
-                splitType: 'equal',
-            });
+            expect(
+                await screen.findByText(/enter a share count for every participant/i),
+            ).toBeInTheDocument();
+            expect(onSubmit).not.toHaveBeenCalled();
         });
 
         it('submits exact split amounts that add up to the total', async () => {
