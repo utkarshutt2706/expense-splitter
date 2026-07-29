@@ -3,10 +3,10 @@ import type { IExpenseRepository, IGroupRepository, IUserRepository } from './re
 
 export const CURRENT_USER_ID = 'current-user';
 
-const FRIEND_ABHAY_ID = 'friend-abhay';
-const FRIEND_DIVANSHU_ID = 'friend-divanshu';
-const FRIEND_ABHINAV_ID = 'friend-abhinav';
-const FRIEND_KHEM_ID = 'friend-khem';
+export const FRIEND_ABHAY_ID = 'friend-abhay';
+export const FRIEND_DIVANSHU_ID = 'friend-divanshu';
+export const FRIEND_ABHINAV_ID = 'friend-abhinav';
+export const FRIEND_KHEM_ID = 'friend-khem';
 const DAARU_PARTY_GROUP_ID = 'group-daaru-party';
 
 const seedUsers: User[] = [

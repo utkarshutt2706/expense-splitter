@@ -8,7 +8,12 @@ import {
     GroupBalancePage,
     GroupDetailPage,
     GroupsPage,
+    LoginPage,
 } from './lazyPages';
+
+vi.mock('@app/pages/LoginPage', () => ({
+    LoginPage: () => <p>Login page</p>,
+}));
 
 vi.mock('@features/friends/pages/FriendsPage', () => ({
     FriendsPage: () => <p>Friends page</p>,
@@ -31,6 +36,16 @@ vi.mock('@features/expenses/pages/ExpenseDetailPage', () => ({
 }));
 
 describe('lazyPages', () => {
+    it('resolves LoginPage to the real named export once loaded', async () => {
+        render(
+            <Suspense fallback="loading">
+                <LoginPage />
+            </Suspense>,
+        );
+
+        expect(await screen.findByText('Login page')).toBeInTheDocument();
+    });
+
     it('resolves FriendsPage to the real named export once loaded', async () => {
         render(
             <Suspense fallback="loading">

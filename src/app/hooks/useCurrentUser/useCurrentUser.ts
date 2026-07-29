@@ -1,30 +1,10 @@
-import { useQuery } from '@tanstack/react-query';
+import { useAuthStore } from '@app/stores';
 
-import type { User } from '@data/entities';
-import { CURRENT_USER_ID } from '@data/seed';
-import { userService } from '@services/instances';
-
-const CACHE_KEY = 'current-user';
-
-function readCachedCurrentUser(): User | undefined {
-    const raw = localStorage.getItem(CACHE_KEY);
-    if (!raw) return undefined;
-
-    try {
-        return JSON.parse(raw) as User;
-    } catch {
-        return undefined;
-    }
-}
-
+// The current user's full record is fetched once, at login time (see LoginPage),
+// and cached in authStore — this just reads it back synchronously, rather than
+// re-querying the service/IndexedDB on every mount (which was showing a blank
+// avatar in the sidebar for a moment after login).
 export function useCurrentUser() {
-    return useQuery({
-        queryKey: ['users', CURRENT_USER_ID],
-        queryFn: async () => {
-            const user = await userService.getById(CURRENT_USER_ID);
-            localStorage.setItem(CACHE_KEY, JSON.stringify(user));
-            return user;
-        },
-        initialData: readCachedCurrentUser,
-    });
+    const cachedUser = useAuthStore((state) => state.cachedUser);
+    return { data: cachedUser ?? undefined };
 }
