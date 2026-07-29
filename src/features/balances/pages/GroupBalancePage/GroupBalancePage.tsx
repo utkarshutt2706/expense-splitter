@@ -5,7 +5,7 @@ import { Link, useParams } from 'react-router';
 import { useExpenses } from '@features/expenses/hooks/useExpenses';
 import { calculateNetBalance } from '@features/expenses/utils/calculateNetBalance';
 import { useGroup, useGroupMembers } from '@features/groups';
-import { Skeleton, SkeletonList } from '@shared/components';
+import { Skeleton } from '@shared/components';
 import { GroupBalanceAccordionList } from '../../components/GroupBalanceAccordionList';
 import { simplifyDebts } from '../../utils/simplifyDebts';
 
@@ -28,7 +28,19 @@ export function GroupBalancePage() {
 
     let content: ReactNode;
     if (isLoading) {
-        content = <SkeletonList label="Loading balances…" />;
+        content = (
+            <output aria-label="Loading balances…" className="flex flex-col gap-3">
+                {[0, 1, 2].map((index) => (
+                    <div
+                        key={index}
+                        className="flex items-center justify-between gap-2 rounded-lg border border-border p-3"
+                    >
+                        <Skeleton className="h-4 w-48" />
+                        <Skeleton className="size-4 shrink-0 rounded-full" />
+                    </div>
+                ))}
+            </output>
+        );
     } else if (isError || !group) {
         content = <div className="text-red-600">Couldn't load balances.</div>;
     } else {

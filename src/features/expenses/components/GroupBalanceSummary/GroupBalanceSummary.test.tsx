@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
 
-import type { Expense } from '@data/entities';
+import type { Expense, User } from '@data/entities';
 import { CURRENT_USER_ID } from '@data/seed';
 import { useExpenses } from '@features/expenses/hooks/useExpenses';
 import { GroupBalanceSummary } from './GroupBalanceSummary';
@@ -25,10 +25,15 @@ function expense(overrides: Partial<Expense>): Expense {
     };
 }
 
-function renderSummary() {
+const defaultMembers: User[] = [
+    { id: CURRENT_USER_ID, name: 'Alex Morgan', email: 'alex@example.com' },
+    { id: 'friend-1', name: 'Priya Sharma', email: 'priya@example.com' },
+];
+
+function renderSummary(members: User[] = defaultMembers) {
     return render(
         <MemoryRouter>
-            <GroupBalanceSummary groupId="group-1" />
+            <GroupBalanceSummary groupId="group-1" members={members} />
         </MemoryRouter>,
     );
 }
@@ -105,7 +110,7 @@ describe('GroupBalanceSummary', () => {
         expect(link).not.toHaveClass('text-owe');
     });
 
-    it('shows a settled message in the settled color, with a neutral link to the balance page', () => {
+    it('shows a settled message and a celebratory note instead of a link when the whole group is settled', () => {
         vi.mocked(useExpenses).mockReturnValue({
             data: [],
             isLoading: false,
@@ -115,8 +120,34 @@ describe('GroupBalanceSummary', () => {
         renderSummary();
 
         expect(screen.getByText(/all settled up/i)).toHaveClass('text-settled');
+        expect(screen.getByText(/this group is all settled/i)).toBeInTheDocument();
+        expect(screen.queryByRole('link')).not.toBeInTheDocument();
+    });
+
+    it('still links to the balance page when the current user is settled but another member is not', () => {
+        vi.mocked(useExpenses).mockReturnValue({
+            data: [
+                expense({
+                    paidByUserId: 'friend-1',
+                    splits: [
+                        { userId: 'friend-1', amount: 50 },
+                        { userId: 'friend-2', amount: 50 },
+                    ],
+                }),
+            ],
+            isLoading: false,
+            isError: false,
+        } as unknown as ReturnType<typeof useExpenses>);
+
+        renderSummary([
+            ...defaultMembers,
+            { id: 'friend-2', name: 'Khem', email: 'khem@example.com' },
+        ]);
+
+        expect(screen.getByText(/all settled up/i)).toHaveClass('text-settled');
 
         const link = screen.getByRole('link', { name: /click to view details/i });
-        expect(link).not.toHaveClass('text-settled');
+        expect(link).toHaveAttribute('href', '/groups/group-1/balance');
+        expect(screen.queryByText(/this group is all settled/i)).not.toBeInTheDocument();
     });
 });

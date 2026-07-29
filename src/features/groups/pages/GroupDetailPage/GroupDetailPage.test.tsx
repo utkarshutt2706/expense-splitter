@@ -77,7 +77,7 @@ function renderPage() {
 }
 
 describe('GroupDetailPage', () => {
-    it('shows a loading message while fetching, with no group-dependent content rendered', () => {
+    it('shows a loading message while fetching, with group-name content deferred but balance/expenses fetching in parallel', () => {
         vi.mocked(useGroup).mockReturnValue({
             data: undefined,
             isLoading: true,
@@ -94,12 +94,15 @@ describe('GroupDetailPage', () => {
 
         expect(screen.getByRole('status', { name: /loading group/i })).toBeInTheDocument();
         expect(screen.queryByTestId('group-name-editor')).not.toBeInTheDocument();
-        expect(screen.queryByTestId('group-balance-summary')).not.toBeInTheDocument();
         expect(screen.queryByTestId('add-expense-action')).not.toBeInTheDocument();
-        expect(screen.queryByTestId('expense-list')).not.toBeInTheDocument();
+        // Balance/expenses don't need the group query to resolve — groupId comes
+        // straight from the route — so they mount and start fetching immediately
+        // instead of waiting behind the group query, avoiding a skeleton waterfall.
+        expect(screen.getByTestId('group-balance-summary')).toHaveTextContent('group-1');
+        expect(screen.getByTestId('expense-list')).toHaveTextContent('group-1-0');
     });
 
-    it('shows an error message when the group fails to load', () => {
+    it('shows an error message when the group fails to load, without rendering balance/expenses', () => {
         vi.mocked(useGroup).mockReturnValue({
             data: undefined,
             isLoading: false,
@@ -114,6 +117,8 @@ describe('GroupDetailPage', () => {
         renderPage();
 
         expect(screen.getByText(/couldn't load this group/i)).toBeInTheDocument();
+        expect(screen.queryByTestId('group-balance-summary')).not.toBeInTheDocument();
+        expect(screen.queryByTestId('expense-list')).not.toBeInTheDocument();
     });
 
     it('renders the back link', () => {

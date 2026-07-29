@@ -4,12 +4,12 @@ import type { Expense, User } from '@data/entities';
 import { CURRENT_USER_ID } from '@data/seed';
 import { useExpenses } from '@features/expenses/hooks/useExpenses';
 import { calculateExpenseInvolvement } from '@features/expenses/utils/calculateExpenseInvolvement';
-import { Avatar } from '@shared/components';
-import { SkeletonList } from '@shared/components/SkeletonList';
+import { Avatar, Skeleton } from '@shared/components';
 
 interface ExpenseListProps {
     readonly groupId: string;
     readonly members: User[];
+    readonly isMembersLoading?: boolean;
 }
 
 const dateFormatter = new Intl.DateTimeFormat('en-US', {
@@ -21,6 +21,22 @@ const dateFormatter = new Intl.DateTimeFormat('en-US', {
 function payerLabel(payer: User | undefined): string {
     if (!payer) return 'Someone';
     return payer.id === CURRENT_USER_ID ? 'You' : payer.name;
+}
+
+function ExpenseRowSkeleton() {
+    return (
+        <li className="flex items-center gap-3 rounded-lg border border-border p-3">
+            <Skeleton className="size-9 shrink-0 rounded-full" />
+            <div className="flex-1 space-y-2">
+                <Skeleton className="h-4 w-1/3" />
+                <Skeleton className="h-3 w-1/2" />
+            </div>
+            <div className="flex flex-col items-end gap-1.5">
+                <Skeleton className="h-4 w-14" />
+                <Skeleton className="h-3 w-24" />
+            </div>
+        </li>
+    );
 }
 
 function involvementLabel(expense: Expense): { text: string; className: string } {
@@ -37,11 +53,19 @@ function involvementLabel(expense: Expense): { text: string; className: string }
     return { text: 'You were not involved', className: 'text-muted-foreground' };
 }
 
-export function ExpenseList({ groupId, members }: ExpenseListProps) {
+export function ExpenseList({ groupId, members, isMembersLoading = false }: ExpenseListProps) {
     const { data: expenses, isLoading, isError } = useExpenses(groupId);
 
-    if (isLoading) {
-        return <SkeletonList label="Loading expenses…" />;
+    if (isLoading || isMembersLoading) {
+        return (
+            <output aria-label="Loading expenses…" className="block">
+                <ul className="flex flex-col gap-3">
+                    {Array.from({ length: 3 }, (_, index) => (
+                        <ExpenseRowSkeleton key={index} />
+                    ))}
+                </ul>
+            </output>
+        );
     }
 
     if (isError) {
