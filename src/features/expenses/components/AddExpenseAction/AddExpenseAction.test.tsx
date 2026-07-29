@@ -20,6 +20,7 @@ vi.mock('../AddExpenseDialog', () => ({
             amount: number;
             paidByUserId: string;
             participantUserIds: string[];
+            splitType: 'equal';
         }) => void;
     }) => (
         <div data-testid="add-expense-dialog">
@@ -31,6 +32,7 @@ vi.mock('../AddExpenseDialog', () => ({
                         amount: 42.5,
                         paidByUserId: 'current-user',
                         participantUserIds: ['friend-1'],
+                        splitType: 'equal',
                     })
                 }
             >
@@ -91,6 +93,8 @@ describe('AddExpenseAction', () => {
                 amount: 42.5,
                 paidByUserId: 'current-user',
                 participantUserIds: ['friend-1'],
+                splitType: 'equal',
+                exactSplits: undefined,
             },
             expect.anything(),
         );
