@@ -117,9 +117,7 @@ describe('LoginPage', () => {
         await user.type(screen.getByLabelText(/password/i), 'changeme-utkarsh');
         await user.click(screen.getByRole('button', { name: /sign in/i }));
 
-        expect(
-            await screen.findByText(/something went wrong logging in/i),
-        ).toBeInTheDocument();
+        expect(await screen.findByText(/something went wrong logging in/i)).toBeInTheDocument();
         expect(useAuthStore.getState().currentUserId).toBeNull();
     });
 
