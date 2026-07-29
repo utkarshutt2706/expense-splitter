@@ -1,12 +1,15 @@
 import { ArrowLeft, Pencil, Trash2 } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { Link, useParams } from 'react-router';
+import { useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router';
+import { toast } from 'sonner';
 
 import type { User } from '@data/entities';
 import { CURRENT_USER_ID } from '@data/seed';
+import { useDeleteExpense } from '@features/expenses/hooks/useDeleteExpense';
 import { useExpense } from '@features/expenses/hooks/useExpense';
 import { useGroup, useGroupMembers } from '@features/groups';
-import { Avatar, Skeleton, SkeletonList } from '@shared/components';
+import { Avatar, ConfirmationDialog, Skeleton, SkeletonList } from '@shared/components';
 
 const dateFormatter = new Intl.DateTimeFormat('en-US', {
     month: 'short',
@@ -21,6 +24,7 @@ function memberLabel(member: User | undefined): string {
 
 export function ExpenseDetailPage() {
     const { groupId, expenseId } = useParams<{ groupId: string; expenseId: string }>();
+    const navigate = useNavigate();
     const {
         data: expense,
         isLoading: isExpenseLoading,
@@ -28,8 +32,26 @@ export function ExpenseDetailPage() {
     } = useExpense(expenseId ?? '');
     const { data: group } = useGroup(groupId ?? '');
     const { data: members, isLoading: isMembersLoading } = useGroupMembers(group?.memberIds ?? []);
+    const deleteExpense = useDeleteExpense();
+    const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
 
     const isLoading = isExpenseLoading || isMembersLoading;
+
+    const handleDelete = () => {
+        if (!expense || !groupId) return;
+
+        const toastId = toast.loading('Expense is being deleted…');
+        deleteExpense.mutate(
+            { id: expense.id, groupId },
+            {
+                onSuccess: () => {
+                    toast.success('Expense deleted', { id: toastId });
+                    navigate(`/groups/${groupId}`);
+                },
+                onError: (error) => toast.error(error.message, { id: toastId }),
+            },
+        );
+    };
 
     let content: ReactNode;
     if (isLoading) {
@@ -139,7 +161,9 @@ export function ExpenseDetailPage() {
                         type="button"
                         aria-label="Delete expense"
                         title="Delete expense"
-                        className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-border p-2 text-sm font-medium text-red-600 hover:bg-muted md:px-3 md:py-1.5"
+                        disabled={isLoading}
+                        onClick={() => setIsConfirmingDelete(true)}
+                        className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-border p-2 text-sm font-medium text-red-600 hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60 md:px-3 md:py-1.5"
                     >
                         <Trash2 className="size-4" />
                         <span className="hidden md:inline">Delete</span>
@@ -148,6 +172,19 @@ export function ExpenseDetailPage() {
             </div>
 
             {content}
+
+            <ConfirmationDialog
+                open={isConfirmingDelete}
+                onOpenChange={setIsConfirmingDelete}
+                title={`Delete "${expense?.description ?? 'this expense'}"?`}
+                description="This will permanently remove the expense from this group."
+                confirmLabel="Delete"
+                destructive
+                onConfirm={() => {
+                    setIsConfirmingDelete(false);
+                    handleDelete();
+                }}
+            />
         </div>
     );
 }
