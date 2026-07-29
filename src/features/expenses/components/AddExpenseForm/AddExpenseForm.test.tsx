@@ -206,7 +206,10 @@ describe('AddExpenseForm', () => {
             await user.type(screen.getByLabelText(/amount/i), '42.50');
             await user.click(screen.getByRole('button', { name: 'Exact' }));
             await user.type(screen.getByRole('spinbutton', { name: 'You amount' }), '20');
-            await user.type(screen.getByRole('spinbutton', { name: /priya sharma amount/i }), '22.50');
+            await user.type(
+                screen.getByRole('spinbutton', { name: /priya sharma amount/i }),
+                '22.50',
+            );
             await user.click(screen.getByRole('button', { name: /add expense/i }));
 
             expect(onSubmit).toHaveBeenCalledWith({
