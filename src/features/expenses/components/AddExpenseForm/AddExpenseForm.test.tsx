@@ -177,7 +177,7 @@ describe('AddExpenseForm', () => {
             expect(screen.getByRole('spinbutton', { name: 'You shares' })).toBeInTheDocument();
         });
 
-        it('does not submit percentage/shares split values yet', async () => {
+        it('does not submit shares split values yet', async () => {
             const onSubmit = vi.fn();
             const user = userEvent.setup();
             render(<AddExpenseForm members={members} onSubmit={onSubmit} onCancel={vi.fn()} />);
@@ -256,6 +256,72 @@ describe('AddExpenseForm', () => {
 
             expect(
                 await screen.findByText(/enter an amount for every participant/i),
+            ).toBeInTheDocument();
+            expect(onSubmit).not.toHaveBeenCalled();
+        });
+
+        it('submits percentages that add up to 100', async () => {
+            const onSubmit = vi.fn();
+            const user = userEvent.setup();
+            render(<AddExpenseForm members={members} onSubmit={onSubmit} onCancel={vi.fn()} />);
+
+            await user.type(screen.getByLabelText(/description/i), 'Groceries');
+            await user.type(screen.getByLabelText(/amount/i), '42.50');
+            await user.click(screen.getByRole('button', { name: 'Percentage' }));
+            await user.type(screen.getByRole('spinbutton', { name: 'You percentage' }), '60');
+            await user.type(
+                screen.getByRole('spinbutton', { name: /priya sharma percentage/i }),
+                '40',
+            );
+            await user.click(screen.getByRole('button', { name: /add expense/i }));
+
+            expect(onSubmit).toHaveBeenCalledWith({
+                description: 'Groceries',
+                amount: 42.5,
+                paidByUserId: CURRENT_USER_ID,
+                participantUserIds: [CURRENT_USER_ID, 'user-2'],
+                splitType: 'percentage',
+                percentageSplits: [
+                    { userId: CURRENT_USER_ID, percentage: 60 },
+                    { userId: 'user-2', percentage: 40 },
+                ],
+            });
+        });
+
+        it('shows an error and does not submit when percentages do not add up to 100', async () => {
+            const onSubmit = vi.fn();
+            const user = userEvent.setup();
+            render(<AddExpenseForm members={members} onSubmit={onSubmit} onCancel={vi.fn()} />);
+
+            await user.type(screen.getByLabelText(/description/i), 'Groceries');
+            await user.type(screen.getByLabelText(/amount/i), '42.50');
+            await user.click(screen.getByRole('button', { name: 'Percentage' }));
+            await user.type(screen.getByRole('spinbutton', { name: 'You percentage' }), '60');
+            await user.type(
+                screen.getByRole('spinbutton', { name: /priya sharma percentage/i }),
+                '30',
+            );
+            await user.click(screen.getByRole('button', { name: /add expense/i }));
+
+            expect(
+                await screen.findByText(/split percentages must add up to 100/i),
+            ).toBeInTheDocument();
+            expect(onSubmit).not.toHaveBeenCalled();
+        });
+
+        it('shows an error and does not submit when a percentage is left blank', async () => {
+            const onSubmit = vi.fn();
+            const user = userEvent.setup();
+            render(<AddExpenseForm members={members} onSubmit={onSubmit} onCancel={vi.fn()} />);
+
+            await user.type(screen.getByLabelText(/description/i), 'Groceries');
+            await user.type(screen.getByLabelText(/amount/i), '42.50');
+            await user.click(screen.getByRole('button', { name: 'Percentage' }));
+            await user.type(screen.getByRole('spinbutton', { name: 'You percentage' }), '100');
+            await user.click(screen.getByRole('button', { name: /add expense/i }));
+
+            expect(
+                await screen.findByText(/enter a percentage for every participant/i),
             ).toBeInTheDocument();
             expect(onSubmit).not.toHaveBeenCalled();
         });

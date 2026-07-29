@@ -6,7 +6,10 @@ import { z } from 'zod';
 
 import type { SplitType, User } from '@data/entities';
 import { CURRENT_USER_ID } from '@data/seed';
-import type { ExactSplitEntry } from '@features/expenses/utils/splitCalculator';
+import type {
+    ExactSplitEntry,
+    PercentageSplitEntry,
+} from '@features/expenses/utils/splitCalculator';
 import { PaidByPicker } from '../PaidByPicker';
 import { SplitParticipantList } from '../SplitParticipantList';
 import { SplitTypeTabs } from '../SplitTypeTabs';
@@ -23,6 +26,8 @@ const addExpenseSchema = z.object({
 
 type AddExpenseInput = z.infer<typeof addExpenseSchema>;
 
+const PERCENTAGE_TOLERANCE = 0.01;
+
 export interface AddExpenseFormValues {
     description: string;
     amount: number;
@@ -30,6 +35,7 @@ export interface AddExpenseFormValues {
     participantUserIds: string[];
     splitType: SplitType;
     exactSplits?: ExactSplitEntry[];
+    percentageSplits?: PercentageSplitEntry[];
 }
 
 interface AddExpenseFormProps {
@@ -96,6 +102,29 @@ export function AddExpenseForm({ members, onSubmit, onCancel }: AddExpenseFormPr
         return exactSplits;
     };
 
+    const buildPercentageSplits = (): PercentageSplitEntry[] | undefined => {
+        let sumPercentage = 0;
+        const percentageSplits: PercentageSplitEntry[] = [];
+
+        for (const userId of participantUserIds) {
+            const raw = splitValues[userId];
+            const parsed = raw === undefined || raw === '' ? Number.NaN : Number(raw);
+            if (!Number.isFinite(parsed) || parsed <= 0) {
+                setSplitError('Enter a percentage for every participant');
+                return undefined;
+            }
+            sumPercentage += parsed;
+            percentageSplits.push({ userId, percentage: parsed });
+        }
+
+        if (Math.abs(sumPercentage - 100) > PERCENTAGE_TOLERANCE) {
+            setSplitError('Split percentages must add up to 100');
+            return undefined;
+        }
+
+        return percentageSplits;
+    };
+
     const submit = handleSubmit((values) => {
         if (participantUserIds.length === 0) {
             setParticipantsError('Select at least one participant');
@@ -115,6 +144,22 @@ export function AddExpenseForm({ members, onSubmit, onCancel }: AddExpenseFormPr
                 participantUserIds,
                 splitType: 'exact',
                 exactSplits,
+            });
+            return;
+        }
+
+        if (splitType === 'percentage') {
+            const percentageSplits = buildPercentageSplits();
+            if (!percentageSplits) return;
+
+            setSplitError(undefined);
+            onSubmit({
+                description: values.description,
+                amount: values.amount,
+                paidByUserId: values.paidByUserId,
+                participantUserIds,
+                splitType: 'percentage',
+                percentageSplits,
             });
             return;
         }
@@ -201,7 +246,7 @@ export function AddExpenseForm({ members, onSubmit, onCancel }: AddExpenseFormPr
                 />
                 {participantsError && <p className="text-xs text-red-600">{participantsError}</p>}
                 {splitError && <p className="text-xs text-red-600">{splitError}</p>}
-                {(splitType === 'percentage' || splitType === 'shares') && (
+                {splitType === 'shares' && (
                     <p className="text-xs text-muted-foreground">
                         {splitType} splits aren't supported yet — this expense will still be split
                         equally until that's wired up.

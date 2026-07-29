@@ -23,6 +23,7 @@ export function AddExpenseAction({ groupId, members }: AddExpenseActionProps) {
         participantUserIds,
         splitType,
         exactSplits,
+        percentageSplits,
     }: AddExpenseFormValues) => {
         const toastId = toast.loading('Expense is being added…');
         createExpense.mutate(
@@ -34,6 +35,7 @@ export function AddExpenseAction({ groupId, members }: AddExpenseActionProps) {
                 participantUserIds,
                 splitType,
                 exactSplits,
+                percentageSplits,
             },
             {
                 onSuccess: () => toast.success('Expense added', { id: toastId }),
