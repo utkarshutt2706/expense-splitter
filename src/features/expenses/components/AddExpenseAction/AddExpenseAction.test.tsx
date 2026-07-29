@@ -95,6 +95,7 @@ describe('AddExpenseAction', () => {
                 participantUserIds: ['friend-1'],
                 splitType: 'equal',
                 exactSplits: undefined,
+                percentageSplits: undefined,
             },
             expect.anything(),
         );
