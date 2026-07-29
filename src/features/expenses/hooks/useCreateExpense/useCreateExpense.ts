@@ -4,11 +4,13 @@ import type { SplitType } from '@data/entities';
 import type {
     ExactSplitEntry,
     PercentageSplitEntry,
+    SharesSplitEntry,
 } from '@features/expenses/utils/splitCalculator';
 import {
     calculateEqualSplit,
     calculateExactSplit,
     calculatePercentageSplit,
+    calculateSharesSplit,
 } from '@features/expenses/utils/splitCalculator';
 import { expenseService } from '@services/instances';
 
@@ -21,6 +23,7 @@ interface CreateExpenseInput {
     splitType: SplitType;
     exactSplits?: ExactSplitEntry[];
     percentageSplits?: PercentageSplitEntry[];
+    sharesSplits?: SharesSplitEntry[];
 }
 
 export function useCreateExpense() {
@@ -36,12 +39,15 @@ export function useCreateExpense() {
             splitType,
             exactSplits,
             percentageSplits,
+            sharesSplits,
         }: CreateExpenseInput) => {
             let splits;
             if (splitType === 'exact' && exactSplits) {
                 splits = calculateExactSplit({ amount, splits: exactSplits });
             } else if (splitType === 'percentage' && percentageSplits) {
                 splits = calculatePercentageSplit({ amount, splits: percentageSplits });
+            } else if (splitType === 'shares' && sharesSplits) {
+                splits = calculateSharesSplit({ amount, splits: sharesSplits });
             } else {
                 splits = calculateEqualSplit({ amount, participantUserIds });
             }
