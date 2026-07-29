@@ -1,3 +1,5 @@
+import { Link } from 'react-router';
+
 import type { Expense, User } from '@data/entities';
 import { CURRENT_USER_ID } from '@data/seed';
 import { useExpenses } from '@features/expenses/hooks/useExpenses';
@@ -59,26 +61,30 @@ export function ExpenseList({ groupId, members }: ExpenseListProps) {
                 const involvement = involvementLabel(expense);
 
                 return (
-                    <li
-                        key={expense.id}
-                        className="flex items-center gap-3 rounded-lg border border-border p-3"
-                    >
-                        <Avatar name={payer?.name ?? '?'} />
-                        <div className="flex-1">
-                            <p className="font-medium text-surface-foreground">
-                                {expense.description}
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                                {payerLabel(payer)} paid ·{' '}
-                                {dateFormatter.format(new Date(expense.createdAt))}
-                            </p>
-                        </div>
-                        <div className="flex flex-col items-end gap-0.5">
-                            <p className="font-medium text-surface-foreground">
-                                ₹{expense.amount.toFixed(2)}
-                            </p>
-                            <p className={`text-xs ${involvement.className}`}>{involvement.text}</p>
-                        </div>
+                    <li key={expense.id}>
+                        <Link
+                            to={`/groups/${groupId}/expenses/${expense.id}`}
+                            className="flex items-center gap-3 rounded-lg border border-border p-3 hover:bg-muted"
+                        >
+                            <Avatar name={payer?.name ?? '?'} />
+                            <div className="flex-1">
+                                <p className="font-medium text-surface-foreground">
+                                    {expense.description}
+                                </p>
+                                <p className="text-sm text-muted-foreground">
+                                    {payerLabel(payer)} paid ·{' '}
+                                    {dateFormatter.format(new Date(expense.createdAt))}
+                                </p>
+                            </div>
+                            <div className="flex flex-col items-end gap-0.5">
+                                <p className="font-medium text-surface-foreground">
+                                    ₹{expense.amount.toFixed(2)}
+                                </p>
+                                <p className={`text-xs ${involvement.className}`}>
+                                    {involvement.text}
+                                </p>
+                            </div>
+                        </Link>
                     </li>
                 );
             })}
