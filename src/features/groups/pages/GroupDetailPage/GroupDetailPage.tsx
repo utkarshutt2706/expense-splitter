@@ -82,7 +82,7 @@ export function GroupDetailPage() {
             {content}
 
             {group && (
-                <div className="mt-6 flex flex-col gap-6">
+                <div className="mt-6 mb-12 flex flex-col gap-6">
                     <GroupBalanceSummary groupId={group.id} />
 
                     <div>
