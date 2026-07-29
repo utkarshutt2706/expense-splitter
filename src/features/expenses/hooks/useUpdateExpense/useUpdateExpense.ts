@@ -9,7 +9,8 @@ import type {
 } from '@features/expenses/utils/splitCalculator';
 import { expenseService } from '@services/instances';
 
-interface CreateExpenseInput {
+interface UpdateExpenseInput {
+    id: string;
     groupId: string;
     description: string;
     amount: number;
@@ -21,12 +22,12 @@ interface CreateExpenseInput {
     sharesSplits?: SharesSplitEntry[];
 }
 
-export function useCreateExpense() {
+export function useUpdateExpense() {
     const queryClient = useQueryClient();
 
     return useMutation({
         mutationFn: ({
-            groupId,
+            id,
             description,
             amount,
             paidByUserId,
@@ -35,7 +36,7 @@ export function useCreateExpense() {
             exactSplits,
             percentageSplits,
             sharesSplits,
-        }: CreateExpenseInput) => {
+        }: UpdateExpenseInput) => {
             const splits = resolveSplits({
                 splitType,
                 amount,
@@ -45,19 +46,17 @@ export function useCreateExpense() {
                 sharesSplits,
             });
 
-            return expenseService.create({
-                id: crypto.randomUUID(),
-                groupId,
+            return expenseService.update(id, {
                 description,
                 amount,
                 paidByUserId,
                 splitType,
                 splits,
-                createdAt: new Date().toISOString(),
             });
         },
-        onSuccess: (_, { groupId }) => {
+        onSuccess: (_, { id, groupId }) => {
             queryClient.invalidateQueries({ queryKey: ['expenses', groupId] });
+            queryClient.invalidateQueries({ queryKey: ['expenses', 'detail', id] });
         },
     });
 }

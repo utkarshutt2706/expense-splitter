@@ -4,8 +4,8 @@ import { toast } from 'sonner';
 
 import type { User } from '@data/entities';
 import { useCreateExpense } from '@features/expenses/hooks/useCreateExpense';
-import { AddExpenseDialog } from '../AddExpenseDialog';
-import type { AddExpenseFormValues } from '../AddExpenseForm';
+import { UpsertExpenseDialog } from '../UpsertExpenseDialog';
+import type { UpsertExpenseFormValues } from '../UpsertExpenseForm';
 
 interface AddExpenseActionProps {
     readonly groupId: string;
@@ -25,7 +25,7 @@ export function AddExpenseAction({ groupId, members }: AddExpenseActionProps) {
         exactSplits,
         percentageSplits,
         sharesSplits,
-    }: AddExpenseFormValues) => {
+    }: UpsertExpenseFormValues) => {
         const toastId = toast.loading('Expense is being added…');
         createExpense.mutate(
             {
@@ -61,7 +61,7 @@ export function AddExpenseAction({ groupId, members }: AddExpenseActionProps) {
                 </button>
             )}
 
-            <AddExpenseDialog
+            <UpsertExpenseDialog
                 open={isAddingExpense}
                 onOpenChange={setIsAddingExpense}
                 members={members}

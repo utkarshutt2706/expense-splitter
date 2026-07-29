@@ -1,6 +1,10 @@
 export { AddExpenseAction } from './AddExpenseAction';
-export { AddExpenseDialog } from './AddExpenseDialog';
-export { AddExpenseForm, type AddExpenseFormValues } from './AddExpenseForm';
+export { UpsertExpenseDialog } from './UpsertExpenseDialog';
+export {
+    UpsertExpenseForm,
+    type UpsertExpenseFormInitialValues,
+    type UpsertExpenseFormValues,
+} from './UpsertExpenseForm';
 export { ExpenseList } from './ExpenseList';
 export { GroupBalanceSummary } from './GroupBalanceSummary';
 export { PaidByPicker } from './PaidByPicker';

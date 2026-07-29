@@ -4,10 +4,16 @@ import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 import { toast } from 'sonner';
 
-import type { User } from '@data/entities';
+import type { Expense, User } from '@data/entities';
 import { CURRENT_USER_ID } from '@data/seed';
+import { UpsertExpenseDialog } from '@features/expenses/components/UpsertExpenseDialog';
+import type {
+    UpsertExpenseFormInitialValues,
+    UpsertExpenseFormValues,
+} from '@features/expenses/components/UpsertExpenseForm';
 import { useDeleteExpense } from '@features/expenses/hooks/useDeleteExpense';
 import { useExpense } from '@features/expenses/hooks/useExpense';
+import { useUpdateExpense } from '@features/expenses/hooks/useUpdateExpense';
 import { useGroup, useGroupMembers } from '@features/groups';
 import { Avatar, ConfirmationDialog, Skeleton, SkeletonList } from '@shared/components';
 
@@ -22,6 +28,33 @@ function memberLabel(member: User | undefined): string {
     return member.id === CURRENT_USER_ID ? 'You' : member.name;
 }
 
+function buildEditInitialValues(expense: Expense): UpsertExpenseFormInitialValues {
+    const splitValues: Record<string, string> = {};
+
+    if (expense.splitType === 'exact') {
+        for (const split of expense.splits) {
+            splitValues[split.userId] = split.amount.toString();
+        }
+    } else if (expense.splitType === 'percentage') {
+        for (const split of expense.splits) {
+            splitValues[split.userId] = ((split.amount / expense.amount) * 100).toFixed(2);
+        }
+    }
+    // Shares are left blank: only the resulting dollar amounts are persisted, not the
+    // original share counts, and share counts aren't recoverable from amounts alone
+    // (e.g. 2:1 and 4:2 produce identical splits) — editing a shares split means
+    // re-entering shares.
+
+    return {
+        description: expense.description,
+        amount: expense.amount,
+        paidByUserId: expense.paidByUserId,
+        participantUserIds: expense.splits.map((split) => split.userId),
+        splitType: expense.splitType,
+        splitValues,
+    };
+}
+
 export function ExpenseDetailPage() {
     const { groupId, expenseId } = useParams<{ groupId: string; expenseId: string }>();
     const navigate = useNavigate();
@@ -33,7 +66,9 @@ export function ExpenseDetailPage() {
     const { data: group } = useGroup(groupId ?? '');
     const { data: members, isLoading: isMembersLoading } = useGroupMembers(group?.memberIds ?? []);
     const deleteExpense = useDeleteExpense();
+    const updateExpense = useUpdateExpense();
     const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+    const [isEditingExpense, setIsEditingExpense] = useState(false);
 
     const isLoading = isExpenseLoading || isMembersLoading;
 
@@ -48,6 +83,19 @@ export function ExpenseDetailPage() {
                     toast.success('Expense deleted', { id: toastId });
                     navigate(`/groups/${groupId}`);
                 },
+                onError: (error) => toast.error(error.message, { id: toastId }),
+            },
+        );
+    };
+
+    const handleUpdateExpense = (values: UpsertExpenseFormValues) => {
+        if (!expense || !groupId) return;
+
+        const toastId = toast.loading('Expense is being updated…');
+        updateExpense.mutate(
+            { id: expense.id, groupId, ...values },
+            {
+                onSuccess: () => toast.success('Expense updated', { id: toastId }),
                 onError: (error) => toast.error(error.message, { id: toastId }),
             },
         );
@@ -152,7 +200,9 @@ export function ExpenseDetailPage() {
                         type="button"
                         aria-label="Edit expense"
                         title="Edit expense"
-                        className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-border p-2 text-sm font-medium text-surface-foreground hover:bg-muted md:px-3 md:py-1.5"
+                        disabled={isLoading}
+                        onClick={() => setIsEditingExpense(true)}
+                        className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-border p-2 text-sm font-medium text-surface-foreground hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60 md:px-3 md:py-1.5"
                     >
                         <Pencil className="size-4" />
                         <span className="hidden md:inline">Edit</span>
@@ -184,6 +234,15 @@ export function ExpenseDetailPage() {
                     setIsConfirmingDelete(false);
                     handleDelete();
                 }}
+            />
+
+            <UpsertExpenseDialog
+                mode="edit"
+                open={isEditingExpense}
+                onOpenChange={setIsEditingExpense}
+                members={members ?? []}
+                initialValues={expense ? buildEditInitialValues(expense) : undefined}
+                onSubmit={handleUpdateExpense}
             />
         </div>
     );
