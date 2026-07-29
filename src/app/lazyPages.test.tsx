@@ -2,7 +2,13 @@ import { render, screen } from '@testing-library/react';
 import { Suspense } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
-import { FriendsPage, GroupBalancePage, GroupDetailPage, GroupsPage } from './lazyPages';
+import {
+    ExpenseDetailPage,
+    FriendsPage,
+    GroupBalancePage,
+    GroupDetailPage,
+    GroupsPage,
+} from './lazyPages';
 
 vi.mock('@features/friends/pages/FriendsPage', () => ({
     FriendsPage: () => <p>Friends page</p>,
@@ -18,6 +24,10 @@ vi.mock('@features/groups/pages/GroupDetailPage', () => ({
 
 vi.mock('@features/balances/pages/GroupBalancePage', () => ({
     GroupBalancePage: () => <p>Group balance page</p>,
+}));
+
+vi.mock('@features/expenses/pages/ExpenseDetailPage', () => ({
+    ExpenseDetailPage: () => <p>Expense detail page</p>,
 }));
 
 describe('lazyPages', () => {
@@ -59,5 +69,15 @@ describe('lazyPages', () => {
         );
 
         expect(await screen.findByText('Group balance page')).toBeInTheDocument();
+    });
+
+    it('resolves ExpenseDetailPage to the real named export once loaded', async () => {
+        render(
+            <Suspense fallback="loading">
+                <ExpenseDetailPage />
+            </Suspense>,
+        );
+
+        expect(await screen.findByText('Expense detail page')).toBeInTheDocument();
     });
 });

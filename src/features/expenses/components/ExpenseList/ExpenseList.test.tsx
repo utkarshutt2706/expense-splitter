@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { Expense, User } from '@data/entities';
@@ -9,6 +10,14 @@ import { ExpenseList } from './ExpenseList';
 vi.mock('@features/expenses/hooks/useExpenses', () => ({
     useExpenses: vi.fn(),
 }));
+
+function renderList(groupId = 'group-1') {
+    return render(
+        <MemoryRouter>
+            <ExpenseList groupId={groupId} members={members} />
+        </MemoryRouter>,
+    );
+}
 
 const members: User[] = [
     { id: CURRENT_USER_ID, name: 'Alex Morgan', email: 'alex@example.com' },
@@ -52,7 +61,7 @@ describe('ExpenseList', () => {
             isError: false,
         } as unknown as ReturnType<typeof useExpenses>);
 
-        render(<ExpenseList groupId="group-1" members={members} />);
+        renderList();
 
         expect(screen.getByRole('status', { name: /loading expenses/i })).toBeInTheDocument();
     });
@@ -64,7 +73,7 @@ describe('ExpenseList', () => {
             isError: true,
         } as unknown as ReturnType<typeof useExpenses>);
 
-        render(<ExpenseList groupId="group-1" members={members} />);
+        renderList();
 
         expect(screen.getByText(/couldn't load expenses/i)).toBeInTheDocument();
     });
@@ -76,7 +85,7 @@ describe('ExpenseList', () => {
             isError: false,
         } as unknown as ReturnType<typeof useExpenses>);
 
-        render(<ExpenseList groupId="group-1" members={members} />);
+        renderList();
 
         expect(screen.getByText(/no expenses yet/i)).toBeInTheDocument();
     });
@@ -88,7 +97,7 @@ describe('ExpenseList', () => {
             isError: false,
         } as unknown as ReturnType<typeof useExpenses>);
 
-        render(<ExpenseList groupId="group-1" members={members} />);
+        renderList();
 
         expect(screen.getByText('Groceries')).toBeInTheDocument();
         expect(screen.getByText('₹42.50')).toBeInTheDocument();
@@ -103,6 +112,21 @@ describe('ExpenseList', () => {
         expect(owedText).toHaveClass('text-owe');
     });
 
+    it('links each expense row to its detail page', () => {
+        vi.mocked(useExpenses).mockReturnValue({
+            data: expenses,
+            isLoading: false,
+            isError: false,
+        } as unknown as ReturnType<typeof useExpenses>);
+
+        renderList();
+
+        expect(screen.getByRole('link', { name: /groceries/i })).toHaveAttribute(
+            'href',
+            '/groups/group-1/expenses/expense-1',
+        );
+    });
+
     it('shows "not involved" when the current user has no stake in the expense', () => {
         vi.mocked(useExpenses).mockReturnValue({
             data: [
@@ -115,7 +139,7 @@ describe('ExpenseList', () => {
             isError: false,
         } as unknown as ReturnType<typeof useExpenses>);
 
-        render(<ExpenseList groupId="group-1" members={members} />);
+        renderList();
 
         const notInvolvedText = screen.getByText('You were not involved');
         expect(notInvolvedText).toHaveClass('text-muted-foreground');
@@ -128,7 +152,7 @@ describe('ExpenseList', () => {
             isError: false,
         } as unknown as ReturnType<typeof useExpenses>);
 
-        render(<ExpenseList groupId="group-1" members={members} />);
+        renderList();
 
         expect(screen.getByText(/someone paid/i)).toBeInTheDocument();
     });

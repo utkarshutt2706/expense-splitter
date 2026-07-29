@@ -23,3 +23,9 @@ export const GroupBalancePage = lazy(() =>
         default: module.GroupBalancePage,
     })),
 );
+
+export const ExpenseDetailPage = lazy(() =>
+    import('@features/expenses/pages/ExpenseDetailPage').then((module) => ({
+        default: module.ExpenseDetailPage,
+    })),
+);
