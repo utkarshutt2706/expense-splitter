@@ -57,7 +57,9 @@ describe('SplitParticipantList', () => {
         );
 
         expect(screen.getByRole('spinbutton', { name: 'You amount' })).toBeInTheDocument();
-        expect(screen.getByRole('spinbutton', { name: /priya sharma amount/i })).toBeInTheDocument();
+        expect(
+            screen.getByRole('spinbutton', { name: /priya sharma amount/i }),
+        ).toBeInTheDocument();
     });
 
     it('renders a percentage input per selected participant for the percentage split type', () => {
@@ -89,7 +91,9 @@ describe('SplitParticipantList', () => {
         );
 
         expect(screen.getByRole('spinbutton', { name: 'You shares' })).toBeInTheDocument();
-        expect(screen.getByRole('spinbutton', { name: /priya sharma shares/i })).toBeInTheDocument();
+        expect(
+            screen.getByRole('spinbutton', { name: /priya sharma shares/i }),
+        ).toBeInTheDocument();
     });
 
     it('does not render a trailing input for an unselected participant', () => {
