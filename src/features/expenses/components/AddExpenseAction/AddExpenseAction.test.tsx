@@ -11,8 +11,8 @@ vi.mock('@features/expenses/hooks/useCreateExpense', () => ({
     useCreateExpense: vi.fn(),
 }));
 
-vi.mock('../AddExpenseDialog', () => ({
-    AddExpenseDialog: ({
+vi.mock('../UpsertExpenseDialog', () => ({
+    UpsertExpenseDialog: ({
         onSubmit,
     }: {
         onSubmit: (values: {

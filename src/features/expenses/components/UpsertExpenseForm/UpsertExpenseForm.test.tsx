@@ -4,18 +4,18 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type { User } from '@data/entities';
 import { CURRENT_USER_ID } from '@data/seed';
-import { AddExpenseForm } from './AddExpenseForm';
+import { UpsertExpenseForm } from './UpsertExpenseForm';
 
 const members: User[] = [
     { id: CURRENT_USER_ID, name: 'Alex Morgan', email: 'alex@example.com' },
     { id: 'user-2', name: 'Priya Sharma', email: 'priya@example.com' },
 ];
 
-describe('AddExpenseForm', () => {
+describe('UpsertExpenseForm', () => {
     it('shows validation errors when submitted without a description or amount', async () => {
         const onSubmit = vi.fn();
         const user = userEvent.setup();
-        render(<AddExpenseForm members={members} onSubmit={onSubmit} onCancel={vi.fn()} />);
+        render(<UpsertExpenseForm members={members} onSubmit={onSubmit} onCancel={vi.fn()} />);
 
         await user.click(screen.getByRole('button', { name: /add expense/i }));
 
@@ -28,7 +28,7 @@ describe('AddExpenseForm', () => {
         const onSubmit = vi.fn();
         const user = userEvent.setup();
 
-        render(<AddExpenseForm members={members} onSubmit={onSubmit} onCancel={vi.fn()} />);
+        render(<UpsertExpenseForm members={members} onSubmit={onSubmit} onCancel={vi.fn()} />);
 
         await user.type(screen.getByLabelText(/description/i), 'Groceries');
         await user.type(screen.getByLabelText(/amount/i), '0');
@@ -42,7 +42,7 @@ describe('AddExpenseForm', () => {
         const onSubmit = vi.fn();
         const user = userEvent.setup();
 
-        render(<AddExpenseForm members={members} onSubmit={onSubmit} onCancel={vi.fn()} />);
+        render(<UpsertExpenseForm members={members} onSubmit={onSubmit} onCancel={vi.fn()} />);
 
         await user.type(screen.getByLabelText(/description/i), 'Groceries');
         await user.type(screen.getByLabelText(/amount/i), '-42.50');
@@ -53,7 +53,7 @@ describe('AddExpenseForm', () => {
     });
 
     it('defaults to splitting between every group member', () => {
-        render(<AddExpenseForm members={members} onSubmit={vi.fn()} onCancel={vi.fn()} />);
+        render(<UpsertExpenseForm members={members} onSubmit={vi.fn()} onCancel={vi.fn()} />);
 
         expect(screen.getByRole('checkbox', { name: 'You' })).toBeChecked();
         expect(screen.getByRole('checkbox', { name: /priya sharma/i })).toBeChecked();
@@ -62,7 +62,7 @@ describe('AddExpenseForm', () => {
     it('allows unchecking the current user as a participant', async () => {
         const onSubmit = vi.fn();
         const user = userEvent.setup();
-        render(<AddExpenseForm members={members} onSubmit={onSubmit} onCancel={vi.fn()} />);
+        render(<UpsertExpenseForm members={members} onSubmit={onSubmit} onCancel={vi.fn()} />);
 
         await user.type(screen.getByLabelText(/description/i), 'Groceries');
         await user.type(screen.getByLabelText(/amount/i), '42.50');
@@ -77,7 +77,7 @@ describe('AddExpenseForm', () => {
     it('calls onSubmit with the entered values and default participants', async () => {
         const onSubmit = vi.fn();
         const user = userEvent.setup();
-        render(<AddExpenseForm members={members} onSubmit={onSubmit} onCancel={vi.fn()} />);
+        render(<UpsertExpenseForm members={members} onSubmit={onSubmit} onCancel={vi.fn()} />);
 
         await user.type(screen.getByLabelText(/description/i), 'Groceries');
         await user.type(screen.getByLabelText(/amount/i), '42.50');
@@ -95,7 +95,7 @@ describe('AddExpenseForm', () => {
     it('excludes an unchecked participant from the submitted values', async () => {
         const onSubmit = vi.fn();
         const user = userEvent.setup();
-        render(<AddExpenseForm members={members} onSubmit={onSubmit} onCancel={vi.fn()} />);
+        render(<UpsertExpenseForm members={members} onSubmit={onSubmit} onCancel={vi.fn()} />);
 
         await user.type(screen.getByLabelText(/description/i), 'Groceries');
         await user.type(screen.getByLabelText(/amount/i), '42.50');
@@ -114,7 +114,7 @@ describe('AddExpenseForm', () => {
     it('shows an error and does not submit when every participant is unchecked', async () => {
         const onSubmit = vi.fn();
         const user = userEvent.setup();
-        render(<AddExpenseForm members={members} onSubmit={onSubmit} onCancel={vi.fn()} />);
+        render(<UpsertExpenseForm members={members} onSubmit={onSubmit} onCancel={vi.fn()} />);
 
         await user.type(screen.getByLabelText(/description/i), 'Groceries');
         await user.type(screen.getByLabelText(/amount/i), '42.50');
@@ -129,7 +129,7 @@ describe('AddExpenseForm', () => {
     it('calls onCancel when the cancel button is clicked', async () => {
         const onCancel = vi.fn();
         const user = userEvent.setup();
-        render(<AddExpenseForm members={members} onSubmit={vi.fn()} onCancel={onCancel} />);
+        render(<UpsertExpenseForm members={members} onSubmit={vi.fn()} onCancel={onCancel} />);
 
         await user.click(screen.getByRole('button', { name: /cancel/i }));
 
@@ -138,7 +138,7 @@ describe('AddExpenseForm', () => {
 
     describe('split type', () => {
         it('defaults to the equal split type with no trailing inputs', () => {
-            render(<AddExpenseForm members={members} onSubmit={vi.fn()} onCancel={vi.fn()} />);
+            render(<UpsertExpenseForm members={members} onSubmit={vi.fn()} onCancel={vi.fn()} />);
 
             expect(screen.getByRole('button', { name: 'Equal' })).toHaveAttribute(
                 'aria-pressed',
@@ -149,7 +149,7 @@ describe('AddExpenseForm', () => {
 
         it('shows a trailing amount input per participant when Exact is selected', async () => {
             const user = userEvent.setup();
-            render(<AddExpenseForm members={members} onSubmit={vi.fn()} onCancel={vi.fn()} />);
+            render(<UpsertExpenseForm members={members} onSubmit={vi.fn()} onCancel={vi.fn()} />);
 
             await user.click(screen.getByRole('button', { name: 'Exact' }));
 
@@ -161,7 +161,7 @@ describe('AddExpenseForm', () => {
 
         it('shows a trailing percentage input per participant when Percentage is selected', async () => {
             const user = userEvent.setup();
-            render(<AddExpenseForm members={members} onSubmit={vi.fn()} onCancel={vi.fn()} />);
+            render(<UpsertExpenseForm members={members} onSubmit={vi.fn()} onCancel={vi.fn()} />);
 
             await user.click(screen.getByRole('button', { name: 'Percentage' }));
 
@@ -170,7 +170,7 @@ describe('AddExpenseForm', () => {
 
         it('shows a trailing shares input per participant when Shares is selected', async () => {
             const user = userEvent.setup();
-            render(<AddExpenseForm members={members} onSubmit={vi.fn()} onCancel={vi.fn()} />);
+            render(<UpsertExpenseForm members={members} onSubmit={vi.fn()} onCancel={vi.fn()} />);
 
             await user.click(screen.getByRole('button', { name: 'Shares' }));
 
@@ -180,7 +180,7 @@ describe('AddExpenseForm', () => {
         it('submits share counts for every participant', async () => {
             const onSubmit = vi.fn();
             const user = userEvent.setup();
-            render(<AddExpenseForm members={members} onSubmit={onSubmit} onCancel={vi.fn()} />);
+            render(<UpsertExpenseForm members={members} onSubmit={onSubmit} onCancel={vi.fn()} />);
 
             await user.type(screen.getByLabelText(/description/i), 'Groceries');
             await user.type(screen.getByLabelText(/amount/i), '42.50');
@@ -205,7 +205,7 @@ describe('AddExpenseForm', () => {
         it('shows an error and does not submit when a share count is left blank', async () => {
             const onSubmit = vi.fn();
             const user = userEvent.setup();
-            render(<AddExpenseForm members={members} onSubmit={onSubmit} onCancel={vi.fn()} />);
+            render(<UpsertExpenseForm members={members} onSubmit={onSubmit} onCancel={vi.fn()} />);
 
             await user.type(screen.getByLabelText(/description/i), 'Groceries');
             await user.type(screen.getByLabelText(/amount/i), '42.50');
@@ -222,7 +222,7 @@ describe('AddExpenseForm', () => {
         it('submits exact split amounts that add up to the total', async () => {
             const onSubmit = vi.fn();
             const user = userEvent.setup();
-            render(<AddExpenseForm members={members} onSubmit={onSubmit} onCancel={vi.fn()} />);
+            render(<UpsertExpenseForm members={members} onSubmit={onSubmit} onCancel={vi.fn()} />);
 
             await user.type(screen.getByLabelText(/description/i), 'Groceries');
             await user.type(screen.getByLabelText(/amount/i), '42.50');
@@ -250,7 +250,7 @@ describe('AddExpenseForm', () => {
         it('shows an error and does not submit when exact amounts do not add up to the total', async () => {
             const onSubmit = vi.fn();
             const user = userEvent.setup();
-            render(<AddExpenseForm members={members} onSubmit={onSubmit} onCancel={vi.fn()} />);
+            render(<UpsertExpenseForm members={members} onSubmit={onSubmit} onCancel={vi.fn()} />);
 
             await user.type(screen.getByLabelText(/description/i), 'Groceries');
             await user.type(screen.getByLabelText(/amount/i), '42.50');
@@ -268,7 +268,7 @@ describe('AddExpenseForm', () => {
         it('shows an error and does not submit when an exact amount is left blank', async () => {
             const onSubmit = vi.fn();
             const user = userEvent.setup();
-            render(<AddExpenseForm members={members} onSubmit={onSubmit} onCancel={vi.fn()} />);
+            render(<UpsertExpenseForm members={members} onSubmit={onSubmit} onCancel={vi.fn()} />);
 
             await user.type(screen.getByLabelText(/description/i), 'Groceries');
             await user.type(screen.getByLabelText(/amount/i), '42.50');
@@ -285,7 +285,7 @@ describe('AddExpenseForm', () => {
         it('submits percentages that add up to 100', async () => {
             const onSubmit = vi.fn();
             const user = userEvent.setup();
-            render(<AddExpenseForm members={members} onSubmit={onSubmit} onCancel={vi.fn()} />);
+            render(<UpsertExpenseForm members={members} onSubmit={onSubmit} onCancel={vi.fn()} />);
 
             await user.type(screen.getByLabelText(/description/i), 'Groceries');
             await user.type(screen.getByLabelText(/amount/i), '42.50');
@@ -313,7 +313,7 @@ describe('AddExpenseForm', () => {
         it('shows an error and does not submit when percentages do not add up to 100', async () => {
             const onSubmit = vi.fn();
             const user = userEvent.setup();
-            render(<AddExpenseForm members={members} onSubmit={onSubmit} onCancel={vi.fn()} />);
+            render(<UpsertExpenseForm members={members} onSubmit={onSubmit} onCancel={vi.fn()} />);
 
             await user.type(screen.getByLabelText(/description/i), 'Groceries');
             await user.type(screen.getByLabelText(/amount/i), '42.50');
@@ -334,7 +334,7 @@ describe('AddExpenseForm', () => {
         it('shows an error and does not submit when a percentage is left blank', async () => {
             const onSubmit = vi.fn();
             const user = userEvent.setup();
-            render(<AddExpenseForm members={members} onSubmit={onSubmit} onCancel={vi.fn()} />);
+            render(<UpsertExpenseForm members={members} onSubmit={onSubmit} onCancel={vi.fn()} />);
 
             await user.type(screen.getByLabelText(/description/i), 'Groceries');
             await user.type(screen.getByLabelText(/amount/i), '42.50');
@@ -350,7 +350,7 @@ describe('AddExpenseForm', () => {
 
         it('clears entered split values when switching split type', async () => {
             const user = userEvent.setup();
-            render(<AddExpenseForm members={members} onSubmit={vi.fn()} onCancel={vi.fn()} />);
+            render(<UpsertExpenseForm members={members} onSubmit={vi.fn()} onCancel={vi.fn()} />);
 
             await user.click(screen.getByRole('button', { name: 'Exact' }));
             await user.type(screen.getByRole('spinbutton', { name: 'You amount' }), '20');
@@ -362,7 +362,7 @@ describe('AddExpenseForm', () => {
 
     describe('paid by', () => {
         it('defaults the payer to the current user, labeled "You"', () => {
-            render(<AddExpenseForm members={members} onSubmit={vi.fn()} onCancel={vi.fn()} />);
+            render(<UpsertExpenseForm members={members} onSubmit={vi.fn()} onCancel={vi.fn()} />);
 
             expect(screen.getByRole('button', { name: 'Paid by' })).toHaveTextContent('You');
         });
@@ -370,7 +370,7 @@ describe('AddExpenseForm', () => {
         it('submits the selected payer when changed', async () => {
             const onSubmit = vi.fn();
             const user = userEvent.setup();
-            render(<AddExpenseForm members={members} onSubmit={onSubmit} onCancel={vi.fn()} />);
+            render(<UpsertExpenseForm members={members} onSubmit={onSubmit} onCancel={vi.fn()} />);
 
             await user.type(screen.getByLabelText(/description/i), 'Groceries');
             await user.type(screen.getByLabelText(/amount/i), '42.50');
@@ -381,6 +381,97 @@ describe('AddExpenseForm', () => {
             expect(onSubmit).toHaveBeenCalledWith(
                 expect.objectContaining({ paidByUserId: 'user-2' }),
             );
+        });
+    });
+
+    describe('edit mode', () => {
+        it('prefills description, amount, payer, participants, and split type', () => {
+            render(
+                <UpsertExpenseForm
+                    mode="edit"
+                    members={members}
+                    initialValues={{
+                        description: 'Groceries',
+                        amount: 42.5,
+                        paidByUserId: 'user-2',
+                        participantUserIds: ['user-2'],
+                        splitType: 'exact',
+                        splitValues: { 'user-2': '42.50' },
+                    }}
+                    onSubmit={vi.fn()}
+                    onCancel={vi.fn()}
+                />,
+            );
+
+            expect(screen.getByLabelText(/description/i)).toHaveValue('Groceries');
+            expect(screen.getByLabelText(/^amount$/i)).toHaveValue(42.5);
+            expect(screen.getByRole('button', { name: 'Paid by' })).toHaveTextContent(
+                /priya sharma/i,
+            );
+            expect(screen.getByRole('checkbox', { name: 'You' })).not.toBeChecked();
+            expect(screen.getByRole('checkbox', { name: /priya sharma/i })).toBeChecked();
+            expect(screen.getByRole('button', { name: 'Exact' })).toHaveAttribute(
+                'aria-pressed',
+                'true',
+            );
+            expect(screen.getByRole('spinbutton', { name: /priya sharma amount/i })).toHaveValue(
+                42.5,
+            );
+        });
+
+        it('shows a "Save changes" submit button instead of "Add expense"', () => {
+            render(
+                <UpsertExpenseForm
+                    mode="edit"
+                    members={members}
+                    initialValues={{
+                        description: 'Groceries',
+                        amount: 42.5,
+                        paidByUserId: CURRENT_USER_ID,
+                        participantUserIds: [CURRENT_USER_ID],
+                        splitType: 'equal',
+                        splitValues: {},
+                    }}
+                    onSubmit={vi.fn()}
+                    onCancel={vi.fn()}
+                />,
+            );
+
+            expect(screen.getByRole('button', { name: /save changes/i })).toBeInTheDocument();
+            expect(screen.queryByRole('button', { name: /add expense/i })).not.toBeInTheDocument();
+        });
+
+        it('submits the edited values', async () => {
+            const onSubmit = vi.fn();
+            const user = userEvent.setup();
+            render(
+                <UpsertExpenseForm
+                    mode="edit"
+                    members={members}
+                    initialValues={{
+                        description: 'Groceries',
+                        amount: 42.5,
+                        paidByUserId: CURRENT_USER_ID,
+                        participantUserIds: [CURRENT_USER_ID, 'user-2'],
+                        splitType: 'equal',
+                        splitValues: {},
+                    }}
+                    onSubmit={onSubmit}
+                    onCancel={vi.fn()}
+                />,
+            );
+
+            await user.clear(screen.getByLabelText(/description/i));
+            await user.type(screen.getByLabelText(/description/i), 'Dinner');
+            await user.click(screen.getByRole('button', { name: /save changes/i }));
+
+            expect(onSubmit).toHaveBeenCalledWith({
+                description: 'Dinner',
+                amount: 42.5,
+                paidByUserId: CURRENT_USER_ID,
+                participantUserIds: [CURRENT_USER_ID, 'user-2'],
+                splitType: 'equal',
+            });
         });
     });
 });

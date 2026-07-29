@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Receipt } from 'lucide-react';
+import { Check, Receipt } from 'lucide-react';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -15,7 +15,7 @@ import { PaidByPicker } from '../PaidByPicker';
 import { SplitParticipantList } from '../SplitParticipantList';
 import { SplitTypeTabs } from '../SplitTypeTabs';
 
-const addExpenseSchema = z.object({
+const upsertExpenseSchema = z.object({
     description: z.string().trim().min(1, 'Description is required'),
     amount: z
         .number({
@@ -25,11 +25,11 @@ const addExpenseSchema = z.object({
     paidByUserId: z.string().min(1, 'Select who paid'),
 });
 
-type AddExpenseInput = z.infer<typeof addExpenseSchema>;
+type UpsertExpenseInput = z.infer<typeof upsertExpenseSchema>;
 
 const PERCENTAGE_TOLERANCE = 0.01;
 
-export interface AddExpenseFormValues {
+export interface UpsertExpenseFormValues {
     description: string;
     amount: number;
     paidByUserId: string;
@@ -40,28 +40,51 @@ export interface AddExpenseFormValues {
     sharesSplits?: SharesSplitEntry[];
 }
 
-interface AddExpenseFormProps {
+export interface UpsertExpenseFormInitialValues {
+    description: string;
+    amount: number;
+    paidByUserId: string;
+    participantUserIds: string[];
+    splitType: SplitType;
+    splitValues: Record<string, string>;
+}
+
+interface UpsertExpenseFormProps {
+    readonly mode?: 'add' | 'edit';
     readonly members: User[];
-    readonly onSubmit: (values: AddExpenseFormValues) => void;
+    readonly initialValues?: UpsertExpenseFormInitialValues;
+    readonly onSubmit: (values: UpsertExpenseFormValues) => void;
     readonly onCancel: () => void;
 }
 
-export function AddExpenseForm({ members, onSubmit, onCancel }: AddExpenseFormProps) {
+export function UpsertExpenseForm({
+    mode = 'add',
+    members,
+    initialValues,
+    onSubmit,
+    onCancel,
+}: UpsertExpenseFormProps) {
     const {
         register,
         handleSubmit,
         control,
         formState: { errors },
-    } = useForm<AddExpenseInput>({
-        resolver: zodResolver(addExpenseSchema),
-        defaultValues: { paidByUserId: CURRENT_USER_ID },
+    } = useForm<UpsertExpenseInput>({
+        resolver: zodResolver(upsertExpenseSchema),
+        defaultValues: {
+            description: initialValues?.description ?? '',
+            amount: initialValues?.amount,
+            paidByUserId: initialValues?.paidByUserId ?? CURRENT_USER_ID,
+        },
     });
     const [participantUserIds, setParticipantUserIds] = useState<string[]>(
-        members.map((member) => member.id),
+        initialValues?.participantUserIds ?? members.map((member) => member.id),
     );
     const [participantsError, setParticipantsError] = useState<string | undefined>();
-    const [splitType, setSplitType] = useState<SplitType>('equal');
-    const [splitValues, setSplitValues] = useState<Record<string, string>>({});
+    const [splitType, setSplitType] = useState<SplitType>(initialValues?.splitType ?? 'equal');
+    const [splitValues, setSplitValues] = useState<Record<string, string>>(
+        initialValues?.splitValues ?? {},
+    );
     const [splitError, setSplitError] = useState<string | undefined>();
 
     const toggleParticipant = (id: string) => {
@@ -294,8 +317,8 @@ export function AddExpenseForm({ members, onSubmit, onCancel }: AddExpenseFormPr
                     type="submit"
                     className="inline-flex cursor-pointer items-center gap-1 rounded-md bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700"
                 >
-                    <Receipt className="size-4" />
-                    Add expense
+                    {mode === 'add' ? <Receipt className="size-4" /> : <Check className="size-4" />}
+                    {mode === 'add' ? 'Add expense' : 'Save changes'}
                 </button>
             </div>
         </form>

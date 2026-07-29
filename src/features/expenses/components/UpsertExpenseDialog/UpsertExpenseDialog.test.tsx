@@ -2,10 +2,10 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
-import { AddExpenseDialog } from './AddExpenseDialog';
+import { UpsertExpenseDialog } from './UpsertExpenseDialog';
 
-vi.mock('../AddExpenseForm', () => ({
-    AddExpenseForm: ({
+vi.mock('../UpsertExpenseForm', () => ({
+    UpsertExpenseForm: ({
         onSubmit,
         onCancel,
     }: {
@@ -17,7 +17,7 @@ vi.mock('../AddExpenseForm', () => ({
         }) => void;
         onCancel: () => void;
     }) => (
-        <div data-testid="add-expense-form">
+        <div data-testid="upsert-expense-form">
             <button
                 type="button"
                 onClick={() =>
@@ -38,10 +38,10 @@ vi.mock('../AddExpenseForm', () => ({
     ),
 }));
 
-describe('AddExpenseDialog', () => {
+describe('UpsertExpenseDialog', () => {
     it('does not render the form when closed', () => {
         render(
-            <AddExpenseDialog
+            <UpsertExpenseDialog
                 open={false}
                 onOpenChange={vi.fn()}
                 members={[]}
@@ -49,13 +49,13 @@ describe('AddExpenseDialog', () => {
             />,
         );
 
-        expect(screen.queryByTestId('add-expense-form')).not.toBeInTheDocument();
+        expect(screen.queryByTestId('upsert-expense-form')).not.toBeInTheDocument();
     });
 
     it('renders the form when open', () => {
-        render(<AddExpenseDialog open onOpenChange={vi.fn()} members={[]} onSubmit={vi.fn()} />);
+        render(<UpsertExpenseDialog open onOpenChange={vi.fn()} members={[]} onSubmit={vi.fn()} />);
 
-        expect(screen.getByTestId('add-expense-form')).toBeInTheDocument();
+        expect(screen.getByTestId('upsert-expense-form')).toBeInTheDocument();
         expect(screen.getByText(/add an expense/i)).toBeInTheDocument();
     });
 
@@ -63,7 +63,12 @@ describe('AddExpenseDialog', () => {
         const onOpenChange = vi.fn();
         const user = userEvent.setup();
         render(
-            <AddExpenseDialog open onOpenChange={onOpenChange} members={[]} onSubmit={vi.fn()} />,
+            <UpsertExpenseDialog
+                open
+                onOpenChange={onOpenChange}
+                members={[]}
+                onSubmit={vi.fn()}
+            />,
         );
 
         await user.click(screen.getByRole('button', { name: /close/i }));
@@ -75,7 +80,12 @@ describe('AddExpenseDialog', () => {
         const onOpenChange = vi.fn();
         const user = userEvent.setup();
         render(
-            <AddExpenseDialog open onOpenChange={onOpenChange} members={[]} onSubmit={vi.fn()} />,
+            <UpsertExpenseDialog
+                open
+                onOpenChange={onOpenChange}
+                members={[]}
+                onSubmit={vi.fn()}
+            />,
         );
 
         await user.click(screen.getByRole('button', { name: /fake cancel/i }));
@@ -83,12 +93,31 @@ describe('AddExpenseDialog', () => {
         expect(onOpenChange).toHaveBeenCalledWith(false);
     });
 
+    it('shows an edit title and description in edit mode', () => {
+        render(
+            <UpsertExpenseDialog
+                mode="edit"
+                open
+                onOpenChange={vi.fn()}
+                members={[]}
+                onSubmit={vi.fn()}
+            />,
+        );
+
+        expect(screen.getByText(/edit expense/i)).toBeInTheDocument();
+    });
+
     it('reports closed and forwards the values when the form submits', async () => {
         const onOpenChange = vi.fn();
         const onSubmit = vi.fn();
         const user = userEvent.setup();
         render(
-            <AddExpenseDialog open onOpenChange={onOpenChange} members={[]} onSubmit={onSubmit} />,
+            <UpsertExpenseDialog
+                open
+                onOpenChange={onOpenChange}
+                members={[]}
+                onSubmit={onSubmit}
+            />,
         );
 
         await user.click(screen.getByRole('button', { name: /fake submit/i }));
