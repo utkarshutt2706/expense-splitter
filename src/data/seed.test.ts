@@ -38,10 +38,10 @@ describe('seedDatabase', () => {
     it('creates the current user, friends, group, and expenses when the database is empty', async () => {
         await seedDatabase({ users, groups, expenses });
 
-        expect(users.create).toHaveBeenCalledTimes(3);
+        expect(users.create).toHaveBeenCalledTimes(5);
         expect(users.create).toHaveBeenCalledWith(expect.objectContaining({ id: CURRENT_USER_ID }));
         expect(groups.create).toHaveBeenCalledTimes(1);
-        expect(expenses.create).toHaveBeenCalledTimes(2);
+        expect(expenses.create).toHaveBeenCalledTimes(1);
     });
 
     it('includes the current user in the seeded group membership', async () => {

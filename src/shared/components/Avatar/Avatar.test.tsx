@@ -33,4 +33,16 @@ describe('Avatar', () => {
 
         expect(container.querySelector('svg')).toHaveClass('size-6');
     });
+
+    it('never shrinks below its size in a flex row, even next to long sibling content', () => {
+        render(<Avatar name="Alex Morgan" />);
+
+        expect(screen.getByText('AM')).toHaveClass('shrink-0');
+    });
+
+    it('applies the same shrink protection to the fallback icon', () => {
+        const { container } = render(<Avatar name="" />);
+
+        expect(container.querySelector('svg')).toHaveClass('shrink-0');
+    });
 });

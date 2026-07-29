@@ -1,7 +1,7 @@
 import { createBrowserRouter } from 'react-router';
 
 import { AppLayout } from '@app/layouts';
-import { FriendsPage, GroupDetailPage, GroupsPage } from '@app/lazyPages';
+import { FriendsPage, GroupBalancePage, GroupDetailPage, GroupsPage } from '@app/lazyPages';
 import { PlaceholderPage } from '@app/pages/PlaceholderPage';
 
 export const router = createBrowserRouter(
@@ -14,6 +14,7 @@ export const router = createBrowserRouter(
                 { path: 'friends', element: <FriendsPage /> },
                 { path: 'groups', element: <GroupsPage /> },
                 { path: 'groups/:groupId', element: <GroupDetailPage /> },
+                { path: 'groups/:groupId/balance', element: <GroupBalancePage /> },
                 { path: 'activity', element: <PlaceholderPage title="Activity coming soon" /> },
                 { path: 'settings', element: <PlaceholderPage title="Settings coming soon" /> },
             ],
