@@ -4,10 +4,11 @@ import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
-import type { User } from '@data/entities';
+import type { SplitType, User } from '@data/entities';
 import { CURRENT_USER_ID } from '@data/seed';
-import { MemberCheckboxList } from '@features/groups';
 import { PaidByPicker } from '../PaidByPicker';
+import { SplitParticipantList } from '../SplitParticipantList';
+import { SplitTypeTabs } from '../SplitTypeTabs';
 
 const addExpenseSchema = z.object({
     description: z.string().trim().min(1, 'Description is required'),
@@ -48,11 +49,22 @@ export function AddExpenseForm({ members, onSubmit, onCancel }: AddExpenseFormPr
         members.map((member) => member.id),
     );
     const [participantsError, setParticipantsError] = useState<string | undefined>();
+    const [splitType, setSplitType] = useState<SplitType>('equal');
+    const [splitValues, setSplitValues] = useState<Record<string, string>>({});
 
     const toggleParticipant = (id: string) => {
         setParticipantUserIds((current) =>
             current.includes(id) ? current.filter((memberId) => memberId !== id) : [...current, id],
         );
+    };
+
+    const changeSplitType = (type: SplitType) => {
+        setSplitType(type);
+        setSplitValues({});
+    };
+
+    const changeSplitValue = (id: string, value: string) => {
+        setSplitValues((current) => ({ ...current, [id]: value }));
     };
 
     const submit = handleSubmit((values) => {
@@ -128,18 +140,25 @@ export function AddExpenseForm({ members, onSubmit, onCancel }: AddExpenseFormPr
                 )}
             </div>
 
-            <div className="flex flex-col gap-1">
-                <span className="text-sm font-medium text-surface-foreground">
-                    Split equally between
-                </span>
-                <MemberCheckboxList
+            <div className="flex flex-col gap-2">
+                <span className="text-sm font-medium text-surface-foreground">Split</span>
+                <SplitTypeTabs value={splitType} onChange={changeSplitType} />
+                <SplitParticipantList
                     users={members}
+                    splitType={splitType}
                     selectedIds={participantUserIds}
                     onToggle={toggleParticipant}
+                    values={splitValues}
+                    onValueChange={changeSplitValue}
                     emptyMessage="This group has no members to split with."
-                    currentUserId={CURRENT_USER_ID}
                 />
                 {participantsError && <p className="text-xs text-red-600">{participantsError}</p>}
+                {splitType !== 'equal' && (
+                    <p className="text-xs text-muted-foreground">
+                        {splitType} splits aren't supported yet — this expense will still be split
+                        equally until that's wired up.
+                    </p>
+                )}
             </div>
 
             <div className="flex justify-end gap-2">
