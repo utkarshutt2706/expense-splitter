@@ -1,7 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import { createMemoryRouter, RouterProvider } from 'react-router';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { useAuthStore } from '@app/stores';
 import { AppLayout } from './AppLayout';
 
 vi.mock('@app/hooks', async (importOriginal) => ({
@@ -13,18 +14,36 @@ vi.mock('@features/groups', () => ({
     useGroup: () => ({ data: undefined }),
 }));
 
-describe('AppLayout', () => {
-    it('renders the matched child route through the outlet', () => {
-        const router = createMemoryRouter([
-            {
-                path: '/',
-                element: <AppLayout />,
-                children: [{ index: true, element: <p>child route content</p> }],
-            },
-        ]);
+function renderLayout() {
+    const router = createMemoryRouter([
+        {
+            path: '/',
+            element: <AppLayout />,
+            children: [{ index: true, element: <p>child route content</p> }],
+        },
+        { path: '/login', element: <p>login page</p> },
+    ]);
 
-        render(<RouterProvider router={router} />);
+    return render(<RouterProvider router={router} />);
+}
+
+describe('AppLayout', () => {
+    beforeEach(() => {
+        localStorage.clear();
+        useAuthStore.setState({ currentUserId: null });
+    });
+
+    it('renders the matched child route through the outlet when logged in', () => {
+        useAuthStore.setState({ currentUserId: 'current-user' });
+
+        renderLayout();
 
         expect(screen.getByText('child route content')).toBeInTheDocument();
+    });
+
+    it('redirects to the login page when not logged in', () => {
+        renderLayout();
+
+        expect(screen.getByText('login page')).toBeInTheDocument();
     });
 });

@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { createBrowserRouter } from 'react-router';
 
 import { AppLayout } from '@app/layouts';
@@ -7,11 +8,21 @@ import {
     GroupBalancePage,
     GroupDetailPage,
     GroupsPage,
+    LoginPage,
 } from '@app/lazyPages';
 import { PlaceholderPage } from '@app/pages/PlaceholderPage';
+import { TopProgressBar } from '@shared/components';
 
 export const router = createBrowserRouter(
     [
+        {
+            path: 'login',
+            element: (
+                <Suspense fallback={<TopProgressBar />}>
+                    <LoginPage />
+                </Suspense>
+            ),
+        },
         {
             path: '/',
             element: <AppLayout />,

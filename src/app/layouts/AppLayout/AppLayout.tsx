@@ -1,12 +1,18 @@
 import { Suspense } from 'react';
-import { Outlet } from 'react-router';
+import { Navigate, Outlet } from 'react-router';
 
 import { Header, Sidebar } from '@app/components';
 import { useThemeAttribute } from '@app/hooks';
+import { useAuthStore } from '@app/stores';
 import { TopProgressBar } from '@shared/components';
 
 export function AppLayout() {
     useThemeAttribute();
+    const currentUserId = useAuthStore((state) => state.currentUserId);
+
+    if (!currentUserId) {
+        return <Navigate to="/login" replace />;
+    }
 
     return (
         <div className="flex h-svh bg-surface text-surface-foreground">
