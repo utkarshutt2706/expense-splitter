@@ -16,7 +16,7 @@ export function AddExpenseDialog({ open, onOpenChange, members, onSubmit }: AddE
             open={open}
             onOpenChange={onOpenChange}
             title="Add an expense"
-            description="Record a new expense and split it equally among participants."
+            description="Record a new expense and split it among participants."
         >
             <AddExpenseForm members={members} {...closeOnSubmit(onOpenChange, onSubmit)} />
         </FormDialog>

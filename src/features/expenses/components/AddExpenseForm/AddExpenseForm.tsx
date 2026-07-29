@@ -6,6 +6,7 @@ import { z } from 'zod';
 
 import type { SplitType, User } from '@data/entities';
 import { CURRENT_USER_ID } from '@data/seed';
+import type { ExactSplitEntry } from '@features/expenses/utils/splitCalculator';
 import { PaidByPicker } from '../PaidByPicker';
 import { SplitParticipantList } from '../SplitParticipantList';
 import { SplitTypeTabs } from '../SplitTypeTabs';
@@ -27,6 +28,8 @@ export interface AddExpenseFormValues {
     amount: number;
     paidByUserId: string;
     participantUserIds: string[];
+    splitType: SplitType;
+    exactSplits?: ExactSplitEntry[];
 }
 
 interface AddExpenseFormProps {
@@ -51,6 +54,7 @@ export function AddExpenseForm({ members, onSubmit, onCancel }: AddExpenseFormPr
     const [participantsError, setParticipantsError] = useState<string | undefined>();
     const [splitType, setSplitType] = useState<SplitType>('equal');
     const [splitValues, setSplitValues] = useState<Record<string, string>>({});
+    const [splitError, setSplitError] = useState<string | undefined>();
 
     const toggleParticipant = (id: string) => {
         setParticipantUserIds((current) =>
@@ -61,10 +65,35 @@ export function AddExpenseForm({ members, onSubmit, onCancel }: AddExpenseFormPr
     const changeSplitType = (type: SplitType) => {
         setSplitType(type);
         setSplitValues({});
+        setSplitError(undefined);
     };
 
     const changeSplitValue = (id: string, value: string) => {
         setSplitValues((current) => ({ ...current, [id]: value }));
+    };
+
+    const buildExactSplits = (amount: number): ExactSplitEntry[] | undefined => {
+        const totalCents = Math.round(amount * 100);
+        let sumCents = 0;
+        const exactSplits: ExactSplitEntry[] = [];
+
+        for (const userId of participantUserIds) {
+            const raw = splitValues[userId];
+            const parsed = raw === undefined || raw === '' ? Number.NaN : Number(raw);
+            if (!Number.isFinite(parsed) || parsed <= 0) {
+                setSplitError('Enter an amount for every participant');
+                return undefined;
+            }
+            sumCents += Math.round(parsed * 100);
+            exactSplits.push({ userId, amount: parsed });
+        }
+
+        if (sumCents !== totalCents) {
+            setSplitError('Exact amounts must add up to the total expense amount');
+            return undefined;
+        }
+
+        return exactSplits;
     };
 
     const submit = handleSubmit((values) => {
@@ -72,13 +101,31 @@ export function AddExpenseForm({ members, onSubmit, onCancel }: AddExpenseFormPr
             setParticipantsError('Select at least one participant');
             return;
         }
-
         setParticipantsError(undefined);
+
+        if (splitType === 'exact') {
+            const exactSplits = buildExactSplits(values.amount);
+            if (!exactSplits) return;
+
+            setSplitError(undefined);
+            onSubmit({
+                description: values.description,
+                amount: values.amount,
+                paidByUserId: values.paidByUserId,
+                participantUserIds,
+                splitType: 'exact',
+                exactSplits,
+            });
+            return;
+        }
+
+        setSplitError(undefined);
         onSubmit({
             description: values.description,
             amount: values.amount,
             paidByUserId: values.paidByUserId,
             participantUserIds,
+            splitType: 'equal',
         });
     });
 
@@ -115,7 +162,7 @@ export function AddExpenseForm({ members, onSubmit, onCancel }: AddExpenseFormPr
                     type="number"
                     step="0.01"
                     min="0"
-                    placeholder="0.00"
+                    placeholder="₹0.00"
                     {...register('amount', { valueAsNumber: true })}
                     className="rounded-md border border-border bg-surface px-3 py-2 text-sm text-surface-foreground outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
                 />
@@ -153,7 +200,8 @@ export function AddExpenseForm({ members, onSubmit, onCancel }: AddExpenseFormPr
                     emptyMessage="This group has no members to split with."
                 />
                 {participantsError && <p className="text-xs text-red-600">{participantsError}</p>}
-                {splitType !== 'equal' && (
+                {splitError && <p className="text-xs text-red-600">{splitError}</p>}
+                {(splitType === 'percentage' || splitType === 'shares') && (
                     <p className="text-xs text-muted-foreground">
                         {splitType} splits aren't supported yet — this expense will still be split
                         equally until that's wired up.

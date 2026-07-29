@@ -1,6 +1,8 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { calculateEqualSplit } from '@features/expenses/utils/splitCalculator';
+import type { SplitType } from '@data/entities';
+import type { ExactSplitEntry } from '@features/expenses/utils/splitCalculator';
+import { calculateEqualSplit, calculateExactSplit } from '@features/expenses/utils/splitCalculator';
 import { expenseService } from '@services/instances';
 
 interface CreateExpenseInput {
@@ -9,6 +11,8 @@ interface CreateExpenseInput {
     amount: number;
     paidByUserId: string;
     participantUserIds: string[];
+    splitType: SplitType;
+    exactSplits?: ExactSplitEntry[];
 }
 
 export function useCreateExpense() {
@@ -21,17 +25,25 @@ export function useCreateExpense() {
             amount,
             paidByUserId,
             participantUserIds,
-        }: CreateExpenseInput) =>
-            expenseService.create({
+            splitType,
+            exactSplits,
+        }: CreateExpenseInput) => {
+            const splits =
+                splitType === 'exact' && exactSplits
+                    ? calculateExactSplit({ amount, splits: exactSplits })
+                    : calculateEqualSplit({ amount, participantUserIds });
+
+            return expenseService.create({
                 id: crypto.randomUUID(),
                 groupId,
                 description,
                 amount,
                 paidByUserId,
-                splitType: 'equal',
-                splits: calculateEqualSplit({ amount, participantUserIds }),
+                splitType,
+                splits,
                 createdAt: new Date().toISOString(),
-            }),
+            });
+        },
         onSuccess: (_, { groupId }) => {
             queryClient.invalidateQueries({ queryKey: ['expenses', groupId] });
         },

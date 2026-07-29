@@ -45,6 +45,7 @@ describe('useCreateExpense', () => {
             amount: 90,
             paidByUserId: 'user-2',
             participantUserIds: ['user-1', 'user-2', 'user-3'],
+            splitType: 'equal',
         });
 
         await waitFor(() => expect(result.current.isSuccess).toBe(true));
@@ -64,5 +65,55 @@ describe('useCreateExpense', () => {
             }),
         );
         expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['expenses', 'group-1'] });
+    });
+
+    it('creates an expense with an exact split, using the provided per-participant amounts', async () => {
+        const { expenseService } = await import('@services/instances');
+        const created: Expense = {
+            id: 'generated-id',
+            groupId: 'group-1',
+            description: 'Groceries',
+            amount: 90,
+            paidByUserId: 'user-2',
+            splitType: 'exact',
+            splits: [
+                { userId: 'user-1', amount: 50 },
+                { userId: 'user-2', amount: 40 },
+            ],
+            createdAt: '2026-07-01T00:00:00.000Z',
+        };
+        vi.mocked(expenseService.create).mockResolvedValue(created);
+
+        const queryClient = new QueryClient();
+        const wrapper = ({ children }: { children: ReactNode }) => (
+            <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+        );
+
+        const { result } = renderHook(() => useCreateExpense(), { wrapper });
+
+        result.current.mutate({
+            groupId: 'group-1',
+            description: 'Groceries',
+            amount: 90,
+            paidByUserId: 'user-2',
+            participantUserIds: ['user-1', 'user-2'],
+            splitType: 'exact',
+            exactSplits: [
+                { userId: 'user-1', amount: 50 },
+                { userId: 'user-2', amount: 40 },
+            ],
+        });
+
+        await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+        expect(expenseService.create).toHaveBeenCalledWith(
+            expect.objectContaining({
+                splitType: 'exact',
+                splits: [
+                    { userId: 'user-1', amount: 50 },
+                    { userId: 'user-2', amount: 40 },
+                ],
+            }),
+        );
     });
 });
