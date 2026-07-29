@@ -21,12 +21,16 @@ export function Avatar({ name, size = 'md' }: AvatarProps) {
     const initials = getInitials(name);
 
     if (!initials) {
-        return <CircleUserRound className={`${iconSizeClasses[size]} text-muted-foreground`} />;
+        return (
+            <CircleUserRound
+                className={`${iconSizeClasses[size]} shrink-0 text-muted-foreground`}
+            />
+        );
     }
 
     return (
         <span
-            className={`flex ${sizeClasses[size]} items-center justify-center rounded-full select-none bg-brand-600 font-medium text-white`}
+            className={`flex ${sizeClasses[size]} shrink-0 items-center justify-center rounded-full select-none bg-brand-600 font-medium text-white`}
         >
             {initials}
         </span>
