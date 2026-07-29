@@ -81,15 +81,19 @@ export function GroupDetailPage() {
 
             {content}
 
-            {group && (
+            {!isError && (
                 <div className="mt-6 mb-12 flex flex-col gap-6">
-                    <GroupBalanceSummary groupId={group.id} />
+                    <GroupBalanceSummary groupId={groupId ?? ''} members={members ?? []} />
 
                     <div>
                         <h2 className="mb-3 font-display text-lg font-medium text-surface-foreground">
                             Expenses
                         </h2>
-                        <ExpenseList groupId={group.id} members={members ?? []} />
+                        <ExpenseList
+                            groupId={groupId ?? ''}
+                            members={members ?? []}
+                            isMembersLoading={isLoading || isMembersLoading}
+                        />
                     </div>
                 </div>
             )}

@@ -15,7 +15,7 @@ import { useDeleteExpense } from '@features/expenses/hooks/useDeleteExpense';
 import { useExpense } from '@features/expenses/hooks/useExpense';
 import { useUpdateExpense } from '@features/expenses/hooks/useUpdateExpense';
 import { useGroup, useGroupMembers } from '@features/groups';
-import { Avatar, ConfirmationDialog, Skeleton, SkeletonList } from '@shared/components';
+import { Avatar, ConfirmationDialog, Skeleton } from '@shared/components';
 
 const dateFormatter = new Intl.DateTimeFormat('en-US', {
     month: 'short',
@@ -103,7 +103,42 @@ export function ExpenseDetailPage() {
 
     let content: ReactNode;
     if (isLoading) {
-        content = <SkeletonList label="Loading expense…" />;
+        content = (
+            <output aria-label="Loading expense…" className="flex flex-col gap-6">
+                <div>
+                    <Skeleton className="h-8 w-32" />
+                    <Skeleton className="mt-2 h-4 w-56" />
+                </div>
+
+                <div>
+                    <div className="flex items-center gap-3">
+                        <Skeleton className="size-9 shrink-0 rounded-full" />
+                        <Skeleton className="h-5 w-48" />
+                    </div>
+
+                    <ul className="relative mt-3 ml-4.5 flex flex-col gap-4">
+                        <span
+                            aria-hidden="true"
+                            className="absolute top-0 bottom-6 left-0 w-px bg-border"
+                        />
+                        {[0, 1].map((index) => (
+                            <li key={index} className="relative flex items-center gap-2 pl-6">
+                                <span
+                                    aria-hidden="true"
+                                    className={
+                                        index === 1
+                                            ? 'absolute top-0 left-0 h-1/2 w-5 rounded-bl-md border-l border-b border-border'
+                                            : 'absolute top-1/2 left-0 h-px w-5 -translate-y-1/2 bg-border'
+                                    }
+                                />
+                                <Skeleton className="size-6 shrink-0 rounded-full" />
+                                <Skeleton className="h-4 w-32" />
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            </output>
+        );
     } else if (isExpenseError || !expense) {
         content = <div className="text-red-600">Couldn't load this expense.</div>;
     } else {

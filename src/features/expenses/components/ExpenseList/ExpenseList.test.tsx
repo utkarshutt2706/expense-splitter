@@ -11,10 +11,10 @@ vi.mock('@features/expenses/hooks/useExpenses', () => ({
     useExpenses: vi.fn(),
 }));
 
-function renderList(groupId = 'group-1') {
+function renderList(groupId = 'group-1', isMembersLoading = false) {
     return render(
         <MemoryRouter>
-            <ExpenseList groupId={groupId} members={members} />
+            <ExpenseList groupId={groupId} members={members} isMembersLoading={isMembersLoading} />
         </MemoryRouter>,
     );
 }
@@ -155,5 +155,18 @@ describe('ExpenseList', () => {
         renderList();
 
         expect(screen.getByText(/someone paid/i)).toBeInTheDocument();
+    });
+
+    it('shows a loading message while members are still resolving, even once expenses have loaded', () => {
+        vi.mocked(useExpenses).mockReturnValue({
+            data: expenses,
+            isLoading: false,
+            isError: false,
+        } as unknown as ReturnType<typeof useExpenses>);
+
+        renderList('group-1', true);
+
+        expect(screen.getByRole('status', { name: /loading expenses/i })).toBeInTheDocument();
+        expect(screen.queryByText(/paid/i)).not.toBeInTheDocument();
     });
 });
