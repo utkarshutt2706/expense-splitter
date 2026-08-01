@@ -16,7 +16,7 @@ export function SkeletonList({ label, count = 6 }: SkeletonListProps) {
                 {rowIds.map((rowId) => (
                     <li
                         key={rowId}
-                        className="flex items-center gap-3 rounded-lg border border-border p-3"
+                        className="border-border flex items-center gap-3 rounded-lg border p-3"
                     >
                         <Skeleton className="size-9 shrink-0 rounded-full" />
                         <div className="flex-1 space-y-2">

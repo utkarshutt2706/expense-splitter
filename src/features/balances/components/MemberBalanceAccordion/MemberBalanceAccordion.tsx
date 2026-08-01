@@ -53,24 +53,24 @@ export function MemberBalanceAccordion({
     const title = titleFor(member, netAmount);
 
     return (
-        <Accordion.Item value={member.id} className="rounded-lg border border-border">
+        <Accordion.Item value={member.id} className="border-border rounded-lg border">
             <Accordion.Header>
                 <Accordion.Trigger
                     className={`group flex w-full cursor-pointer items-center justify-between gap-2 p-3 text-left text-sm font-medium ${title.className}`}
                 >
                     {title.text}
-                    <ChevronDown className="size-4 shrink-0 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                    <ChevronDown className="text-muted-foreground size-4 shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-180" />
                 </Accordion.Trigger>
             </Accordion.Header>
-            <Accordion.Content className="border-t border-border px-3 pb-3">
+            <Accordion.Content className="border-border border-t px-3 pb-3">
                 {transactions.length === 0 ? (
-                    <p className="pt-3 text-sm text-muted-foreground">No settlements needed.</p>
+                    <p className="text-muted-foreground pt-3 text-sm">No settlements needed.</p>
                 ) : (
                     <ul className="flex flex-col gap-1 pt-3">
                         {transactions.map((transaction) => (
                             <li
                                 key={`${transaction.fromUserId}-${transaction.toUserId}`}
-                                className="text-sm text-muted-foreground"
+                                className="text-muted-foreground text-sm"
                             >
                                 {subjectName(transaction.fromUserId, membersById)} owe
                                 {transaction.fromUserId === CURRENT_USER_ID ? '' : 's'} ₹

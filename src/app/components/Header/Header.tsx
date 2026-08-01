@@ -10,8 +10,8 @@ export function Header() {
     const title = groupId ? (group?.name ?? 'Group Detail') : (pageTitles[pathname] ?? '');
 
     return (
-        <header className="flex items-center border-b border-border bg-surface px-4 md:px-6 py-4">
-            <h1 className="font-display text-xl font-medium text-surface-foreground">{title}</h1>
+        <header className="border-border bg-surface flex items-center border-b px-4 py-4 md:px-6">
+            <h1 className="text-surface-foreground font-display text-xl font-medium">{title}</h1>
         </header>
     );
 }

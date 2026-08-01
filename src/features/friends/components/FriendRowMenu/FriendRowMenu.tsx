@@ -14,7 +14,7 @@ export function FriendRowMenu({ friendName, onEdit, onRemove }: FriendRowMenuPro
                 <button
                     type="button"
                     aria-label={`Open actions for ${friendName}`}
-                    className="cursor-pointer rounded-md p-1.5 text-muted-foreground hover:bg-muted"
+                    className="text-muted-foreground hover:bg-muted cursor-pointer rounded-md p-1.5"
                 >
                     <MoreVertical className="size-4" />
                 </button>
@@ -22,18 +22,18 @@ export function FriendRowMenu({ friendName, onEdit, onRemove }: FriendRowMenuPro
             <DropdownMenu.Portal>
                 <DropdownMenu.Content
                     align="end"
-                    className="z-50 min-w-36 rounded-md border border-border bg-surface p-1 shadow-lg"
+                    className="border-border bg-surface z-50 min-w-36 rounded-md border p-1 shadow-lg"
                 >
                     <DropdownMenu.Item
                         onSelect={onEdit}
-                        className="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-surface-foreground outline-none hover:bg-muted"
+                        className="text-surface-foreground hover:bg-muted flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm font-medium outline-none"
                     >
-                        <Pencil className="size-4 text-muted-foreground" />
+                        <Pencil className="text-muted-foreground size-4" />
                         Edit
                     </DropdownMenu.Item>
                     <DropdownMenu.Item
                         onSelect={onRemove}
-                        className="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-red-600 outline-none hover:bg-muted"
+                        className="hover:bg-muted flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-red-600 outline-none"
                     >
                         <Trash2 className="size-4" />
                         Remove

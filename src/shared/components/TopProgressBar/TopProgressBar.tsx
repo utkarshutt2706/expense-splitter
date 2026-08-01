@@ -8,7 +8,7 @@ export function TopProgressBar() {
             <progress className="sr-only" aria-label="Loading" />
             <div
                 aria-hidden="true"
-                className="h-full origin-left animate-progress-fill rounded-full bg-brand-500"
+                className="animate-progress-fill bg-brand-500 h-full origin-left rounded-full"
             />
         </div>
     );

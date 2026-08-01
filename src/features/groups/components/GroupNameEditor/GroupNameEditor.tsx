@@ -63,7 +63,7 @@ export function GroupNameEditor({ group, isEditing, onEditingChange }: GroupName
                     }}
                     disabled={renameGroup.isPending}
                     aria-label="Group name"
-                    className="rounded-md border border-border bg-surface px-2 py-1 font-display text-xl font-medium text-surface-foreground outline-none focus-visible:ring-2 focus-visible:ring-brand-500 disabled:opacity-60"
+                    className="border-border bg-surface font-display text-surface-foreground focus-visible:ring-brand-500 rounded-md border px-2 py-1 text-xl font-medium outline-none focus-visible:ring-2 disabled:opacity-60"
                 />
                 <div className="flex items-center">
                     <button
@@ -72,7 +72,7 @@ export function GroupNameEditor({ group, isEditing, onEditingChange }: GroupName
                         title="Rename"
                         onClick={rename}
                         disabled={renameGroup.isPending}
-                        className="cursor-pointer rounded-md p-1.5 text-green-600 hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
+                        className="hover:bg-muted cursor-pointer rounded-md p-1.5 text-green-600 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                         <Check className="size-4" />
                     </button>
@@ -82,7 +82,7 @@ export function GroupNameEditor({ group, isEditing, onEditingChange }: GroupName
                         title="Cancel"
                         onClick={cancelRename}
                         disabled={renameGroup.isPending}
-                        className="cursor-pointer rounded-md p-1.5 text-muted-foreground hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
+                        className="text-muted-foreground hover:bg-muted cursor-pointer rounded-md p-1.5 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                         <X className="size-4" />
                     </button>
@@ -93,7 +93,7 @@ export function GroupNameEditor({ group, isEditing, onEditingChange }: GroupName
 
     return (
         <>
-            <h1 className="font-display text-xl font-medium text-surface-foreground">
+            <h1 className="font-display text-surface-foreground text-xl font-medium">
                 {group.name}
             </h1>
             <button
@@ -101,7 +101,7 @@ export function GroupNameEditor({ group, isEditing, onEditingChange }: GroupName
                 aria-label={`Edit ${group.name}`}
                 title={`Rename ${group.name}`}
                 onClick={startRenaming}
-                className="cursor-pointer rounded-md p-1.5 text-muted-foreground hover:bg-muted"
+                className="text-muted-foreground hover:bg-muted cursor-pointer rounded-md p-1.5"
             >
                 <Pencil className="size-4" />
             </button>

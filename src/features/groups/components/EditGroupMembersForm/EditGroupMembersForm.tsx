@@ -41,7 +41,7 @@ export function EditGroupMembersForm({
     return (
         <form onSubmit={submit} noValidate className="flex flex-col gap-4">
             <div className="flex flex-col gap-1">
-                <span className="text-sm font-medium text-surface-foreground">Members</span>
+                <span className="text-surface-foreground text-sm font-medium">Members</span>
                 <MemberCheckboxList
                     users={users}
                     selectedIds={memberIds}
@@ -56,13 +56,13 @@ export function EditGroupMembersForm({
                 <button
                     type="button"
                     onClick={onCancel}
-                    className="cursor-pointer rounded-md border border-border px-4 py-2 text-sm font-medium text-surface-foreground hover:bg-muted"
+                    className="border-border text-surface-foreground hover:bg-muted cursor-pointer rounded-md border px-4 py-2 text-sm font-medium"
                 >
                     Cancel
                 </button>
                 <button
                     type="submit"
-                    className="inline-flex cursor-pointer items-center gap-1 rounded-md bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700"
+                    className="bg-brand-600 hover:bg-brand-700 inline-flex cursor-pointer items-center gap-1 rounded-md px-4 py-2 text-sm font-medium text-white"
                 >
                     <Check className="size-4" />
                     Save changes

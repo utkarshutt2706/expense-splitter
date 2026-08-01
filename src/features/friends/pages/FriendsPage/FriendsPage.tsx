@@ -81,16 +81,16 @@ export function FriendsPage() {
         content = <div className="text-muted-foreground">No friends match your search.</div>;
     } else {
         content = (
-            <ul className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+            <ul className="grid grid-cols-1 gap-3 lg:grid-cols-2">
                 {filteredFriends.map((friend) => (
                     <li
                         key={friend.id}
-                        className="flex items-center gap-3 rounded-lg border border-border p-3"
+                        className="border-border flex items-center gap-3 rounded-lg border p-3"
                     >
                         <Avatar name={friend.name} />
                         <div className="flex-1">
-                            <p className="font-medium text-surface-foreground">{friend.name}</p>
-                            <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-sm text-muted-foreground">
+                            <p className="text-surface-foreground font-medium">{friend.name}</p>
+                            <div className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-0.5 text-sm">
                                 {friend.email && (
                                     <span className="inline-flex items-center gap-1">
                                         <Mail className="size-3.5" />
@@ -138,7 +138,7 @@ export function FriendsPage() {
                     <button
                         type="button"
                         onClick={() => setAddDialogOpen(true)}
-                        className="ml-auto inline-flex shrink-0 cursor-pointer items-center gap-1 rounded-md border border-border px-4 py-2 text-sm font-medium text-surface-foreground hover:bg-muted"
+                        className="border-border text-surface-foreground hover:bg-muted ml-auto inline-flex shrink-0 cursor-pointer items-center gap-1 rounded-md border px-4 py-2 text-sm font-medium"
                     >
                         <UserPlus className="size-4" />
                         Add friend

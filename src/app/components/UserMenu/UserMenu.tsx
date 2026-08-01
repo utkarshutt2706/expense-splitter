@@ -18,9 +18,9 @@ function MenuItem({ icon: Icon, label, onClick }: MenuItemProps) {
         <button
             type="button"
             onClick={onClick}
-            className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm font-medium cursor-pointer text-surface-foreground hover:bg-muted"
+            className="text-surface-foreground hover:bg-muted flex w-full cursor-pointer items-center gap-3 rounded-md px-3 py-2 text-left text-sm font-medium"
         >
-            <Icon className="size-4 text-muted-foreground" />
+            <Icon className="text-muted-foreground size-4" />
             {label}
         </button>
     );
@@ -35,9 +35,9 @@ function ThemeToggleRow() {
             role="switch"
             aria-checked={isDark}
             onClick={() => setIsDark((current) => !current)}
-            className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm font-medium cursor-pointer text-surface-foreground hover:bg-muted"
+            className="text-surface-foreground hover:bg-muted flex w-full cursor-pointer items-center gap-3 rounded-md px-3 py-2 text-left text-sm font-medium"
         >
-            <SunMoon className="size-4 text-muted-foreground" />
+            <SunMoon className="text-muted-foreground size-4" />
             <span className="flex-1">Theme</span>
             <span
                 className={`flex h-5 w-9 shrink-0 items-center rounded-full p-0.5 transition-colors ${
@@ -74,14 +74,14 @@ export function UserMenu({ expanded }: UserMenuProps) {
                 <button
                     type="button"
                     aria-label="Open user menu"
-                    className={`flex w-full items-center gap-3 rounded-md p-1 text-left outline-none cursor-pointer hover:bg-border focus-visible:ring-2 focus-visible:ring-brand-500 ${expanded ? 'px-3 py-2' : ''}`}
+                    className={`hover:bg-border focus-visible:ring-brand-500 flex w-full cursor-pointer items-center gap-3 rounded-md p-1 text-left outline-none focus-visible:ring-2 ${expanded ? 'px-3 py-2' : ''}`}
                 >
                     <Avatar name={currentUser?.name ?? ''} />
                     <div className={`min-w-0 flex-1 ${expanded ? 'block' : 'hidden'} md:block`}>
-                        <p className="truncate text-sm font-medium text-surface-foreground">
+                        <p className="text-surface-foreground truncate text-sm font-medium">
                             {currentUser?.name}
                         </p>
-                        <p className="truncate text-xs text-muted-foreground">
+                        <p className="text-muted-foreground truncate text-xs">
                             {currentUser?.email}
                         </p>
                     </div>
@@ -93,24 +93,24 @@ export function UserMenu({ expanded }: UserMenuProps) {
                     side="top"
                     sideOffset={8}
                     data-testid="user-menu-content"
-                    className="z-30 w-56 rounded-lg border border-border bg-surface p-1 shadow-lg"
+                    className="border-border bg-surface z-30 w-56 rounded-lg border p-1 shadow-lg"
                 >
                     <div className="flex items-center gap-3 px-3 py-2">
                         <Avatar name={currentUser?.name ?? ''} />
                         <div className="min-w-0">
-                            <p className="truncate text-sm font-medium text-surface-foreground">
+                            <p className="text-surface-foreground truncate text-sm font-medium">
                                 {currentUser?.name}
                             </p>
-                            <p className="truncate text-xs text-muted-foreground">
+                            <p className="text-muted-foreground truncate text-xs">
                                 {currentUser?.email}
                             </p>
                         </div>
                     </div>
-                    <div className="my-1 h-px bg-border" />
+                    <div className="bg-border my-1 h-px" />
                     <MenuItem icon={UserRound} label="My account" />
                     <MenuItem icon={Settings} label="Settings" />
                     <ThemeToggleRow />
-                    <div className="my-1 h-px bg-border" />
+                    <div className="bg-border my-1 h-px" />
                     <MenuItem icon={LogOut} label="Logout" onClick={handleLogout} />
                 </Popover.Content>
             </Popover.Portal>

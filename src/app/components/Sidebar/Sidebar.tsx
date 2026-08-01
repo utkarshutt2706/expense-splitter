@@ -19,7 +19,7 @@ export function Sidebar() {
                 />
             )}
             <aside
-                className={`fixed inset-y-0 left-0 z-20 flex ${isExpanded ? 'w-72' : 'w-16'} shrink-0 flex-col gap-1 overflow-hidden border-r border-border bg-muted px-2 py-4 transition-all md:static md:w-64 md:px-4`}
+                className={`fixed inset-y-0 left-0 z-20 flex ${isExpanded ? 'w-72' : 'w-16'} border-border bg-muted shrink-0 flex-col gap-1 overflow-hidden border-r px-2 py-4 transition-all md:static md:w-64 md:px-4`}
             >
                 <div className="mb-4 flex shrink-0 items-center justify-between gap-2 px-2">
                     <Link
@@ -27,7 +27,7 @@ export function Sidebar() {
                         className={`min-w-0 items-center gap-2 ${isExpanded ? 'flex' : 'hidden'} md:flex`}
                     >
                         <img src={logo} alt="" className="size-8 shrink-0" />
-                        <span className="font-display text-lg font-semibold whitespace-nowrap text-brand-600">
+                        <span className="font-display text-brand-600 text-lg font-semibold whitespace-nowrap">
                             Expense Splitter
                         </span>
                     </Link>
@@ -35,7 +35,7 @@ export function Sidebar() {
                         type="button"
                         aria-label={isExpanded ? 'Collapse sidebar' : 'Expand sidebar'}
                         onClick={() => setIsExpanded((current) => !current)}
-                        className="flex size-8 shrink-0 items-center justify-center rounded-md cursor-pointer text-muted-foreground hover:bg-border md:hidden"
+                        className="text-muted-foreground hover:bg-border flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-md md:hidden"
                     >
                         {isExpanded ? <X className="size-6" /> : <Menu className="size-6" />}
                     </button>
@@ -65,7 +65,7 @@ export function Sidebar() {
                     ))}
                 </nav>
                 <div
-                    className={`shrink-0 ${isExpanded ? 'mt-1 border-t border-border pt-4' : ''} md:mt-1 md:border-t md:border-border md:pt-4`}
+                    className={`shrink-0 ${isExpanded ? 'border-border mt-1 border-t pt-4' : ''} md:border-border md:mt-1 md:border-t md:pt-4`}
                 >
                     <UserMenu expanded={isExpanded} />
                 </div>

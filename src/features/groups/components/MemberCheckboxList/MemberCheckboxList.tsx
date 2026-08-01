@@ -19,7 +19,7 @@ export function MemberCheckboxList({
     lockCurrentUser = false,
 }: MemberCheckboxListProps) {
     if (users.length === 0) {
-        return <p className="text-sm text-muted-foreground">{emptyMessage}</p>;
+        return <p className="text-muted-foreground text-sm">{emptyMessage}</p>;
     }
 
     const orderedUsers = [...users].sort((a, b) => {
@@ -36,18 +36,18 @@ export function MemberCheckboxList({
 
                 return (
                     <li key={user.id}>
-                        <label className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted">
+                        <label className="hover:bg-muted flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5">
                             <input
                                 type="checkbox"
                                 checked={isLocked || selectedIds.includes(user.id)}
                                 disabled={isLocked}
                                 onChange={() => onToggle(user.id)}
-                                className="size-4 cursor-pointer accent-brand-600 disabled:cursor-not-allowed"
+                                className="accent-brand-600 size-4 cursor-pointer disabled:cursor-not-allowed"
                             />
                             <span aria-hidden="true">
                                 <Avatar name={user.name} />
                             </span>
-                            <span className="text-sm text-surface-foreground">
+                            <span className="text-surface-foreground text-sm">
                                 {isCurrentUser ? 'You' : user.name}
                             </span>
                         </label>

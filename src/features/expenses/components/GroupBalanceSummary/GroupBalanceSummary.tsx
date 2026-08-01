@@ -19,7 +19,7 @@ export function GroupBalanceSummary({ groupId, members }: GroupBalanceSummaryPro
     }
 
     if (isError) {
-        return <p className="text-sm text-muted-foreground">Couldn't load balance.</p>;
+        return <p className="text-muted-foreground text-sm">Couldn't load balance.</p>;
     }
 
     const balance = calculateNetBalance(expenses ?? [], CURRENT_USER_ID);
@@ -47,13 +47,13 @@ export function GroupBalanceSummary({ groupId, members }: GroupBalanceSummaryPro
         <span className={`font-display text-lg font-medium ${className}`}>
             {text}
             {isGroupFullySettled ? (
-                <span className="ml-2 text-base font-normal text-muted-foreground">
+                <span className="text-muted-foreground ml-2 text-base font-normal">
                     🎉 This group is all settled
                 </span>
             ) : (
                 <Link
                     to={`/groups/${groupId}/balance`}
-                    className="ml-2 text-base font-normal text-muted-foreground hover:text-surface-foreground hover:underline"
+                    className="text-muted-foreground hover:text-surface-foreground ml-2 text-base font-normal hover:underline"
                 >
                     Click to view details
                 </Link>

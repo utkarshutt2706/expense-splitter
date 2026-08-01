@@ -119,7 +119,7 @@ export function ExpenseDetailPage() {
                     <ul className="relative mt-3 ml-4.5 flex flex-col gap-4">
                         <span
                             aria-hidden="true"
-                            className="absolute top-0 bottom-6 left-0 w-px bg-border"
+                            className="bg-border absolute top-0 bottom-6 left-0 w-px"
                         />
                         {[0, 1].map((index) => (
                             <li key={index} className="relative flex items-center gap-2 pl-6">
@@ -127,8 +127,8 @@ export function ExpenseDetailPage() {
                                     aria-hidden="true"
                                     className={
                                         index === 1
-                                            ? 'absolute top-0 left-0 h-1/2 w-5 rounded-bl-md border-l border-b border-border'
-                                            : 'absolute top-1/2 left-0 h-px w-5 -translate-y-1/2 bg-border'
+                                            ? 'border-border absolute top-0 left-0 h-1/2 w-5 rounded-bl-md border-b border-l'
+                                            : 'bg-border absolute top-1/2 left-0 h-px w-5 -translate-y-1/2'
                                     }
                                 />
                                 <Skeleton className="size-6 shrink-0 rounded-full" />
@@ -155,10 +155,10 @@ export function ExpenseDetailPage() {
         content = (
             <div className="flex flex-col gap-6">
                 <div>
-                    <p className="text-2xl font-semibold text-surface-foreground">
+                    <p className="text-surface-foreground text-2xl font-semibold">
                         ₹{expense.amount.toFixed(2)}
                     </p>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-muted-foreground text-sm">
                         {`Added by ${memberLabel(addedBy).toLocaleLowerCase()} on ${createdDate}`}
                     </p>
                 </div>
@@ -166,7 +166,7 @@ export function ExpenseDetailPage() {
                 <div>
                     <div className="flex items-center gap-3">
                         <Avatar name={payer?.name ?? '?'} />
-                        <p className="font-medium text-surface-foreground">
+                        <p className="text-surface-foreground font-medium">
                             {`${memberLabel(payer)} paid ₹${expense.amount.toFixed(2)} `}
                             <span className="text-muted-foreground">{`on ${paidDate}`}</span>
                         </p>
@@ -175,7 +175,7 @@ export function ExpenseDetailPage() {
                     <ul className="relative mt-3 ml-4.5 flex flex-col gap-4">
                         <span
                             aria-hidden="true"
-                            className="absolute top-0 bottom-6 left-0 w-px bg-border"
+                            className="bg-border absolute top-0 bottom-6 left-0 w-px"
                         />
                         {participants.map((member, index) => {
                             const share = splitsByUserId.get(member.id)!;
@@ -190,16 +190,16 @@ export function ExpenseDetailPage() {
                                     {isLast ? (
                                         <span
                                             aria-hidden="true"
-                                            className="absolute top-0 left-0 h-1/2 w-5 rounded-bl-md border-l border-b border-border"
+                                            className="border-border absolute top-0 left-0 h-1/2 w-5 rounded-bl-md border-b border-l"
                                         />
                                     ) : (
                                         <span
                                             aria-hidden="true"
-                                            className="absolute top-1/2 left-0 h-px w-5 -translate-y-1/2 bg-border"
+                                            className="bg-border absolute top-1/2 left-0 h-px w-5 -translate-y-1/2"
                                         />
                                     )}
                                     <Avatar name={member.name} size="sm" />
-                                    <span className="text-sm text-surface-foreground">
+                                    <span className="text-surface-foreground text-sm">
                                         {`${memberLabel(member)} owe${isCurrentUser ? '' : 's'} ₹${share.toFixed(2)}`}
                                     </span>
                                 </li>
@@ -215,14 +215,14 @@ export function ExpenseDetailPage() {
         <div>
             <Link
                 to={`/groups/${groupId}`}
-                className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-surface-foreground"
+                className="text-muted-foreground hover:text-surface-foreground mb-4 inline-flex items-center gap-1 text-sm"
             >
                 <ArrowLeft className="size-4" />
                 Back to group
             </Link>
 
             <div className="mb-4 flex items-center gap-3">
-                <h1 className="font-display text-xl font-medium text-surface-foreground">
+                <h1 className="font-display text-surface-foreground text-xl font-medium">
                     {isLoading ? (
                         <Skeleton className="h-7 w-40" />
                     ) : (
@@ -237,7 +237,7 @@ export function ExpenseDetailPage() {
                         title="Edit expense"
                         disabled={isLoading}
                         onClick={() => setIsEditingExpense(true)}
-                        className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-border p-2 text-sm font-medium text-surface-foreground hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60 md:px-3 md:py-1.5"
+                        className="border-border text-surface-foreground hover:bg-muted inline-flex cursor-pointer items-center gap-1 rounded-md border p-2 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-60 md:px-3 md:py-1.5"
                     >
                         <Pencil className="size-4" />
                         <span className="hidden md:inline">Edit</span>
@@ -248,7 +248,7 @@ export function ExpenseDetailPage() {
                         title="Delete expense"
                         disabled={isLoading}
                         onClick={() => setIsConfirmingDelete(true)}
-                        className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-border p-2 text-sm font-medium text-red-600 hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60 md:px-3 md:py-1.5"
+                        className="border-border hover:bg-muted inline-flex cursor-pointer items-center gap-1 rounded-md border p-2 text-sm font-medium text-red-600 disabled:cursor-not-allowed disabled:opacity-60 md:px-3 md:py-1.5"
                     >
                         <Trash2 className="size-4" />
                         <span className="hidden md:inline">Delete</span>
