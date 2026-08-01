@@ -15,7 +15,7 @@ export function AppLayout() {
     }
 
     return (
-        <div className="flex h-svh bg-surface text-surface-foreground">
+        <div className="bg-surface text-surface-foreground flex h-svh">
             <Sidebar />
             <div className="flex flex-1 flex-col overflow-hidden pl-16 md:pl-0">
                 <Header />

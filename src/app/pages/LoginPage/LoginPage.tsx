@@ -49,17 +49,17 @@ export function LoginPage() {
     });
 
     return (
-        <div className="flex min-h-svh items-center justify-center bg-surface p-4">
+        <div className="bg-surface flex min-h-svh items-center justify-center p-4">
             <form
                 onSubmit={submit}
                 noValidate
-                className="flex w-full max-w-sm flex-col gap-4 rounded-lg border border-border bg-surface p-6 shadow-lg"
+                className="border-border bg-surface flex w-full max-w-sm flex-col gap-4 rounded-lg border p-6 shadow-lg"
             >
                 <div>
-                    <h1 className="font-display text-xl font-medium text-surface-foreground">
+                    <h1 className="font-display text-surface-foreground text-xl font-medium">
                         Expense Splitter
                     </h1>
-                    <p className="mt-1 text-sm text-muted-foreground">
+                    <p className="text-muted-foreground mt-1 text-sm">
                         Sign in with the username and password you were given.
                     </p>
                 </div>
@@ -67,7 +67,7 @@ export function LoginPage() {
                 <div className="flex flex-col gap-1">
                     <label
                         htmlFor="login-username"
-                        className="text-sm font-medium text-surface-foreground"
+                        className="text-surface-foreground text-sm font-medium"
                     >
                         Username
                     </label>
@@ -76,7 +76,7 @@ export function LoginPage() {
                         type="text"
                         autoComplete="username"
                         {...register('username')}
-                        className="rounded-md border border-border bg-surface px-3 py-2 text-sm text-surface-foreground outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                        className="border-border bg-surface text-surface-foreground focus-visible:ring-brand-500 rounded-md border px-3 py-2 text-sm outline-none focus-visible:ring-2"
                     />
                     {errors.username && (
                         <p className="text-xs text-red-600">{errors.username.message}</p>
@@ -86,7 +86,7 @@ export function LoginPage() {
                 <div className="flex flex-col gap-1">
                     <label
                         htmlFor="login-password"
-                        className="text-sm font-medium text-surface-foreground"
+                        className="text-surface-foreground text-sm font-medium"
                     >
                         Password
                     </label>
@@ -95,7 +95,7 @@ export function LoginPage() {
                         type="password"
                         autoComplete="current-password"
                         {...register('password')}
-                        className="rounded-md border border-border bg-surface px-3 py-2 text-sm text-surface-foreground outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                        className="border-border bg-surface text-surface-foreground focus-visible:ring-brand-500 rounded-md border px-3 py-2 text-sm outline-none focus-visible:ring-2"
                     />
                     {errors.password && (
                         <p className="text-xs text-red-600">{errors.password.message}</p>
@@ -107,7 +107,7 @@ export function LoginPage() {
                 <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="inline-flex cursor-pointer items-center justify-center gap-1 rounded-md bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="bg-brand-600 hover:bg-brand-700 inline-flex cursor-pointer items-center justify-center gap-1 rounded-md px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-60"
                 >
                     {isSubmitting ? (
                         <Loader2 className="size-4 animate-spin" />

@@ -23,18 +23,18 @@ export function ConfirmationDialog({
         <AlertDialog.Root open={open} onOpenChange={onOpenChange}>
             <AlertDialog.Portal>
                 <AlertDialog.Overlay className="fixed inset-0 z-40 bg-black/50" />
-                <AlertDialog.Content className="fixed top-1/2 left-1/2 z-50 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-lg border border-border bg-surface p-6 shadow-lg">
-                    <AlertDialog.Title className="font-display text-lg font-medium text-surface-foreground">
+                <AlertDialog.Content className="border-border bg-surface fixed top-1/2 left-1/2 z-50 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-lg border p-6 shadow-lg">
+                    <AlertDialog.Title className="font-display text-surface-foreground text-lg font-medium">
                         {title}
                     </AlertDialog.Title>
-                    <AlertDialog.Description className="mt-2 text-sm text-muted-foreground">
+                    <AlertDialog.Description className="text-muted-foreground mt-2 text-sm">
                         {description}
                     </AlertDialog.Description>
                     <div className="mt-6 flex justify-end gap-2">
                         <AlertDialog.Cancel asChild>
                             <button
                                 type="button"
-                                className="cursor-pointer rounded-md border border-border px-4 py-2 text-sm font-medium text-surface-foreground hover:bg-muted"
+                                className="border-border text-surface-foreground hover:bg-muted cursor-pointer rounded-md border px-4 py-2 text-sm font-medium"
                             >
                                 Cancel
                             </button>
@@ -46,7 +46,7 @@ export function ConfirmationDialog({
                                 className={
                                     destructive
                                         ? 'cursor-pointer rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700'
-                                        : 'cursor-pointer rounded-md bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700'
+                                        : 'bg-brand-600 hover:bg-brand-700 cursor-pointer rounded-md px-4 py-2 text-sm font-medium text-white'
                                 }
                             >
                                 {confirmLabel}

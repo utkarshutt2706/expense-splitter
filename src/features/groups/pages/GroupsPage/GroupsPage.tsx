@@ -61,14 +61,14 @@ export function GroupsPage() {
                     <li key={group.id}>
                         <Link
                             to={`/groups/${group.id}`}
-                            className="flex items-center gap-3 rounded-lg border border-border p-3 hover:bg-muted"
+                            className="border-border hover:bg-muted flex items-center gap-3 rounded-lg border p-3"
                         >
-                            <span className="flex size-9 items-center justify-center rounded-full bg-brand-600 text-white">
+                            <span className="bg-brand-600 flex size-9 items-center justify-center rounded-full text-white">
                                 <UsersRound className="size-4" />
                             </span>
                             <div className="flex-1">
-                                <p className="font-medium text-surface-foreground">{group.name}</p>
-                                <p className="text-sm text-muted-foreground">
+                                <p className="text-surface-foreground font-medium">{group.name}</p>
+                                <p className="text-muted-foreground text-sm">
                                     {group.memberIds.length}{' '}
                                     {group.memberIds.length === 1 ? 'member' : 'members'}
                                 </p>
@@ -102,7 +102,7 @@ export function GroupsPage() {
                     <button
                         type="button"
                         onClick={() => setAddDialogOpen(true)}
-                        className="ml-auto inline-flex shrink-0 cursor-pointer items-center gap-1 rounded-md border border-border px-4 py-2 text-sm font-medium text-surface-foreground hover:bg-muted"
+                        className="border-border text-surface-foreground hover:bg-muted ml-auto inline-flex shrink-0 cursor-pointer items-center gap-1 rounded-md border px-4 py-2 text-sm font-medium"
                     >
                         <Plus className="size-4" />
                         Create group

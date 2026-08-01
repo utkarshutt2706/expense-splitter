@@ -17,7 +17,7 @@ const options: { value: SplitType; label: string; glyph: ReactNode }[] = [
 
 export function SplitTypeTabs({ value, onChange }: SplitTypeTabsProps) {
     return (
-        <div className="flex gap-1 justify-between rounded-md border border-border p-1">
+        <div className="border-border flex justify-between gap-1 rounded-md border p-1">
             {options.map((option) => (
                 <button
                     key={option.value}

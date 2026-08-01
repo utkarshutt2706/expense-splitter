@@ -24,27 +24,27 @@ export function PaidByPicker({ members, value, onChange }: PaidByPickerProps) {
                 <button
                     type="button"
                     aria-label="Paid by"
-                    className="flex w-full cursor-pointer items-center justify-between gap-2 rounded-md border border-border bg-surface px-3 py-1.5 text-sm text-surface-foreground outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                    className="border-border bg-surface text-surface-foreground focus-visible:ring-brand-500 flex w-full cursor-pointer items-center justify-between gap-2 rounded-md border px-3 py-1.5 text-sm outline-none focus-visible:ring-2"
                 >
                     <span className="flex items-center gap-2">
                         {selected && <Avatar name={selected.name} size="sm" />}
                         {selected ? labelFor(selected) : 'Select who paid'}
                     </span>
-                    <ChevronDown className="size-4 text-muted-foreground" />
+                    <ChevronDown className="text-muted-foreground size-4" />
                 </button>
             </DropdownMenu.Trigger>
             <DropdownMenu.Portal>
                 <DropdownMenu.Content
                     align="start"
                     sideOffset={4}
-                    className="z-50 w-64 rounded-lg border border-border bg-surface p-1 shadow-lg"
+                    className="border-border bg-surface z-50 w-64 rounded-lg border p-1 shadow-lg"
                 >
                     <DropdownMenu.RadioGroup value={value} onValueChange={onChange}>
                         {members.map((member) => (
                             <DropdownMenu.RadioItem
                                 key={member.id}
                                 value={member.id}
-                                className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm text-surface-foreground outline-none data-highlighted:bg-muted"
+                                className="text-surface-foreground data-highlighted:bg-muted flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm outline-none"
                             >
                                 <span aria-hidden="true">
                                     <Avatar name={member.name} />

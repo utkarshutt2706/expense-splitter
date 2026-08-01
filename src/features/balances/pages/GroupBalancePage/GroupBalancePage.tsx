@@ -33,7 +33,7 @@ export function GroupBalancePage() {
                 {[0, 1, 2].map((index) => (
                     <div
                         key={index}
-                        className="flex items-center justify-between gap-2 rounded-lg border border-border p-3"
+                        className="border-border flex items-center justify-between gap-2 rounded-lg border p-3"
                     >
                         <Skeleton className="h-4 w-48" />
                         <Skeleton className="size-4 shrink-0 rounded-full" />
@@ -68,13 +68,13 @@ export function GroupBalancePage() {
         <div>
             <Link
                 to={`/groups/${groupId}`}
-                className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-surface-foreground"
+                className="text-muted-foreground hover:text-surface-foreground mb-4 inline-flex items-center gap-1 text-sm"
             >
                 <ArrowLeft className="size-4" />
                 Back to group
             </Link>
 
-            <h1 className="mb-4 font-display text-xl font-medium text-surface-foreground">
+            <h1 className="font-display text-surface-foreground mb-4 text-xl font-medium">
                 {isLoading ? <Skeleton className="h-7 w-40" /> : (group?.name ?? 'Balances')}
             </h1>
 

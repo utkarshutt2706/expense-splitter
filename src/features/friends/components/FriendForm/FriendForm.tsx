@@ -66,7 +66,7 @@ export function FriendForm({ mode, initialValues, onSubmit, onCancel }: FriendFo
             <div className="flex flex-col gap-1">
                 <label
                     htmlFor="friend-name"
-                    className="text-sm font-medium text-surface-foreground"
+                    className="text-surface-foreground text-sm font-medium"
                 >
                     Name
                 </label>
@@ -75,14 +75,14 @@ export function FriendForm({ mode, initialValues, onSubmit, onCancel }: FriendFo
                     type="text"
                     placeholder="Enter friend's name"
                     {...register('name')}
-                    className="rounded-md border border-border bg-surface px-3 py-2 text-sm text-surface-foreground outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                    className="border-border bg-surface text-surface-foreground focus-visible:ring-brand-500 rounded-md border px-3 py-2 text-sm outline-none focus-visible:ring-2"
                 />
                 {errors.name && <p className="text-xs text-red-600">{errors.name.message}</p>}
             </div>
             <div className="flex flex-col gap-1">
                 <label
                     htmlFor="friend-email"
-                    className="text-sm font-medium text-surface-foreground"
+                    className="text-surface-foreground text-sm font-medium"
                 >
                     Email
                 </label>
@@ -91,14 +91,14 @@ export function FriendForm({ mode, initialValues, onSubmit, onCancel }: FriendFo
                     type="email"
                     placeholder="Enter friend's email"
                     {...register('email')}
-                    className="rounded-md border border-border bg-surface px-3 py-2 text-sm text-surface-foreground outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                    className="border-border bg-surface text-surface-foreground focus-visible:ring-brand-500 rounded-md border px-3 py-2 text-sm outline-none focus-visible:ring-2"
                 />
                 {errors.email && <p className="text-xs text-red-600">{errors.email.message}</p>}
             </div>
             <div className="flex flex-col gap-1">
                 <label
                     htmlFor="friend-phone"
-                    className="text-sm font-medium text-surface-foreground"
+                    className="text-surface-foreground text-sm font-medium"
                 >
                     Phone
                 </label>
@@ -107,7 +107,7 @@ export function FriendForm({ mode, initialValues, onSubmit, onCancel }: FriendFo
                     type="tel"
                     placeholder="Enter friend's phone number"
                     {...register('phone')}
-                    className="rounded-md border border-border bg-surface px-3 py-2 text-sm text-surface-foreground outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                    className="border-border bg-surface text-surface-foreground focus-visible:ring-brand-500 rounded-md border px-3 py-2 text-sm outline-none focus-visible:ring-2"
                 />
                 {errors.phone && <p className="text-xs text-red-600">{errors.phone.message}</p>}
             </div>
@@ -115,13 +115,13 @@ export function FriendForm({ mode, initialValues, onSubmit, onCancel }: FriendFo
                 <button
                     type="button"
                     onClick={onCancel}
-                    className="cursor-pointer rounded-md border border-border px-4 py-2 text-sm font-medium text-surface-foreground hover:bg-muted"
+                    className="border-border text-surface-foreground hover:bg-muted cursor-pointer rounded-md border px-4 py-2 text-sm font-medium"
                 >
                     Cancel
                 </button>
                 <button
                     type="submit"
-                    className="inline-flex cursor-pointer items-center gap-1 rounded-md bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700"
+                    className="bg-brand-600 hover:bg-brand-700 inline-flex cursor-pointer items-center gap-1 rounded-md px-4 py-2 text-sm font-medium text-white"
                 >
                     {mode === 'add' ? (
                         <UserPlus className="size-4" />

@@ -1,7 +1,7 @@
 import { Skeleton } from '@shared/components';
 
 function avatarSkeletonCircle(key: number) {
-    return <Skeleton key={key} className="size-9 rounded-full ring-2 ring-surface" />;
+    return <Skeleton key={key} className="ring-surface size-9 rounded-full ring-2" />;
 }
 
 // Mirrors GroupMembersStack's default maxVisibleMobile/maxVisible (2 vs 5), so
