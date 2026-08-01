@@ -65,7 +65,7 @@ export function GroupFabMenu({ groupId, members }: GroupFabMenuProps) {
     return (
         <>
             <FanSlot isOpen={isOpen} offset={SETTLE_UP_OFFSET} delayMs={0}>
-                <SettleUpAction />
+                <SettleUpAction groupId={groupId} />
             </FanSlot>
             <FanSlot isOpen={isOpen} offset={RECORD_PAYMENT_OFFSET} delayMs={40}>
                 <RecordPaymentAction groupId={groupId} members={members} onTriggerClick={close} />

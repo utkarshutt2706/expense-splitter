@@ -1,11 +1,54 @@
 import * as Accordion from '@radix-ui/react-accordion';
-import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { act, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { toast } from 'sonner';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { User } from '@data/entities';
 import { CURRENT_USER_ID } from '@data/seed';
+import { useCreatePayment } from '@features/payments/hooks/useCreatePayment';
 import type { SettlementTransaction } from '../../utils/simplifyDebts';
 import { MemberBalanceAccordion } from './MemberBalanceAccordion';
+
+vi.mock('@features/payments/hooks/useCreatePayment', () => ({
+    useCreatePayment: vi.fn(),
+}));
+
+interface FakeInitialValues {
+    fromUserId: string;
+    toUserId: string;
+    amount: number;
+}
+
+vi.mock('@features/payments/components/RecordPaymentDialog', () => ({
+    RecordPaymentDialog: ({
+        open,
+        initialValues,
+        onSubmit,
+    }: {
+        open: boolean;
+        initialValues?: FakeInitialValues;
+        onSubmit: (values: FakeInitialValues) => void;
+    }) =>
+        open ? (
+            <div data-testid="record-payment-dialog">
+                {initialValues && (
+                    <p>{`${initialValues.fromUserId}-${initialValues.toUserId}-${initialValues.amount}`}</p>
+                )}
+                <button type="button" onClick={() => initialValues && onSubmit(initialValues)}>
+                    Fake settle submit
+                </button>
+            </div>
+        ) : null,
+}));
+
+vi.mock('sonner', () => ({
+    toast: {
+        loading: vi.fn(() => 'toast-id'),
+        success: vi.fn(),
+        error: vi.fn(),
+    },
+}));
 
 const abhinav: User = { id: 'friend-1', name: 'Abhinav', email: 'abhinav@example.com' };
 const khem: User = { id: 'friend-2', name: 'Khem', email: 'khem@example.com' };
@@ -15,11 +58,8 @@ const currentUser: User = {
     email: 'u@example.com',
 };
 
-const membersById = new Map([
-    [abhinav.id, abhinav],
-    [khem.id, khem],
-    [currentUser.id, currentUser],
-]);
+const members = [abhinav, khem, currentUser];
+const membersById = new Map(members.map((member) => [member.id, member]));
 
 function renderAccordion(
     member: User,
@@ -34,6 +74,8 @@ function renderAccordion(
                 netAmount={netAmount}
                 transactions={transactions}
                 membersById={membersById}
+                members={members}
+                groupId="group-1"
                 currentUserId={CURRENT_USER_ID}
             />
         </Accordion.Root>,
@@ -41,6 +83,12 @@ function renderAccordion(
 }
 
 describe('MemberBalanceAccordion', () => {
+    beforeEach(() => {
+        vi.mocked(useCreatePayment).mockReturnValue({
+            mutate: vi.fn(),
+        } as unknown as ReturnType<typeof useCreatePayment>);
+    });
+
     it('shows "gets back" in the owed color for a third-party member with a positive net', () => {
         renderAccordion(khem, 422.5, []);
 
@@ -109,5 +157,56 @@ describe('MemberBalanceAccordion', () => {
         renderAccordion(abhinav, 0, [], [abhinav.id]);
 
         expect(screen.getByText(/no settlements needed/i)).toBeInTheDocument();
+    });
+
+    it('opens the record-payment dialog prefilled from the clicked transaction', async () => {
+        const user = userEvent.setup();
+        renderAccordion(
+            abhinav,
+            -38,
+            [{ fromUserId: CURRENT_USER_ID, toUserId: abhinav.id, amount: 38 }],
+            [abhinav.id],
+        );
+
+        await user.click(screen.getByRole('button', { name: 'Settle up' }));
+
+        expect(screen.getByTestId('record-payment-dialog')).toBeInTheDocument();
+        expect(screen.getByText(`${CURRENT_USER_ID}-${abhinav.id}-38`)).toBeInTheDocument();
+    });
+
+    it('records a payment and shows a loading toast, then success', async () => {
+        let onSuccess: (() => void) | undefined;
+        const mutate = vi.fn((_values, options: { onSuccess?: () => void }) => {
+            onSuccess = options.onSuccess;
+        });
+        vi.mocked(useCreatePayment).mockReturnValue({
+            mutate,
+        } as unknown as ReturnType<typeof useCreatePayment>);
+
+        const user = userEvent.setup();
+        renderAccordion(
+            abhinav,
+            -38,
+            [{ fromUserId: CURRENT_USER_ID, toUserId: abhinav.id, amount: 38 }],
+            [abhinav.id],
+        );
+
+        await user.click(screen.getByRole('button', { name: 'Settle up' }));
+        await user.click(screen.getByRole('button', { name: /fake settle submit/i }));
+
+        expect(toast.loading).toHaveBeenCalledWith('Payment is being recorded…');
+        expect(mutate).toHaveBeenCalledWith(
+            {
+                groupId: 'group-1',
+                fromUserId: CURRENT_USER_ID,
+                toUserId: abhinav.id,
+                amount: 38,
+            },
+            expect.anything(),
+        );
+
+        act(() => onSuccess?.());
+
+        expect(toast.success).toHaveBeenCalledWith('Payment recorded', { id: 'toast-id' });
     });
 });

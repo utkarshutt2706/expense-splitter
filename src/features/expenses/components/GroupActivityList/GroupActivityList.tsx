@@ -6,7 +6,7 @@ import type { Expense, Payment, User } from '@data/entities';
 import { useExpenses } from '@features/expenses/hooks/useExpenses';
 import { calculateExpenseInvolvement } from '@features/expenses/utils/calculateExpenseInvolvement';
 import { usePayments } from '@features/payments';
-import { Avatar, Skeleton } from '@shared/components';
+import { Avatar, FetchingIndicator, Skeleton } from '@shared/components';
 
 interface GroupActivityListProps {
     readonly groupId: string;
@@ -133,11 +133,13 @@ export function GroupActivityList({
     const {
         data: expenses,
         isLoading: isExpensesLoading,
+        isFetching: isExpensesFetching,
         isError: isExpensesError,
     } = useExpenses(groupId);
     const {
         data: payments,
         isLoading: isPaymentsLoading,
+        isFetching: isPaymentsFetching,
         isError: isPaymentsError,
     } = usePayments(groupId);
 
@@ -157,6 +159,12 @@ export function GroupActivityList({
         return <div className="text-red-600">Couldn't load activity.</div>;
     }
 
+    // isLoading only covers the very first fetch — a mutation invalidating these
+    // queries (adding an expense, recording a payment) refetches in the background
+    // with isLoading staying false, so without this the list would just silently
+    // sit stale for the invalidated refetch's own latency.
+    const isRefreshing = isExpensesFetching || isPaymentsFetching;
+
     const items: ActivityItem[] = [
         ...(expenses ?? []).map((expense): ActivityItem => ({
             type: 'expense',
@@ -173,13 +181,24 @@ export function GroupActivityList({
     ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
     if (items.length === 0) {
-        return <div className="text-muted-foreground">No activity yet.</div>;
+        return (
+            <div className="text-muted-foreground flex items-center gap-2">
+                No activity yet.
+                {isRefreshing && <FetchingIndicator />}
+            </div>
+        );
     }
 
     const membersById = new Map(members.map((member) => [member.id, member]));
 
     return (
         <ul className="flex flex-col gap-3">
+            {isRefreshing && (
+                <li className="text-muted-foreground flex items-center gap-2 text-sm">
+                    <FetchingIndicator />
+                    Updating…
+                </li>
+            )}
             {items.map((item) => (
                 <li key={`${item.type}-${item.id}`}>
                     {item.type === 'expense' ? (

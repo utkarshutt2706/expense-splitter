@@ -1,17 +1,22 @@
 import { Handshake } from 'lucide-react';
+import { Link } from 'react-router';
 
-// Placeholder for the settle-up flow (marking a simplified balance-page
-// transaction as paid) — not built yet, so this is deliberately inert.
-export function SettleUpAction() {
+interface SettleUpActionProps {
+    readonly groupId: string;
+}
+
+// Settling up a specific transaction happens on the balance page itself
+// (MemberBalanceAccordion, reusing the record-a-payment core) — there's no single
+// transaction to prefill from here, so this just gets the user there.
+export function SettleUpAction({ groupId }: SettleUpActionProps) {
     return (
-        <button
-            type="button"
+        <Link
+            to={`/groups/${groupId}/balance`}
             aria-label="Settle up"
-            title="Settle up (coming soon)"
-            disabled
-            className="bg-settled inline-flex size-12 cursor-not-allowed items-center justify-center rounded-full text-white shadow-lg"
+            title="Settle up"
+            className="bg-settled inline-flex size-12 cursor-pointer items-center justify-center rounded-full text-white shadow-lg hover:opacity-90"
         >
             <Handshake className="size-5" />
-        </button>
+        </Link>
     );
 }

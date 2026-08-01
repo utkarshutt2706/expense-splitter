@@ -1,5 +1,6 @@
 export { Avatar } from './Avatar';
 export { ConfirmationDialog } from './ConfirmationDialog';
+export { FetchingIndicator } from './FetchingIndicator';
 export { FormDialog } from './FormDialog';
 export { MemberPicker } from './MemberPicker';
 export { SearchInput } from './SearchInput';

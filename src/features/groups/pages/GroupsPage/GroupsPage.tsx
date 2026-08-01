@@ -11,12 +11,13 @@ import {
     useGroups,
     type CreateGroupFormValues,
 } from '@features/groups';
+import { FetchingIndicator } from '@shared/components/FetchingIndicator';
 import { SearchInput } from '@shared/components/SearchInput';
 import { Skeleton } from '@shared/components/Skeleton';
 import { SkeletonList } from '@shared/components/SkeletonList';
 
 export function GroupsPage() {
-    const { data: groups, isLoading, isError } = useGroups();
+    const { data: groups, isLoading, isFetching, isError } = useGroups();
     const { data: friends } = useFriends();
     const createGroup = useCreateGroup();
 
@@ -24,6 +25,10 @@ export function GroupsPage() {
     const [search, setSearch] = useState('');
 
     const hasNoGroups = !isLoading && (!groups || groups.length === 0);
+    // isLoading only covers the very first fetch — creating a group refetches the
+    // list in the background with isLoading staying false, so without this the
+    // list would just silently sit stale for that refetch's own latency.
+    const isRefreshing = !isLoading && isFetching;
 
     const friendNameById = new Map((friends ?? []).map((friend) => [friend.id, friend.name]));
 
@@ -96,18 +101,22 @@ export function GroupsPage() {
                     )
                 )}
 
-                {isLoading ? (
-                    <Skeleton className="ml-auto h-9 w-36 shrink-0" />
-                ) : (
-                    <button
-                        type="button"
-                        onClick={() => setAddDialogOpen(true)}
-                        className="border-border text-surface-foreground hover:bg-muted ml-auto inline-flex shrink-0 cursor-pointer items-center gap-1 rounded-md border px-4 py-2 text-sm font-medium"
-                    >
-                        <Plus className="size-4" />
-                        Create group
-                    </button>
-                )}
+                <div className="ml-auto flex shrink-0 items-center gap-2">
+                    {isRefreshing && <FetchingIndicator />}
+
+                    {isLoading ? (
+                        <Skeleton className="h-9 w-36 shrink-0" />
+                    ) : (
+                        <button
+                            type="button"
+                            onClick={() => setAddDialogOpen(true)}
+                            className="border-border text-surface-foreground hover:bg-muted inline-flex shrink-0 cursor-pointer items-center gap-1 rounded-md border px-4 py-2 text-sm font-medium"
+                        >
+                            <Plus className="size-4" />
+                            Create group
+                        </button>
+                    )}
+                </div>
             </div>
 
             {content}

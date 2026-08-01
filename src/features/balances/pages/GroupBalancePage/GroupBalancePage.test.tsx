@@ -216,4 +216,49 @@ describe('GroupBalancePage', () => {
         expect(list).toHaveTextContent('Utkarsh Srivastava');
         expect(list).toHaveTextContent('Abhinav');
     });
+
+    it('shows a refreshing indicator during a background refetch, not the loading skeleton', () => {
+        vi.mocked(useGroup).mockReturnValue({
+            data: group,
+            isLoading: false,
+            isError: false,
+        } as unknown as ReturnType<typeof useGroup>);
+        vi.mocked(useGroupMembers).mockReturnValue({
+            data: members,
+            isLoading: false,
+        } as unknown as ReturnType<typeof useGroupMembers>);
+        vi.mocked(useExpenses).mockReturnValue({
+            data: expenses,
+            isLoading: false,
+            isFetching: true,
+            isError: false,
+        } as unknown as ReturnType<typeof useExpenses>);
+
+        renderPage();
+
+        expect(screen.getByRole('status', { name: 'Refreshing…' })).toBeInTheDocument();
+        expect(screen.queryByRole('status', { name: /loading balances/i })).not.toBeInTheDocument();
+    });
+
+    it('does not show a refreshing indicator once the background refetch settles', () => {
+        vi.mocked(useGroup).mockReturnValue({
+            data: group,
+            isLoading: false,
+            isError: false,
+        } as unknown as ReturnType<typeof useGroup>);
+        vi.mocked(useGroupMembers).mockReturnValue({
+            data: members,
+            isLoading: false,
+        } as unknown as ReturnType<typeof useGroupMembers>);
+        vi.mocked(useExpenses).mockReturnValue({
+            data: expenses,
+            isLoading: false,
+            isFetching: false,
+            isError: false,
+        } as unknown as ReturnType<typeof useExpenses>);
+
+        renderPage();
+
+        expect(screen.queryByRole('status', { name: 'Refreshing…' })).not.toBeInTheDocument();
+    });
 });

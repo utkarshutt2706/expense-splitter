@@ -14,13 +14,14 @@ import { useUpdateFriend } from '@features/friends/hooks/useUpdateFriend';
 import {
     Avatar,
     ConfirmationDialog,
+    FetchingIndicator,
     SearchInput,
     Skeleton,
     SkeletonList,
 } from '@shared/components';
 
 export function FriendsPage() {
-    const { data: friends, isLoading, isError } = useFriends();
+    const { data: friends, isLoading, isFetching, isError } = useFriends();
     const createFriend = useCreateFriend();
     const updateFriend = useUpdateFriend();
     const removeFriend = useRemoveFriend();
@@ -31,6 +32,11 @@ export function FriendsPage() {
     const [search, setSearch] = useState('');
 
     const hasNoFriends = !isLoading && (!friends || friends.length === 0);
+    // isLoading only covers the very first fetch — adding/editing/removing a
+    // friend refetches the list in the background with isLoading staying false,
+    // so without this the list would just silently sit stale for that refetch's
+    // own latency.
+    const isRefreshing = !isLoading && isFetching;
 
     const query = search.trim().toLowerCase();
     const filteredFriends = friends?.filter(
@@ -132,18 +138,22 @@ export function FriendsPage() {
                     )
                 )}
 
-                {isLoading ? (
-                    <Skeleton className="ml-auto h-9 w-32 shrink-0" />
-                ) : (
-                    <button
-                        type="button"
-                        onClick={() => setAddDialogOpen(true)}
-                        className="border-border text-surface-foreground hover:bg-muted ml-auto inline-flex shrink-0 cursor-pointer items-center gap-1 rounded-md border px-4 py-2 text-sm font-medium"
-                    >
-                        <UserPlus className="size-4" />
-                        Add friend
-                    </button>
-                )}
+                <div className="ml-auto flex shrink-0 items-center gap-2">
+                    {isRefreshing && <FetchingIndicator />}
+
+                    {isLoading ? (
+                        <Skeleton className="h-9 w-32 shrink-0" />
+                    ) : (
+                        <button
+                            type="button"
+                            onClick={() => setAddDialogOpen(true)}
+                            className="border-border text-surface-foreground hover:bg-muted inline-flex shrink-0 cursor-pointer items-center gap-1 rounded-md border px-4 py-2 text-sm font-medium"
+                        >
+                            <UserPlus className="size-4" />
+                            Add friend
+                        </button>
+                    )}
+                </div>
             </div>
 
             {content}

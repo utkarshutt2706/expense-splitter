@@ -5,7 +5,7 @@ import type { User } from '@data/entities';
 import { useExpenses } from '@features/expenses/hooks/useExpenses';
 import { calculateNetBalance } from '@features/expenses/utils/calculateNetBalance';
 import { usePayments } from '@features/payments';
-import { Skeleton } from '@shared/components';
+import { FetchingIndicator, Skeleton } from '@shared/components';
 
 interface GroupBalanceSummaryProps {
     readonly groupId: string;
@@ -17,11 +17,13 @@ export function GroupBalanceSummary({ groupId, members }: GroupBalanceSummaryPro
     const {
         data: expenses,
         isLoading: isExpensesLoading,
+        isFetching: isExpensesFetching,
         isError: isExpensesError,
     } = useExpenses(groupId);
     const {
         data: payments,
         isLoading: isPaymentsLoading,
+        isFetching: isPaymentsFetching,
         isError: isPaymentsError,
     } = usePayments(groupId);
 
@@ -33,6 +35,12 @@ export function GroupBalanceSummary({ groupId, members }: GroupBalanceSummaryPro
         return <p className="text-muted-foreground text-sm">Couldn't load balance.</p>;
     }
 
+    // isLoading only covers the very first fetch — a mutation invalidating these
+    // queries (recording a payment, settling up) refetches in the background with
+    // isLoading staying false the whole time, so without this the balance would
+    // just silently sit stale for the invalidated refetch's own latency.
+    const isRefreshing = isExpensesFetching || isPaymentsFetching;
+
     const balance = calculateNetBalance(expenses ?? [], payments ?? [], currentUser?.id ?? '');
     // members is briefly [] while useGroupMembers is still loading (this component's
     // own expenses query can resolve first) — members.every() on an empty array is
@@ -42,6 +50,18 @@ export function GroupBalanceSummary({ groupId, members }: GroupBalanceSummaryPro
         members.every(
             (member) => calculateNetBalance(expenses ?? [], payments ?? [], member.id) === 0,
         );
+
+    // A fully settled group implies the current user's own balance is zero too, so
+    // showing both "You're all settled up" and the celebratory note would just be
+    // saying the same thing twice — the celebratory note alone is enough.
+    if (isGroupFullySettled) {
+        return (
+            <span className="font-display text-settled inline-flex items-center gap-2 text-lg font-medium">
+                🎉 This group is all settled
+                {isRefreshing && <FetchingIndicator />}
+            </span>
+        );
+    }
 
     let text: string;
     let className: string;
@@ -57,20 +77,17 @@ export function GroupBalanceSummary({ groupId, members }: GroupBalanceSummaryPro
     }
 
     return (
-        <span className={`font-display text-lg font-medium ${className}`}>
+        <span
+            className={`font-display inline-flex items-center gap-2 text-lg font-medium ${className}`}
+        >
             {text}
-            {isGroupFullySettled ? (
-                <span className="text-muted-foreground ml-2 text-base font-normal">
-                    🎉 This group is all settled
-                </span>
-            ) : (
-                <Link
-                    to={`/groups/${groupId}/balance`}
-                    className="text-muted-foreground hover:text-surface-foreground ml-2 text-base font-normal hover:underline"
-                >
-                    Click to view details
-                </Link>
-            )}
+            <Link
+                to={`/groups/${groupId}/balance`}
+                className="text-muted-foreground hover:text-surface-foreground text-base font-normal hover:underline"
+            >
+                Click to view details
+            </Link>
+            {isRefreshing && <FetchingIndicator />}
         </span>
     );
 }

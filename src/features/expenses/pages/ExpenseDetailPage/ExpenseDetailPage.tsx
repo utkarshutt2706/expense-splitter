@@ -15,7 +15,7 @@ import { useDeleteExpense } from '@features/expenses/hooks/useDeleteExpense';
 import { useExpense } from '@features/expenses/hooks/useExpense';
 import { useUpdateExpense } from '@features/expenses/hooks/useUpdateExpense';
 import { useGroup, useGroupMembers } from '@features/groups';
-import { Avatar, ConfirmationDialog, Skeleton } from '@shared/components';
+import { Avatar, ConfirmationDialog, FetchingIndicator, Skeleton } from '@shared/components';
 
 const dateFormatter = new Intl.DateTimeFormat('en-US', {
     month: 'short',
@@ -62,6 +62,7 @@ export function ExpenseDetailPage() {
     const {
         data: expense,
         isLoading: isExpenseLoading,
+        isFetching: isExpenseFetching,
         isError: isExpenseError,
     } = useExpense(expenseId ?? '');
     const { data: group } = useGroup(groupId ?? '');
@@ -72,6 +73,10 @@ export function ExpenseDetailPage() {
     const [isEditingExpense, setIsEditingExpense] = useState(false);
 
     const isLoading = isExpenseLoading || isMembersLoading;
+    // isLoading only covers the very first fetch — editing this expense refetches
+    // it in the background with isLoading staying false, so without this the page
+    // would just silently sit stale for the invalidated refetch's own latency.
+    const isRefreshing = !isLoading && isExpenseFetching;
 
     const handleDelete = () => {
         if (!expense || !groupId) return;
@@ -230,6 +235,8 @@ export function ExpenseDetailPage() {
                         (expense?.description ?? 'Expense')
                     )}
                 </h1>
+
+                {isRefreshing && <FetchingIndicator />}
 
                 <div className="ml-auto flex items-center gap-2">
                     <button
