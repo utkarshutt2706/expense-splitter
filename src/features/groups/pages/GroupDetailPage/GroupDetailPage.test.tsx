@@ -1,5 +1,4 @@
 import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -15,25 +14,6 @@ vi.mock('react-router', async () => {
 vi.mock('@features/groups', () => ({
     useGroup: vi.fn(),
     useGroupMembers: vi.fn(),
-}));
-
-vi.mock('@features/groups/components/GroupNameEditor', () => ({
-    GroupNameEditor: ({
-        group,
-        isEditing,
-        onEditingChange,
-    }: {
-        group: Group;
-        isEditing: boolean;
-        onEditingChange: (isEditing: boolean) => void;
-    }) => (
-        <div data-testid="group-name-editor">
-            <span>{group.name}</span>
-            <button type="button" onClick={() => onEditingChange(!isEditing)}>
-                Toggle editing
-            </button>
-        </div>
-    ),
 }));
 
 vi.mock('@features/groups/components/GroupMembersSection', () => ({
@@ -96,7 +76,7 @@ describe('GroupDetailPage', () => {
         renderPage();
 
         expect(screen.getByRole('status', { name: /loading group/i })).toBeInTheDocument();
-        expect(screen.queryByTestId('group-name-editor')).not.toBeInTheDocument();
+        expect(screen.queryByRole('heading', { name: 'Weekend Trip' })).not.toBeInTheDocument();
         expect(screen.queryByTestId('group-fab-menu')).not.toBeInTheDocument();
         // Balance/expenses don't need the group query to resolve — groupId comes
         // straight from the route — so they mount and start fetching immediately
@@ -157,34 +137,24 @@ describe('GroupDetailPage', () => {
             } as unknown as ReturnType<typeof useGroupMembers>);
         });
 
-        it('renders the name editor, members section, settings button, balance summary, activity list, and the fab menu', () => {
+        it('renders the group name, members section, settings link, balance summary, activity list, and the fab menu', () => {
             renderPage();
 
-            expect(screen.getByTestId('group-name-editor')).toHaveTextContent('Weekend Trip');
+            expect(screen.getByRole('heading', { name: 'Weekend Trip' })).toBeInTheDocument();
             expect(screen.getByTestId('group-members-section')).toBeInTheDocument();
-            expect(screen.getByRole('button', { name: /group settings/i })).toBeInTheDocument();
             expect(screen.getByTestId('group-balance-summary')).toHaveTextContent('group-1');
             expect(screen.getByRole('heading', { name: /activity/i })).toBeInTheDocument();
             expect(screen.getByTestId('group-activity-list')).toHaveTextContent('group-1-2');
             expect(screen.getByTestId('group-fab-menu')).toHaveTextContent('group-1-2');
         });
 
-        it('hides the members section while the group name is being edited', async () => {
-            const user = userEvent.setup();
+        it('links the settings button to the group settings page', () => {
             renderPage();
 
-            await user.click(screen.getByRole('button', { name: /toggle editing/i }));
-
-            expect(screen.queryByTestId('group-members-section')).not.toBeInTheDocument();
-        });
-
-        it('still shows the fab menu while the group name is being edited', async () => {
-            const user = userEvent.setup();
-            renderPage();
-
-            await user.click(screen.getByRole('button', { name: /toggle editing/i }));
-
-            expect(screen.getByTestId('group-fab-menu')).toBeInTheDocument();
+            expect(screen.getByRole('link', { name: /group settings/i })).toHaveAttribute(
+                'href',
+                '/groups/group-1/settings',
+            );
         });
     });
 });

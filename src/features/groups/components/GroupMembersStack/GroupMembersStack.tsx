@@ -1,15 +1,14 @@
 import * as Popover from '@radix-ui/react-popover';
-import { UserRoundPlus } from 'lucide-react';
 
 import { useCurrentUser } from '@app/hooks';
 import type { User } from '@data/entities';
 import { Avatar } from '@shared/components';
+import { MemberList } from '../MemberList';
 
 interface GroupMembersStackProps {
     readonly members: User[];
     readonly maxVisible?: number;
     readonly maxVisibleMobile?: number;
-    readonly onEditMembers?: () => void;
 }
 
 interface AvatarRowProps {
@@ -43,7 +42,6 @@ export function GroupMembersStack({
     members,
     maxVisible = 5,
     maxVisibleMobile = 2,
-    onEditMembers,
 }: GroupMembersStackProps) {
     const { data: currentUser } = useCurrentUser();
     const orderedMembers = [...members].sort((a, b) => {
@@ -81,40 +79,7 @@ export function GroupMembersStack({
                     sideOffset={8}
                     className="border-border bg-surface z-50 w-64 rounded-lg border p-2 shadow-lg"
                 >
-                    <ul className="flex max-h-64 flex-col gap-1 overflow-y-auto">
-                        {orderedMembers.map((member) => (
-                            <li
-                                key={member.id}
-                                className="flex items-center gap-2 rounded-md px-2 py-1.5"
-                            >
-                                <Avatar name={member.name} />
-                                <div>
-                                    <p className="text-surface-foreground text-sm font-medium">
-                                        {member.id === currentUser?.id ? 'You' : member.name}
-                                    </p>
-                                    {(member.email || member.phone) && (
-                                        <p className="text-muted-foreground text-xs">
-                                            {[member.email, member.phone]
-                                                .filter(Boolean)
-                                                .join(' · ')}
-                                        </p>
-                                    )}
-                                </div>
-                            </li>
-                        ))}
-                    </ul>
-                    <div className="border-border mt-1 flex w-full border-t">
-                        <Popover.Close asChild>
-                            <button
-                                type="button"
-                                onClick={onEditMembers}
-                                className="text-brand-600 hover:bg-muted mt-1 flex w-full cursor-pointer items-center gap-2 rounded-md px-2 pt-2 pb-1.5 text-sm font-medium"
-                            >
-                                <UserRoundPlus className="size-4" />
-                                Add/Remove members
-                            </button>
-                        </Popover.Close>
-                    </div>
+                    <MemberList members={members} className="max-h-64 overflow-y-auto" />
                 </Popover.Content>
             </Popover.Portal>
         </Popover.Root>

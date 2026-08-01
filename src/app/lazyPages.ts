@@ -24,6 +24,12 @@ export const GroupDetailPage = lazy(() =>
     })),
 );
 
+export const GroupSettingsPage = lazy(() =>
+    import('@features/groups/pages/GroupSettingsPage').then((module) => ({
+        default: module.GroupSettingsPage,
+    })),
+);
+
 export const GroupBalancePage = lazy(() =>
     import('@features/balances/pages/GroupBalancePage').then((module) => ({
         default: module.GroupBalancePage,

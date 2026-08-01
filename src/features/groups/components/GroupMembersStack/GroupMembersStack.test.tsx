@@ -66,26 +66,6 @@ describe('GroupMembersStack', () => {
         expect(screen.getByText('5551234567')).toBeInTheDocument();
     });
 
-    it('shows an add/remove members option as the last item in the popover', async () => {
-        const user = userEvent.setup();
-        render(<GroupMembersStack members={members} />);
-
-        await user.click(screen.getByRole('button', { name: /show all 3 members/i }));
-
-        expect(screen.getByRole('button', { name: /add\/remove members/i })).toBeInTheDocument();
-    });
-
-    it('calls onEditMembers when add/remove members is clicked', async () => {
-        const onEditMembers = vi.fn();
-        const user = userEvent.setup();
-        render(<GroupMembersStack members={members} onEditMembers={onEditMembers} />);
-
-        await user.click(screen.getByRole('button', { name: /show all 3 members/i }));
-        await user.click(screen.getByRole('button', { name: /add\/remove members/i }));
-
-        expect(onEditMembers).toHaveBeenCalled();
-    });
-
     describe('current user', () => {
         const membersWithCurrentUserLast: User[] = [
             { id: 'user-2', name: 'Priya Sharma', email: 'priya@example.com' },

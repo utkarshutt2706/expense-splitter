@@ -1,13 +1,11 @@
 import { ArrowLeft, Settings } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { useState } from 'react';
 import { Link, useParams } from 'react-router';
 
 import { GroupActivityList, GroupBalanceSummary } from '@features/expenses';
 import { useGroup, useGroupMembers } from '@features/groups';
 import { GroupFabMenu } from '@features/groups/components/GroupFabMenu';
 import { GroupMembersSection } from '@features/groups/components/GroupMembersSection';
-import { GroupNameEditor } from '@features/groups/components/GroupNameEditor';
 import { MemberAvatarsSkeleton } from '@features/groups/components/MemberAvatarsSkeleton';
 import { Skeleton } from '@shared/components';
 
@@ -25,8 +23,6 @@ export function GroupDetailPage() {
         isFetching: isMembersFetching,
     } = useGroupMembers(group?.memberIds ?? []);
 
-    const [isEditingName, setIsEditingName] = useState(false);
-
     let content: ReactNode;
     if (isLoading) {
         content = (
@@ -41,31 +37,26 @@ export function GroupDetailPage() {
     } else {
         content = (
             <div className="flex items-center gap-3">
-                <GroupNameEditor
-                    group={group}
-                    isEditing={isEditingName}
-                    onEditingChange={setIsEditingName}
+                <h1 className="font-display text-surface-foreground text-xl font-medium">
+                    {group.name}
+                </h1>
+
+                <GroupMembersSection
+                    members={members ?? []}
+                    isMembersLoading={isMembersLoading}
+                    isMembersFetching={isMembersFetching}
+                    isGroupFetching={isGroupFetching}
                 />
 
-                {!isEditingName && (
-                    <GroupMembersSection
-                        group={group}
-                        members={members ?? []}
-                        isMembersLoading={isMembersLoading}
-                        isMembersFetching={isMembersFetching}
-                        isGroupFetching={isGroupFetching}
-                    />
-                )}
-
-                <button
-                    type="button"
+                <Link
+                    to={`/groups/${group.id}/settings`}
                     aria-label="Group settings"
                     title="Group settings"
-                    className={`border-border text-surface-foreground hover:bg-muted ml-auto inline-flex cursor-pointer items-center gap-1 rounded-md border p-2 text-sm font-medium md:px-3 md:py-1.5 ${isEditingName ? 'hidden md:inline-flex' : ''}`}
+                    className="border-border text-surface-foreground hover:bg-muted ml-auto inline-flex cursor-pointer items-center gap-1 rounded-md border p-2 text-sm font-medium md:px-3 md:py-1.5"
                 >
                     <Settings className="size-4" />
                     <span className="hidden md:inline">Settings</span>
-                </button>
+                </Link>
             </div>
         );
     }

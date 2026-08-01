@@ -7,6 +7,7 @@ import {
     FriendsPage,
     GroupBalancePage,
     GroupDetailPage,
+    GroupSettingsPage,
     GroupsPage,
     LoginPage,
 } from '@app/lazyPages';
@@ -37,6 +38,7 @@ export const routes: RouteObject[] = [
             { path: 'friends', element: <FriendsPage /> },
             { path: 'groups', element: <GroupsPage /> },
             { path: 'groups/:groupId', element: <GroupDetailPage /> },
+            { path: 'groups/:groupId/settings', element: <GroupSettingsPage /> },
             { path: 'groups/:groupId/balance', element: <GroupBalancePage /> },
             {
                 path: 'groups/:groupId/expenses/:expenseId',
