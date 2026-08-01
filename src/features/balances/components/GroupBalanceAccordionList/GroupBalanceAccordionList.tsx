@@ -1,7 +1,7 @@
 import * as Accordion from '@radix-ui/react-accordion';
 
+import { useCurrentUser } from '@app/hooks';
 import type { User } from '@data/entities';
-import { CURRENT_USER_ID } from '@data/seed';
 import type { SettlementTransaction } from '../../utils/simplifyDebts';
 import { MemberBalanceAccordion } from '../MemberBalanceAccordion';
 
@@ -16,13 +16,14 @@ export function GroupBalanceAccordionList({
     netBalances,
     transactions,
 }: GroupBalanceAccordionListProps) {
+    const { data: currentUser } = useCurrentUser();
     const membersById = new Map(members.map((member) => [member.id, member]));
 
     // The current user always leads the list, settled or not — independent of
     // the expand/collapse rule below.
     const orderedMembers = [...members].sort((a, b) => {
-        if (a.id === CURRENT_USER_ID) return -1;
-        if (b.id === CURRENT_USER_ID) return 1;
+        if (a.id === currentUser?.id) return -1;
+        if (b.id === currentUser?.id) return 1;
         return 0;
     });
 
@@ -51,6 +52,7 @@ export function GroupBalanceAccordionList({
                             transaction.toUserId === member.id,
                     )}
                     membersById={membersById}
+                    currentUserId={currentUser?.id}
                 />
             ))}
         </Accordion.Root>

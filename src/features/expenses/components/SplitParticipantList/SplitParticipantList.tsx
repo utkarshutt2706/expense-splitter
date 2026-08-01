@@ -1,5 +1,5 @@
+import { useCurrentUser } from '@app/hooks';
 import type { SplitType, User } from '@data/entities';
-import { CURRENT_USER_ID } from '@data/seed';
 import { Avatar } from '@shared/components';
 
 interface SplitParticipantListProps {
@@ -29,13 +29,15 @@ export function SplitParticipantList({
     onValueChange,
     emptyMessage = "You don't have any friends yet — you can add members later.",
 }: SplitParticipantListProps) {
+    const { data: currentUser } = useCurrentUser();
+
     if (users.length === 0) {
         return <p className="text-muted-foreground text-sm">{emptyMessage}</p>;
     }
 
     const orderedUsers = [...users].sort((a, b) => {
-        if (a.id === CURRENT_USER_ID) return -1;
-        if (b.id === CURRENT_USER_ID) return 1;
+        if (a.id === currentUser?.id) return -1;
+        if (b.id === currentUser?.id) return 1;
         return 0;
     });
 
@@ -44,7 +46,7 @@ export function SplitParticipantList({
     return (
         <ul className="flex max-h-48 flex-col gap-1 overflow-y-auto">
             {orderedUsers.map((user) => {
-                const isCurrentUser = user.id === CURRENT_USER_ID;
+                const isCurrentUser = user.id === currentUser?.id;
                 const name = isCurrentUser ? 'You' : user.name;
                 const isSelected = selectedIds.includes(user.id);
 

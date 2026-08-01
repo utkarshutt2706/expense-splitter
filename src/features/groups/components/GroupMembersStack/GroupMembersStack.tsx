@@ -1,8 +1,8 @@
 import * as Popover from '@radix-ui/react-popover';
 import { UserRoundPlus } from 'lucide-react';
 
+import { useCurrentUser } from '@app/hooks';
 import type { User } from '@data/entities';
-import { CURRENT_USER_ID } from '@data/seed';
 import { Avatar } from '@shared/components';
 
 interface GroupMembersStackProps {
@@ -45,9 +45,10 @@ export function GroupMembersStack({
     maxVisibleMobile = 2,
     onEditMembers,
 }: GroupMembersStackProps) {
+    const { data: currentUser } = useCurrentUser();
     const orderedMembers = [...members].sort((a, b) => {
-        if (a.id === CURRENT_USER_ID) return -1;
-        if (b.id === CURRENT_USER_ID) return 1;
+        if (a.id === currentUser?.id) return -1;
+        if (b.id === currentUser?.id) return 1;
         return 0;
     });
 
@@ -89,7 +90,7 @@ export function GroupMembersStack({
                                 <Avatar name={member.name} />
                                 <div>
                                     <p className="text-surface-foreground text-sm font-medium">
-                                        {member.id === CURRENT_USER_ID ? 'You' : member.name}
+                                        {member.id === currentUser?.id ? 'You' : member.name}
                                     </p>
                                     {(member.email || member.phone) && (
                                         <p className="text-muted-foreground text-xs">

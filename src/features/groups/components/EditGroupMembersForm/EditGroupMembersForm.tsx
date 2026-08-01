@@ -2,8 +2,8 @@ import { Check } from 'lucide-react';
 import type { SubmitEvent } from 'react';
 import { useState } from 'react';
 
+import { useCurrentUser } from '@app/hooks';
 import type { User } from '@data/entities';
-import { CURRENT_USER_ID } from '@data/seed';
 import { MemberCheckboxList } from '../MemberCheckboxList';
 
 export interface EditGroupMembersFormValues {
@@ -23,10 +23,11 @@ export function EditGroupMembersForm({
     onSubmit,
     onCancel,
 }: EditGroupMembersFormProps) {
+    const { data: currentUser } = useCurrentUser();
     const [memberIds, setMemberIds] = useState<string[]>(initialMemberIds);
 
     const toggleMember = (id: string) => {
-        if (id === CURRENT_USER_ID) return;
+        if (id === currentUser?.id) return;
 
         setMemberIds((current) =>
             current.includes(id) ? current.filter((memberId) => memberId !== id) : [...current, id],
@@ -47,7 +48,7 @@ export function EditGroupMembersForm({
                     selectedIds={memberIds}
                     onToggle={toggleMember}
                     emptyMessage="No members to show."
-                    currentUserId={CURRENT_USER_ID}
+                    currentUserId={currentUser?.id ?? ''}
                     lockCurrentUser
                 />
             </div>

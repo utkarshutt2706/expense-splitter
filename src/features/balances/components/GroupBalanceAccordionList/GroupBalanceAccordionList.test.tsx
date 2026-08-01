@@ -1,11 +1,18 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import type { User } from '@data/entities';
 import { CURRENT_USER_ID } from '@data/seed';
 import type { SettlementTransaction } from '../../utils/simplifyDebts';
 import { GroupBalanceAccordionList } from './GroupBalanceAccordionList';
+
+vi.mock('@app/hooks', async (importOriginal) => ({
+    ...(await importOriginal<typeof import('@app/hooks')>()),
+    useCurrentUser: () => ({
+        data: { id: CURRENT_USER_ID, name: 'Utkarsh Srivastava', email: 'utkarsh@example.com' },
+    }),
+}));
 
 const members: User[] = [
     { id: 'friend-1', name: 'Abhinav', email: 'abhinav@example.com' },

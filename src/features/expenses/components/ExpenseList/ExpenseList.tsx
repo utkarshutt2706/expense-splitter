@@ -1,7 +1,7 @@
 import { Link } from 'react-router';
 
+import { useCurrentUser } from '@app/hooks';
 import type { Expense, User } from '@data/entities';
-import { CURRENT_USER_ID } from '@data/seed';
 import { useExpenses } from '@features/expenses/hooks/useExpenses';
 import { calculateExpenseInvolvement } from '@features/expenses/utils/calculateExpenseInvolvement';
 import { Avatar, Skeleton } from '@shared/components';
@@ -18,9 +18,9 @@ const dateFormatter = new Intl.DateTimeFormat('en-US', {
     year: 'numeric',
 });
 
-function payerLabel(payer: User | undefined): string {
+function payerLabel(payer: User | undefined, currentUserId: string | undefined): string {
     if (!payer) return 'Someone';
-    return payer.id === CURRENT_USER_ID ? 'You' : payer.name;
+    return payer.id === currentUserId ? 'You' : payer.name;
 }
 
 function ExpenseRowSkeleton() {
@@ -39,8 +39,11 @@ function ExpenseRowSkeleton() {
     );
 }
 
-function involvementLabel(expense: Expense): { text: string; className: string } {
-    const involvement = calculateExpenseInvolvement(expense, CURRENT_USER_ID);
+function involvementLabel(
+    expense: Expense,
+    currentUserId: string | undefined,
+): { text: string; className: string } {
+    const involvement = calculateExpenseInvolvement(expense, currentUserId ?? '');
 
     if (involvement.type === 'lent') {
         return { text: `You lent ₹${involvement.amount.toFixed(2)}`, className: 'text-owed' };
@@ -54,6 +57,7 @@ function involvementLabel(expense: Expense): { text: string; className: string }
 }
 
 export function ExpenseList({ groupId, members, isMembersLoading = false }: ExpenseListProps) {
+    const { data: currentUser } = useCurrentUser();
     const { data: expenses, isLoading, isError } = useExpenses(groupId);
 
     if (isLoading || isMembersLoading) {
@@ -82,7 +86,7 @@ export function ExpenseList({ groupId, members, isMembersLoading = false }: Expe
         <ul className="flex flex-col gap-3">
             {expenses.map((expense) => {
                 const payer = membersById.get(expense.paidByUserId);
-                const involvement = involvementLabel(expense);
+                const involvement = involvementLabel(expense, currentUser?.id);
 
                 return (
                     <li key={expense.id}>
@@ -96,7 +100,7 @@ export function ExpenseList({ groupId, members, isMembersLoading = false }: Expe
                                     {expense.description}
                                 </p>
                                 <p className="text-muted-foreground text-sm">
-                                    {payerLabel(payer)} paid ·{' '}
+                                    {payerLabel(payer, currentUser?.id)} paid ·{' '}
                                     {dateFormatter.format(new Date(expense.createdAt))}
                                 </p>
                             </div>

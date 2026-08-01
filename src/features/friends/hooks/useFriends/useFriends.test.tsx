@@ -13,6 +13,13 @@ vi.mock('@services/instances', () => ({
     },
 }));
 
+vi.mock('@app/hooks', async (importOriginal) => ({
+    ...(await importOriginal<typeof import('@app/hooks')>()),
+    useCurrentUser: () => ({
+        data: { id: CURRENT_USER_ID, name: 'Alex Morgan', email: 'alex@example.com' },
+    }),
+}));
+
 describe('useFriends', () => {
     it('excludes the current user from the friends list', async () => {
         const { userService } = await import('@services/instances');

@@ -6,6 +6,13 @@ import type { User } from '@data/entities';
 import { CURRENT_USER_ID } from '@data/seed';
 import { UpsertExpenseForm } from './UpsertExpenseForm';
 
+vi.mock('@app/hooks', async (importOriginal) => ({
+    ...(await importOriginal<typeof import('@app/hooks')>()),
+    useCurrentUser: () => ({
+        data: { id: CURRENT_USER_ID, name: 'Alex Morgan', email: 'alex@example.com' },
+    }),
+}));
+
 const members: User[] = [
     { id: CURRENT_USER_ID, name: 'Alex Morgan', email: 'alex@example.com' },
     { id: 'user-2', name: 'Priya Sharma', email: 'priya@example.com' },

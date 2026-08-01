@@ -1,8 +1,8 @@
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { ChevronDown } from 'lucide-react';
 
+import { useCurrentUser } from '@app/hooks';
 import type { User } from '@data/entities';
-import { CURRENT_USER_ID } from '@data/seed';
 import { Avatar } from '@shared/components';
 
 interface PaidByPickerProps {
@@ -11,11 +11,12 @@ interface PaidByPickerProps {
     readonly onChange: (id: string) => void;
 }
 
-function labelFor(member: User): string {
-    return member.id === CURRENT_USER_ID ? 'You' : member.name;
+function labelFor(member: User, currentUserId: string | undefined): string {
+    return member.id === currentUserId ? 'You' : member.name;
 }
 
 export function PaidByPicker({ members, value, onChange }: PaidByPickerProps) {
+    const { data: currentUser } = useCurrentUser();
     const selected = members.find((member) => member.id === value);
 
     return (
@@ -28,7 +29,7 @@ export function PaidByPicker({ members, value, onChange }: PaidByPickerProps) {
                 >
                     <span className="flex items-center gap-2">
                         {selected && <Avatar name={selected.name} size="sm" />}
-                        {selected ? labelFor(selected) : 'Select who paid'}
+                        {selected ? labelFor(selected, currentUser?.id) : 'Select who paid'}
                     </span>
                     <ChevronDown className="text-muted-foreground size-4" />
                 </button>
@@ -49,7 +50,7 @@ export function PaidByPicker({ members, value, onChange }: PaidByPickerProps) {
                                 <span aria-hidden="true">
                                     <Avatar name={member.name} />
                                 </span>
-                                {labelFor(member)}
+                                {labelFor(member, currentUser?.id)}
                             </DropdownMenu.RadioItem>
                         ))}
                     </DropdownMenu.RadioGroup>

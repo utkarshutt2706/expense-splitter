@@ -2,7 +2,6 @@ import * as Accordion from '@radix-ui/react-accordion';
 import { ChevronDown } from 'lucide-react';
 
 import type { User } from '@data/entities';
-import { CURRENT_USER_ID } from '@data/seed';
 import type { SettlementTransaction } from '../../utils/simplifyDebts';
 
 interface MemberBalanceAccordionProps {
@@ -10,18 +9,31 @@ interface MemberBalanceAccordionProps {
     readonly netAmount: number;
     readonly transactions: SettlementTransaction[];
     readonly membersById: Map<string, User>;
+    readonly currentUserId: string | undefined;
 }
 
-function subjectName(userId: string, membersById: Map<string, User>): string {
-    return userId === CURRENT_USER_ID ? 'You' : (membersById.get(userId)?.name ?? 'Someone');
+function subjectName(
+    userId: string,
+    membersById: Map<string, User>,
+    currentUserId: string | undefined,
+): string {
+    return userId === currentUserId ? 'You' : (membersById.get(userId)?.name ?? 'Someone');
 }
 
-function objectName(userId: string, membersById: Map<string, User>): string {
-    return userId === CURRENT_USER_ID ? 'you' : (membersById.get(userId)?.name ?? 'someone');
+function objectName(
+    userId: string,
+    membersById: Map<string, User>,
+    currentUserId: string | undefined,
+): string {
+    return userId === currentUserId ? 'you' : (membersById.get(userId)?.name ?? 'someone');
 }
 
-function titleFor(member: User, netAmount: number): { text: string; className: string } {
-    const isCurrentUser = member.id === CURRENT_USER_ID;
+function titleFor(
+    member: User,
+    netAmount: number,
+    currentUserId: string | undefined,
+): { text: string; className: string } {
+    const isCurrentUser = member.id === currentUserId;
     const subject = isCurrentUser ? 'You' : member.name;
 
     if (netAmount > 0) {
@@ -49,8 +61,9 @@ export function MemberBalanceAccordion({
     netAmount,
     transactions,
     membersById,
+    currentUserId,
 }: MemberBalanceAccordionProps) {
-    const title = titleFor(member, netAmount);
+    const title = titleFor(member, netAmount, currentUserId);
 
     return (
         <Accordion.Item value={member.id} className="border-border rounded-lg border">
@@ -72,10 +85,10 @@ export function MemberBalanceAccordion({
                                 key={`${transaction.fromUserId}-${transaction.toUserId}`}
                                 className="text-muted-foreground text-sm"
                             >
-                                {subjectName(transaction.fromUserId, membersById)} owe
-                                {transaction.fromUserId === CURRENT_USER_ID ? '' : 's'} ₹
+                                {subjectName(transaction.fromUserId, membersById, currentUserId)}{' '}
+                                owe{transaction.fromUserId === currentUserId ? '' : 's'} ₹
                                 {transaction.amount.toFixed(2)} to{' '}
-                                {objectName(transaction.toUserId, membersById)}
+                                {objectName(transaction.toUserId, membersById, currentUserId)}
                             </li>
                         ))}
                     </ul>
