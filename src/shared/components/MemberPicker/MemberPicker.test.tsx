@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type { User } from '@data/entities';
 import { CURRENT_USER_ID } from '@data/seed';
-import { PaidByPicker } from './PaidByPicker';
+import { MemberPicker } from './MemberPicker';
 
 vi.mock('@app/hooks', async (importOriginal) => ({
     ...(await importOriginal<typeof import('@app/hooks')>()),
@@ -18,22 +18,42 @@ const members: User[] = [
     { id: 'user-2', name: 'Priya Sharma', email: 'priya@example.com' },
 ];
 
-describe('PaidByPicker', () => {
+function renderPicker(value: string, onChange = vi.fn()) {
+    return render(
+        <MemberPicker
+            members={members}
+            value={value}
+            onChange={onChange}
+            ariaLabel="Paid by"
+            placeholder="Select who paid"
+        />,
+    );
+}
+
+describe('MemberPicker', () => {
     it('shows "You" on the trigger when the current user is selected', () => {
-        render(<PaidByPicker members={members} value={CURRENT_USER_ID} onChange={vi.fn()} />);
+        renderPicker(CURRENT_USER_ID);
 
         expect(screen.getByRole('button', { name: 'Paid by' })).toHaveTextContent('You');
     });
 
     it("shows the selected member's name on the trigger", () => {
-        render(<PaidByPicker members={members} value="user-2" onChange={vi.fn()} />);
+        renderPicker('user-2');
 
         expect(screen.getByRole('button', { name: 'Paid by' })).toHaveTextContent('Priya Sharma');
     });
 
+    it('shows the placeholder when no member is selected', () => {
+        renderPicker('');
+
+        expect(screen.getByRole('button', { name: 'Paid by' })).toHaveTextContent(
+            'Select who paid',
+        );
+    });
+
     it('lists every member with the current user labeled "You" when opened', async () => {
         const user = userEvent.setup();
-        render(<PaidByPicker members={members} value={CURRENT_USER_ID} onChange={vi.fn()} />);
+        renderPicker(CURRENT_USER_ID);
 
         await user.click(screen.getByRole('button', { name: 'Paid by' }));
 
@@ -44,7 +64,7 @@ describe('PaidByPicker', () => {
     it('calls onChange with the selected member id', async () => {
         const onChange = vi.fn();
         const user = userEvent.setup();
-        render(<PaidByPicker members={members} value={CURRENT_USER_ID} onChange={onChange} />);
+        renderPicker(CURRENT_USER_ID, onChange);
 
         await user.click(screen.getByRole('button', { name: 'Paid by' }));
         await user.click(screen.getByRole('menuitemradio', { name: /priya sharma/i }));

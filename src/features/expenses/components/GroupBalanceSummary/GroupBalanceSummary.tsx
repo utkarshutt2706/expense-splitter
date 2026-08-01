@@ -4,6 +4,7 @@ import { useCurrentUser } from '@app/hooks';
 import type { User } from '@data/entities';
 import { useExpenses } from '@features/expenses/hooks/useExpenses';
 import { calculateNetBalance } from '@features/expenses/utils/calculateNetBalance';
+import { usePayments } from '@features/payments';
 import { Skeleton } from '@shared/components';
 
 interface GroupBalanceSummaryProps {
@@ -13,23 +14,34 @@ interface GroupBalanceSummaryProps {
 
 export function GroupBalanceSummary({ groupId, members }: GroupBalanceSummaryProps) {
     const { data: currentUser } = useCurrentUser();
-    const { data: expenses, isLoading, isError } = useExpenses(groupId);
+    const {
+        data: expenses,
+        isLoading: isExpensesLoading,
+        isError: isExpensesError,
+    } = useExpenses(groupId);
+    const {
+        data: payments,
+        isLoading: isPaymentsLoading,
+        isError: isPaymentsError,
+    } = usePayments(groupId);
 
-    if (isLoading) {
+    if (isExpensesLoading || isPaymentsLoading) {
         return <Skeleton className="h-7 w-48" />;
     }
 
-    if (isError) {
+    if (isExpensesError || isPaymentsError) {
         return <p className="text-muted-foreground text-sm">Couldn't load balance.</p>;
     }
 
-    const balance = calculateNetBalance(expenses ?? [], currentUser?.id ?? '');
+    const balance = calculateNetBalance(expenses ?? [], payments ?? [], currentUser?.id ?? '');
     // members is briefly [] while useGroupMembers is still loading (this component's
     // own expenses query can resolve first) — members.every() on an empty array is
     // vacuously true, so guard against treating that transient state as "settled".
     const isGroupFullySettled =
         members.length > 0 &&
-        members.every((member) => calculateNetBalance(expenses ?? [], member.id) === 0);
+        members.every(
+            (member) => calculateNetBalance(expenses ?? [], payments ?? [], member.id) === 0,
+        );
 
     let text: string;
     let className: string;

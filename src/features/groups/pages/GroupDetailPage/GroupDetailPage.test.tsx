@@ -48,11 +48,17 @@ vi.mock('@features/expenses', () => ({
     AddExpenseAction: ({ groupId, members }: { groupId: string; members: User[] }) => (
         <div data-testid="add-expense-action">{`${groupId}-${members.length}`}</div>
     ),
-    ExpenseList: ({ groupId, members }: { groupId: string; members: User[] }) => (
-        <div data-testid="expense-list">{`${groupId}-${members.length}`}</div>
+    GroupActivityList: ({ groupId, members }: { groupId: string; members: User[] }) => (
+        <div data-testid="group-activity-list">{`${groupId}-${members.length}`}</div>
     ),
     GroupBalanceSummary: ({ groupId }: { groupId: string }) => (
         <div data-testid="group-balance-summary">{groupId}</div>
+    ),
+}));
+
+vi.mock('@features/payments', () => ({
+    RecordPaymentAction: ({ groupId, members }: { groupId: string; members: User[] }) => (
+        <div data-testid="record-payment-action">{`${groupId}-${members.length}`}</div>
     ),
 }));
 
@@ -99,7 +105,7 @@ describe('GroupDetailPage', () => {
         // straight from the route — so they mount and start fetching immediately
         // instead of waiting behind the group query, avoiding a skeleton waterfall.
         expect(screen.getByTestId('group-balance-summary')).toHaveTextContent('group-1');
-        expect(screen.getByTestId('expense-list')).toHaveTextContent('group-1-0');
+        expect(screen.getByTestId('group-activity-list')).toHaveTextContent('group-1-0');
     });
 
     it('shows an error message when the group fails to load, without rendering balance/expenses', () => {
@@ -118,7 +124,7 @@ describe('GroupDetailPage', () => {
 
         expect(screen.getByText(/couldn't load this group/i)).toBeInTheDocument();
         expect(screen.queryByTestId('group-balance-summary')).not.toBeInTheDocument();
-        expect(screen.queryByTestId('expense-list')).not.toBeInTheDocument();
+        expect(screen.queryByTestId('group-activity-list')).not.toBeInTheDocument();
     });
 
     it('renders the back link', () => {
@@ -154,16 +160,17 @@ describe('GroupDetailPage', () => {
             } as unknown as ReturnType<typeof useGroupMembers>);
         });
 
-        it('renders the name editor, members section, settings button, balance summary, expense list, and add-expense action', () => {
+        it('renders the name editor, members section, settings button, balance summary, activity list, and add-expense/record-payment actions', () => {
             renderPage();
 
             expect(screen.getByTestId('group-name-editor')).toHaveTextContent('Weekend Trip');
             expect(screen.getByTestId('group-members-section')).toBeInTheDocument();
             expect(screen.getByRole('button', { name: /group settings/i })).toBeInTheDocument();
             expect(screen.getByTestId('group-balance-summary')).toHaveTextContent('group-1');
-            expect(screen.getByRole('heading', { name: /expenses/i })).toBeInTheDocument();
-            expect(screen.getByTestId('expense-list')).toHaveTextContent('group-1-2');
+            expect(screen.getByRole('heading', { name: /activity/i })).toBeInTheDocument();
+            expect(screen.getByTestId('group-activity-list')).toHaveTextContent('group-1-2');
             expect(screen.getByTestId('add-expense-action')).toHaveTextContent('group-1-2');
+            expect(screen.getByTestId('record-payment-action')).toHaveTextContent('group-1-2');
         });
 
         it('hides the members section while the group name is being edited', async () => {

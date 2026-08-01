@@ -5,6 +5,7 @@ import { Link, useParams } from 'react-router';
 import { useExpenses } from '@features/expenses/hooks/useExpenses';
 import { calculateNetBalance } from '@features/expenses/utils/calculateNetBalance';
 import { useGroup, useGroupMembers } from '@features/groups';
+import { usePayments } from '@features/payments';
 import { Skeleton } from '@shared/components';
 import { GroupBalanceAccordionList } from '../../components/GroupBalanceAccordionList';
 import { simplifyDebts } from '../../utils/simplifyDebts';
@@ -22,9 +23,14 @@ export function GroupBalancePage() {
         isLoading: isExpensesLoading,
         isError: isExpensesError,
     } = useExpenses(groupId ?? '');
+    const {
+        data: payments,
+        isLoading: isPaymentsLoading,
+        isError: isPaymentsError,
+    } = usePayments(groupId ?? '');
 
-    const isLoading = isGroupLoading || isMembersLoading || isExpensesLoading;
-    const isError = isGroupError || isExpensesError;
+    const isLoading = isGroupLoading || isMembersLoading || isExpensesLoading || isPaymentsLoading;
+    const isError = isGroupError || isExpensesError || isPaymentsError;
 
     let content: ReactNode;
     if (isLoading) {
@@ -46,7 +52,10 @@ export function GroupBalancePage() {
     } else {
         const allMembers = members ?? [];
         const netBalances = new Map(
-            allMembers.map((member) => [member.id, calculateNetBalance(expenses ?? [], member.id)]),
+            allMembers.map((member) => [
+                member.id,
+                calculateNetBalance(expenses ?? [], payments ?? [], member.id),
+            ]),
         );
         const transactions = simplifyDebts(
             allMembers.map((member) => ({

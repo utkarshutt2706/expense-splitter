@@ -3,11 +3,12 @@ import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { Link, useParams } from 'react-router';
 
-import { AddExpenseAction, ExpenseList, GroupBalanceSummary } from '@features/expenses';
+import { AddExpenseAction, GroupActivityList, GroupBalanceSummary } from '@features/expenses';
 import { useGroup, useGroupMembers } from '@features/groups';
 import { GroupMembersSection } from '@features/groups/components/GroupMembersSection';
 import { GroupNameEditor } from '@features/groups/components/GroupNameEditor';
 import { MemberAvatarsSkeleton } from '@features/groups/components/MemberAvatarsSkeleton';
+import { RecordPaymentAction } from '@features/payments';
 import { Skeleton } from '@shared/components';
 
 export function GroupDetailPage() {
@@ -87,9 +88,9 @@ export function GroupDetailPage() {
 
                     <div>
                         <h2 className="font-display text-surface-foreground mb-3 text-lg font-medium">
-                            Expenses
+                            Activity
                         </h2>
-                        <ExpenseList
+                        <GroupActivityList
                             groupId={groupId ?? ''}
                             members={members ?? []}
                             isMembersLoading={isLoading || isMembersLoading}
@@ -98,7 +99,12 @@ export function GroupDetailPage() {
                 </div>
             )}
 
-            {group && <AddExpenseAction groupId={group.id} members={members ?? []} />}
+            {group && (
+                <>
+                    <AddExpenseAction groupId={group.id} members={members ?? []} />
+                    <RecordPaymentAction groupId={group.id} members={members ?? []} />
+                </>
+            )}
         </div>
     );
 }

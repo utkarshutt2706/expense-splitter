@@ -1,4 +1,4 @@
-import type { Expense, Group, User } from './entities';
+import type { Expense, Group, Payment, User } from './entities';
 
 export interface IUserRepository {
     getById(id: string): Promise<User | undefined>;
@@ -22,4 +22,9 @@ export interface IExpenseRepository {
     create(expense: Expense): Promise<Expense>;
     update(id: string, changes: Partial<Omit<Expense, 'id'>>): Promise<Expense>;
     delete(id: string): Promise<void>;
+}
+
+export interface IPaymentRepository {
+    getByGroupId(groupId: string): Promise<Payment[]>;
+    create(payment: Payment): Promise<Payment>;
 }

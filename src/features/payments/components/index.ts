@@ -1,0 +1,1 @@
+export { RecordPaymentAction } from './RecordPaymentAction';
