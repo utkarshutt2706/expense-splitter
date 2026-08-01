@@ -152,6 +152,33 @@ describe('GroupsPage', () => {
         );
     });
 
+    it('shows a refreshing indicator during a background refetch, not the loading skeleton', () => {
+        vi.mocked(useGroups).mockReturnValue({
+            data: groups,
+            isLoading: false,
+            isFetching: true,
+            isError: false,
+        } as unknown as ReturnType<typeof useGroups>);
+
+        renderPage();
+
+        expect(screen.getByRole('status', { name: 'Refreshing…' })).toBeInTheDocument();
+        expect(screen.queryByRole('status', { name: /loading groups/i })).not.toBeInTheDocument();
+    });
+
+    it('does not show a refreshing indicator once the background refetch settles', () => {
+        vi.mocked(useGroups).mockReturnValue({
+            data: groups,
+            isLoading: false,
+            isFetching: false,
+            isError: false,
+        } as unknown as ReturnType<typeof useGroups>);
+
+        renderPage();
+
+        expect(screen.queryByRole('status', { name: 'Refreshing…' })).not.toBeInTheDocument();
+    });
+
     describe('create group flow', () => {
         beforeEach(() => {
             vi.mocked(useGroups).mockReturnValue({

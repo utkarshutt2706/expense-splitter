@@ -159,6 +159,48 @@ describe('GroupActivityList', () => {
         expect(screen.queryByRole('link')).not.toBeInTheDocument();
     });
 
+    it('shows a refreshing indicator above the list during a background refetch', () => {
+        mockExpenses(
+            [
+                {
+                    id: 'expense-1',
+                    groupId: 'group-1',
+                    description: 'Groceries',
+                    amount: 40,
+                    paidByUserId: CURRENT_USER_ID,
+                    splitType: 'equal',
+                    splits: [{ userId: CURRENT_USER_ID, amount: 40 }],
+                    createdAt: '2026-07-01T00:00:00.000Z',
+                },
+            ],
+            { isFetching: true },
+        );
+        mockPayments([]);
+
+        renderList();
+
+        expect(screen.getByRole('status', { name: 'Refreshing…' })).toBeInTheDocument();
+    });
+
+    it('shows a refreshing indicator alongside the empty message during a background refetch', () => {
+        mockExpenses([], { isFetching: true });
+        mockPayments([]);
+
+        renderList();
+
+        expect(screen.getByText(/no activity yet/i)).toBeInTheDocument();
+        expect(screen.getByRole('status', { name: 'Refreshing…' })).toBeInTheDocument();
+    });
+
+    it('does not show a refreshing indicator once the background refetch settles', () => {
+        mockExpenses([]);
+        mockPayments([]);
+
+        renderList();
+
+        expect(screen.queryByRole('status', { name: 'Refreshing…' })).not.toBeInTheDocument();
+    });
+
     it('interleaves expenses and payments newest first', () => {
         mockExpenses([
             {

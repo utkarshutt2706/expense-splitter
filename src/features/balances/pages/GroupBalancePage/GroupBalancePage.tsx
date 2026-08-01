@@ -6,7 +6,7 @@ import { useExpenses } from '@features/expenses/hooks/useExpenses';
 import { calculateNetBalance } from '@features/expenses/utils/calculateNetBalance';
 import { useGroup, useGroupMembers } from '@features/groups';
 import { usePayments } from '@features/payments';
-import { Skeleton } from '@shared/components';
+import { FetchingIndicator, Skeleton } from '@shared/components';
 import { GroupBalanceAccordionList } from '../../components/GroupBalanceAccordionList';
 import { simplifyDebts } from '../../utils/simplifyDebts';
 
@@ -15,22 +15,36 @@ export function GroupBalancePage() {
     const {
         data: group,
         isLoading: isGroupLoading,
+        isFetching: isGroupFetching,
         isError: isGroupError,
     } = useGroup(groupId ?? '');
-    const { data: members, isLoading: isMembersLoading } = useGroupMembers(group?.memberIds ?? []);
+    const {
+        data: members,
+        isLoading: isMembersLoading,
+        isFetching: isMembersFetching,
+    } = useGroupMembers(group?.memberIds ?? []);
     const {
         data: expenses,
         isLoading: isExpensesLoading,
+        isFetching: isExpensesFetching,
         isError: isExpensesError,
     } = useExpenses(groupId ?? '');
     const {
         data: payments,
         isLoading: isPaymentsLoading,
+        isFetching: isPaymentsFetching,
         isError: isPaymentsError,
     } = usePayments(groupId ?? '');
 
     const isLoading = isGroupLoading || isMembersLoading || isExpensesLoading || isPaymentsLoading;
     const isError = isGroupError || isExpensesError || isPaymentsError;
+    // isLoading only covers the very first fetch — settling up (or any other
+    // mutation invalidating these queries) refetches in the background with
+    // isLoading staying false, so without this the page would just silently sit
+    // stale for the invalidated refetch's own latency.
+    const isRefreshing =
+        !isLoading &&
+        (isGroupFetching || isMembersFetching || isExpensesFetching || isPaymentsFetching);
 
     let content: ReactNode;
     if (isLoading) {
@@ -66,6 +80,7 @@ export function GroupBalancePage() {
 
         content = (
             <GroupBalanceAccordionList
+                groupId={groupId ?? ''}
                 members={allMembers}
                 netBalances={netBalances}
                 transactions={transactions}
@@ -83,8 +98,9 @@ export function GroupBalancePage() {
                 Back to group
             </Link>
 
-            <h1 className="font-display text-surface-foreground mb-4 text-xl font-medium">
+            <h1 className="font-display text-surface-foreground mb-4 flex items-center gap-2 text-xl font-medium">
                 {isLoading ? <Skeleton className="h-7 w-40" /> : (group?.name ?? 'Balances')}
+                {isRefreshing && <FetchingIndicator />}
             </h1>
 
             {content}

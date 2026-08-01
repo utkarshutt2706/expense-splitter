@@ -165,6 +165,49 @@ describe('ExpenseDetailPage', () => {
         expect(screen.getByRole('heading', { name: 'Chicken' })).toBeInTheDocument();
     });
 
+    it('shows a refreshing indicator during a background refetch, not the loading skeleton', () => {
+        vi.mocked(useExpense).mockReturnValue({
+            data: expense,
+            isLoading: false,
+            isFetching: true,
+            isError: false,
+        } as unknown as ReturnType<typeof useExpense>);
+        vi.mocked(useGroup).mockReturnValue({
+            data: group,
+            isLoading: false,
+        } as unknown as ReturnType<typeof useGroup>);
+        vi.mocked(useGroupMembers).mockReturnValue({
+            data: members,
+            isLoading: false,
+        } as unknown as ReturnType<typeof useGroupMembers>);
+
+        renderPage();
+
+        expect(screen.getByRole('status', { name: 'Refreshing…' })).toBeInTheDocument();
+        expect(screen.queryByRole('status', { name: /loading expense/i })).not.toBeInTheDocument();
+    });
+
+    it('does not show a refreshing indicator once the background refetch settles', () => {
+        vi.mocked(useExpense).mockReturnValue({
+            data: expense,
+            isLoading: false,
+            isFetching: false,
+            isError: false,
+        } as unknown as ReturnType<typeof useExpense>);
+        vi.mocked(useGroup).mockReturnValue({
+            data: group,
+            isLoading: false,
+        } as unknown as ReturnType<typeof useGroup>);
+        vi.mocked(useGroupMembers).mockReturnValue({
+            data: members,
+            isLoading: false,
+        } as unknown as ReturnType<typeof useGroupMembers>);
+
+        renderPage();
+
+        expect(screen.queryByRole('status', { name: 'Refreshing…' })).not.toBeInTheDocument();
+    });
+
     it('shows the amount and who added the expense, with the added date', () => {
         vi.mocked(useExpense).mockReturnValue({
             data: expense,

@@ -179,6 +179,33 @@ describe('FriendsPage', () => {
         expect(screen.getByRole('button', { name: /^add friend$/i })).toBeInTheDocument();
     });
 
+    it('shows a refreshing indicator during a background refetch, not the loading skeleton', () => {
+        vi.mocked(useFriends).mockReturnValue({
+            data: friends,
+            isLoading: false,
+            isFetching: true,
+            isError: false,
+        } as unknown as ReturnType<typeof useFriends>);
+
+        render(<FriendsPage />);
+
+        expect(screen.getByRole('status', { name: 'Refreshing…' })).toBeInTheDocument();
+        expect(screen.queryByRole('status', { name: /loading friends/i })).not.toBeInTheDocument();
+    });
+
+    it('does not show a refreshing indicator once the background refetch settles', () => {
+        vi.mocked(useFriends).mockReturnValue({
+            data: friends,
+            isLoading: false,
+            isFetching: false,
+            isError: false,
+        } as unknown as ReturnType<typeof useFriends>);
+
+        render(<FriendsPage />);
+
+        expect(screen.queryByRole('status', { name: 'Refreshing…' })).not.toBeInTheDocument();
+    });
+
     it('renders each friend with their name and contact info', () => {
         vi.mocked(useFriends).mockReturnValue({
             data: friends,

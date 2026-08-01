@@ -14,6 +14,13 @@ vi.mock('@app/hooks', async (importOriginal) => ({
     }),
 }));
 
+// Each MemberBalanceAccordion calls useCreatePayment unconditionally (for its
+// settle-up dialog), which needs a QueryClientProvider this test doesn't set up —
+// mocked since none of these tests exercise settle-up itself.
+vi.mock('@features/payments/hooks/useCreatePayment', () => ({
+    useCreatePayment: () => ({ mutate: vi.fn() }),
+}));
+
 const members: User[] = [
     { id: 'friend-1', name: 'Abhinav', email: 'abhinav@example.com' },
     { id: 'friend-2', name: 'Khem', email: 'khem@example.com' },
@@ -32,6 +39,7 @@ describe('GroupBalanceAccordionList', () => {
     it('renders one accordion per member', () => {
         render(
             <GroupBalanceAccordionList
+                groupId="group-1"
                 members={members}
                 netBalances={netBalances}
                 transactions={transactions}
@@ -45,6 +53,7 @@ describe('GroupBalanceAccordionList', () => {
     it('expands accordions for non-zero balances and collapses settled ones by default', () => {
         render(
             <GroupBalanceAccordionList
+                groupId="group-1"
                 members={members}
                 netBalances={netBalances}
                 transactions={transactions}
@@ -74,6 +83,7 @@ describe('GroupBalanceAccordionList', () => {
 
         render(
             <GroupBalanceAccordionList
+                groupId="group-1"
                 members={threeMembers}
                 netBalances={multipleUnsettledBalances}
                 transactions={transactions}
@@ -106,6 +116,7 @@ describe('GroupBalanceAccordionList', () => {
 
         render(
             <GroupBalanceAccordionList
+                groupId="group-1"
                 members={membersWithCurrentUserLast}
                 netBalances={balances}
                 transactions={transactions}
@@ -136,6 +147,7 @@ describe('GroupBalanceAccordionList', () => {
 
         render(
             <GroupBalanceAccordionList
+                groupId="group-1"
                 members={members}
                 netBalances={bothNonZeroBalances}
                 transactions={transactions}

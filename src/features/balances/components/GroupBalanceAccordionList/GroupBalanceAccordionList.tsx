@@ -6,12 +6,14 @@ import type { SettlementTransaction } from '../../utils/simplifyDebts';
 import { MemberBalanceAccordion } from '../MemberBalanceAccordion';
 
 interface GroupBalanceAccordionListProps {
+    readonly groupId: string;
     readonly members: User[];
     readonly netBalances: Map<string, number>;
     readonly transactions: SettlementTransaction[];
 }
 
 export function GroupBalanceAccordionList({
+    groupId,
     members,
     netBalances,
     transactions,
@@ -52,6 +54,8 @@ export function GroupBalanceAccordionList({
                             transaction.toUserId === member.id,
                     )}
                     membersById={membersById}
+                    members={members}
+                    groupId={groupId}
                     currentUserId={currentUser?.id}
                 />
             ))}

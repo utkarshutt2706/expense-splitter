@@ -185,8 +185,10 @@ describe('GroupBalanceSummary', () => {
 
         renderSummary();
 
-        expect(screen.getByText(/all settled up/i)).toHaveClass('text-settled');
-        expect(screen.getByText(/this group is all settled/i)).toBeInTheDocument();
+        // Showing both "You're all settled up" and the celebratory note would say
+        // the same thing twice, so only the celebratory note should render.
+        expect(screen.queryByText(/you're all settled up/i)).not.toBeInTheDocument();
+        expect(screen.getByText(/this group is all settled/i)).toHaveClass('text-settled');
         expect(screen.queryByRole('link')).not.toBeInTheDocument();
     });
 
@@ -239,6 +241,35 @@ describe('GroupBalanceSummary', () => {
 
         renderSummary();
 
-        expect(screen.getByText(/all settled up/i)).toHaveClass('text-settled');
+        // Only these two members exist and both net to zero, so the whole group is
+        // settled — same single celebratory-note case as above, not the per-user text.
+        expect(screen.getByText(/this group is all settled/i)).toHaveClass('text-settled');
+    });
+
+    it('shows a refreshing indicator during a background refetch, not the loading skeleton', () => {
+        vi.mocked(useExpenses).mockReturnValue({
+            data: [],
+            isLoading: false,
+            isFetching: true,
+            isError: false,
+        } as unknown as ReturnType<typeof useExpenses>);
+
+        const { container } = renderSummary();
+
+        expect(screen.getByRole('status', { name: 'Refreshing…' })).toBeInTheDocument();
+        expect(container.querySelector('[aria-hidden="true"]')).not.toBeInTheDocument();
+    });
+
+    it('does not show a refreshing indicator once the background refetch settles', () => {
+        vi.mocked(useExpenses).mockReturnValue({
+            data: [],
+            isLoading: false,
+            isFetching: false,
+            isError: false,
+        } as unknown as ReturnType<typeof useExpenses>);
+
+        renderSummary();
+
+        expect(screen.queryByRole('status', { name: 'Refreshing…' })).not.toBeInTheDocument();
     });
 });

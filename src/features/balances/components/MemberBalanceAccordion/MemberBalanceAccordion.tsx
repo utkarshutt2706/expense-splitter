@@ -1,7 +1,11 @@
 import * as Accordion from '@radix-ui/react-accordion';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Handshake } from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
 
 import type { User } from '@data/entities';
+import { RecordPaymentDialog } from '@features/payments/components/RecordPaymentDialog';
+import { useCreatePayment } from '@features/payments/hooks/useCreatePayment';
 import type { SettlementTransaction } from '../../utils/simplifyDebts';
 
 interface MemberBalanceAccordionProps {
@@ -9,6 +13,8 @@ interface MemberBalanceAccordionProps {
     readonly netAmount: number;
     readonly transactions: SettlementTransaction[];
     readonly membersById: Map<string, User>;
+    readonly members: User[];
+    readonly groupId: string;
     readonly currentUserId: string | undefined;
 }
 
@@ -61,9 +67,34 @@ export function MemberBalanceAccordion({
     netAmount,
     transactions,
     membersById,
+    members,
+    groupId,
     currentUserId,
 }: MemberBalanceAccordionProps) {
     const title = titleFor(member, netAmount, currentUserId);
+    const [settlingTransaction, setSettlingTransaction] = useState<SettlementTransaction | null>(
+        null,
+    );
+    const createPayment = useCreatePayment();
+
+    const handleSettleUp = ({
+        fromUserId,
+        toUserId,
+        amount,
+    }: {
+        fromUserId: string;
+        toUserId: string;
+        amount: number;
+    }) => {
+        const toastId = toast.loading('Payment is being recorded…');
+        createPayment.mutate(
+            { groupId, fromUserId, toUserId, amount },
+            {
+                onSuccess: () => toast.success('Payment recorded', { id: toastId }),
+                onError: (error) => toast.error(error.message, { id: toastId }),
+            },
+        );
+    };
 
     return (
         <Accordion.Item value={member.id} className="border-border rounded-lg border">
@@ -79,21 +110,47 @@ export function MemberBalanceAccordion({
                 {transactions.length === 0 ? (
                     <p className="text-muted-foreground pt-3 text-sm">No settlements needed.</p>
                 ) : (
-                    <ul className="flex flex-col gap-1 pt-3">
+                    <ul className="flex flex-col gap-2 pt-3">
                         {transactions.map((transaction) => (
                             <li
                                 key={`${transaction.fromUserId}-${transaction.toUserId}`}
-                                className="text-muted-foreground text-sm"
+                                className="flex items-center justify-between gap-2"
                             >
-                                {subjectName(transaction.fromUserId, membersById, currentUserId)}{' '}
-                                owe{transaction.fromUserId === currentUserId ? '' : 's'} ₹
-                                {transaction.amount.toFixed(2)} to{' '}
-                                {objectName(transaction.toUserId, membersById, currentUserId)}
+                                <span className="text-muted-foreground text-sm">
+                                    {subjectName(
+                                        transaction.fromUserId,
+                                        membersById,
+                                        currentUserId,
+                                    )}{' '}
+                                    owe{transaction.fromUserId === currentUserId ? '' : 's'} ₹
+                                    {transaction.amount.toFixed(2)} to{' '}
+                                    {objectName(transaction.toUserId, membersById, currentUserId)}
+                                </span>
+                                <button
+                                    type="button"
+                                    aria-label="Settle up"
+                                    title="Settle up"
+                                    onClick={() => setSettlingTransaction(transaction)}
+                                    className="border-border text-surface-foreground hover:bg-muted inline-flex shrink-0 cursor-pointer items-center gap-1 rounded-full border px-2 py-1 text-xs font-medium"
+                                >
+                                    <Handshake className="size-3.5" />
+                                    Settle up
+                                </button>
                             </li>
                         ))}
                     </ul>
                 )}
             </Accordion.Content>
+
+            <RecordPaymentDialog
+                open={settlingTransaction !== null}
+                onOpenChange={(open) => {
+                    if (!open) setSettlingTransaction(null);
+                }}
+                members={members}
+                initialValues={settlingTransaction ?? undefined}
+                onSubmit={handleSettleUp}
+            />
         </Accordion.Item>
     );
 }
