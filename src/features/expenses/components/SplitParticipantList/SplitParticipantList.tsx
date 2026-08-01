@@ -30,7 +30,7 @@ export function SplitParticipantList({
     emptyMessage = "You don't have any friends yet — you can add members later.",
 }: SplitParticipantListProps) {
     if (users.length === 0) {
-        return <p className="text-sm text-muted-foreground">{emptyMessage}</p>;
+        return <p className="text-muted-foreground text-sm">{emptyMessage}</p>;
     }
 
     const orderedUsers = [...users].sort((a, b) => {
@@ -51,22 +51,22 @@ export function SplitParticipantList({
                 return (
                     <li
                         key={user.id}
-                        className="flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted"
+                        className="hover:bg-muted flex items-center gap-2 rounded-md px-2 py-1.5"
                     >
                         <label className="flex flex-1 cursor-pointer items-center gap-2">
                             <input
                                 type="checkbox"
                                 checked={isSelected}
                                 onChange={() => onToggle(user.id)}
-                                className="size-4 cursor-pointer accent-brand-600"
+                                className="accent-brand-600 size-4 cursor-pointer"
                             />
                             <span aria-hidden="true">
                                 <Avatar name={user.name} />
                             </span>
-                            <span className="text-sm text-surface-foreground">{name}</span>
+                            <span className="text-surface-foreground text-sm">{name}</span>
                         </label>
                         {inputConfig && isSelected && (
-                            <span className="flex items-center gap-1 text-sm text-muted-foreground">
+                            <span className="text-muted-foreground flex items-center gap-1 text-sm">
                                 {inputConfig.prefix}
                                 <input
                                     type="number"
@@ -76,7 +76,7 @@ export function SplitParticipantList({
                                     value={values[user.id] ?? ''}
                                     onChange={(event) => onValueChange(user.id, event.target.value)}
                                     aria-label={`${name} ${inputConfig.label}`}
-                                    className="w-16 rounded-md border border-border bg-surface px-2 py-1 text-right text-sm text-surface-foreground outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                                    className="border-border bg-surface text-surface-foreground focus-visible:ring-brand-500 w-16 rounded-md border px-2 py-1 text-right text-sm outline-none focus-visible:ring-2"
                                 />
                                 {inputConfig.suffix}
                             </span>

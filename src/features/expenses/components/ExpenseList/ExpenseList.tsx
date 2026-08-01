@@ -25,7 +25,7 @@ function payerLabel(payer: User | undefined): string {
 
 function ExpenseRowSkeleton() {
     return (
-        <li className="flex items-center gap-3 rounded-lg border border-border p-3">
+        <li className="border-border flex items-center gap-3 rounded-lg border p-3">
             <Skeleton className="size-9 shrink-0 rounded-full" />
             <div className="flex-1 space-y-2">
                 <Skeleton className="h-4 w-1/3" />
@@ -88,20 +88,20 @@ export function ExpenseList({ groupId, members, isMembersLoading = false }: Expe
                     <li key={expense.id}>
                         <Link
                             to={`/groups/${groupId}/expenses/${expense.id}`}
-                            className="flex items-center gap-3 rounded-lg border border-border p-3 hover:bg-muted"
+                            className="border-border hover:bg-muted flex items-center gap-3 rounded-lg border p-3"
                         >
                             <Avatar name={payer?.name ?? '?'} />
                             <div className="flex-1">
-                                <p className="font-medium text-surface-foreground">
+                                <p className="text-surface-foreground font-medium">
                                     {expense.description}
                                 </p>
-                                <p className="text-sm text-muted-foreground">
+                                <p className="text-muted-foreground text-sm">
                                     {payerLabel(payer)} paid ·{' '}
                                     {dateFormatter.format(new Date(expense.createdAt))}
                                 </p>
                             </div>
                             <div className="flex flex-col items-end gap-0.5">
-                                <p className="font-medium text-surface-foreground">
+                                <p className="text-surface-foreground font-medium">
                                     ₹{expense.amount.toFixed(2)}
                                 </p>
                                 <p className={`text-xs ${involvement.className}`}>

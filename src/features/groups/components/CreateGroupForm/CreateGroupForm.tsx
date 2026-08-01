@@ -45,7 +45,7 @@ export function CreateGroupForm({ friends, onSubmit, onCancel }: CreateGroupForm
     return (
         <form onSubmit={submit} noValidate className="flex flex-col gap-4">
             <div className="flex flex-col gap-1">
-                <label htmlFor="group-name" className="text-sm font-medium text-surface-foreground">
+                <label htmlFor="group-name" className="text-surface-foreground text-sm font-medium">
                     Group name
                 </label>
                 <input
@@ -53,13 +53,13 @@ export function CreateGroupForm({ friends, onSubmit, onCancel }: CreateGroupForm
                     type="text"
                     placeholder="Enter a group name"
                     {...register('name')}
-                    className="rounded-md border border-border bg-surface px-3 py-2 text-sm text-surface-foreground outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                    className="border-border bg-surface text-surface-foreground focus-visible:ring-brand-500 rounded-md border px-3 py-2 text-sm outline-none focus-visible:ring-2"
                 />
                 {errors.name && <p className="text-xs text-red-600">{errors.name.message}</p>}
             </div>
 
             <div className="flex flex-col gap-1">
-                <span className="text-sm font-medium text-surface-foreground">Members</span>
+                <span className="text-surface-foreground text-sm font-medium">Members</span>
                 <MemberCheckboxList
                     users={friends}
                     selectedIds={memberIds}
@@ -71,13 +71,13 @@ export function CreateGroupForm({ friends, onSubmit, onCancel }: CreateGroupForm
                 <button
                     type="button"
                     onClick={onCancel}
-                    className="cursor-pointer rounded-md border border-border px-4 py-2 text-sm font-medium text-surface-foreground hover:bg-muted"
+                    className="border-border text-surface-foreground hover:bg-muted cursor-pointer rounded-md border px-4 py-2 text-sm font-medium"
                 >
                     Cancel
                 </button>
                 <button
                     type="submit"
-                    className="inline-flex cursor-pointer items-center gap-1 rounded-md bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700"
+                    className="bg-brand-600 hover:bg-brand-700 inline-flex cursor-pointer items-center gap-1 rounded-md px-4 py-2 text-sm font-medium text-white"
                 >
                     <FolderPlus className="size-4" />
                     Create group

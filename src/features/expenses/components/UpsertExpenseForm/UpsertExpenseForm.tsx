@@ -236,7 +236,7 @@ export function UpsertExpenseForm({
             <div className="flex flex-col gap-1">
                 <label
                     htmlFor="expense-description"
-                    className="text-sm font-medium text-surface-foreground"
+                    className="text-surface-foreground text-sm font-medium"
                 >
                     Description
                 </label>
@@ -245,7 +245,7 @@ export function UpsertExpenseForm({
                     type="text"
                     placeholder="What was this expense for?"
                     {...register('description')}
-                    className="rounded-md border border-border bg-surface px-3 py-2 text-sm text-surface-foreground outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                    className="border-border bg-surface text-surface-foreground focus-visible:ring-brand-500 rounded-md border px-3 py-2 text-sm outline-none focus-visible:ring-2"
                 />
                 {errors.description && (
                     <p className="text-xs text-red-600">{errors.description.message}</p>
@@ -255,7 +255,7 @@ export function UpsertExpenseForm({
             <div className="flex flex-col gap-1">
                 <label
                     htmlFor="expense-amount"
-                    className="text-sm font-medium text-surface-foreground"
+                    className="text-surface-foreground text-sm font-medium"
                 >
                     Amount
                 </label>
@@ -266,13 +266,13 @@ export function UpsertExpenseForm({
                     min="0"
                     placeholder="₹0.00"
                     {...register('amount', { valueAsNumber: true })}
-                    className="rounded-md border border-border bg-surface px-3 py-2 text-sm text-surface-foreground outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                    className="border-border bg-surface text-surface-foreground focus-visible:ring-brand-500 rounded-md border px-3 py-2 text-sm outline-none focus-visible:ring-2"
                 />
                 {errors.amount && <p className="text-xs text-red-600">{errors.amount.message}</p>}
             </div>
 
             <div className="flex flex-col gap-1">
-                <span className="text-sm font-medium text-surface-foreground">Paid by</span>
+                <span className="text-surface-foreground text-sm font-medium">Paid by</span>
                 <Controller
                     name="paidByUserId"
                     control={control}
@@ -290,7 +290,7 @@ export function UpsertExpenseForm({
             </div>
 
             <div className="flex flex-col gap-2">
-                <span className="text-sm font-medium text-surface-foreground">Split</span>
+                <span className="text-surface-foreground text-sm font-medium">Split</span>
                 <SplitTypeTabs value={splitType} onChange={changeSplitType} />
                 <SplitParticipantList
                     users={members}
@@ -309,13 +309,13 @@ export function UpsertExpenseForm({
                 <button
                     type="button"
                     onClick={onCancel}
-                    className="cursor-pointer rounded-md border border-border px-4 py-2 text-sm font-medium text-surface-foreground hover:bg-muted"
+                    className="border-border text-surface-foreground hover:bg-muted cursor-pointer rounded-md border px-4 py-2 text-sm font-medium"
                 >
                     Cancel
                 </button>
                 <button
                     type="submit"
-                    className="inline-flex cursor-pointer items-center gap-1 rounded-md bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700"
+                    className="bg-brand-600 hover:bg-brand-700 inline-flex cursor-pointer items-center gap-1 rounded-md px-4 py-2 text-sm font-medium text-white"
                 >
                     {mode === 'add' ? <Receipt className="size-4" /> : <Check className="size-4" />}
                     {mode === 'add' ? 'Add expense' : 'Save changes'}
