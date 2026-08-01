@@ -1,9 +1,9 @@
 import { render, screen } from '@testing-library/react';
-import { RouterProvider } from 'react-router';
+import { createMemoryRouter, RouterProvider } from 'react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useAuthStore } from '@app/stores';
-import { router } from './router';
+import { router, routes } from './router';
 
 vi.mock('./hooks/useCurrentUser', () => ({
     useCurrentUser: () => ({ data: { id: 'current-user', name: 'Alex Morgan', email: '' } }),
@@ -31,5 +31,13 @@ describe('router', () => {
         render(<RouterProvider router={router} />);
 
         expect(screen.getByText(/dashboard coming soon/i)).toBeInTheDocument();
+    });
+
+    it('renders the not-found page for an unmatched route', async () => {
+        const memoryRouter = createMemoryRouter(routes, { initialEntries: ['/does-not-exist'] });
+
+        render(<RouterProvider router={memoryRouter} />);
+
+        expect(await screen.findByRole('heading', { name: /page not found/i })).toBeInTheDocument();
     });
 });
