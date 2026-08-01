@@ -1,6 +1,9 @@
 {
     "name": "Expense Splitter",
     "short_name": "Expense Splitter",
+    "start_url": ".",
+    "scope": ".",
+    "id": ".",
     "icons": [
         {
             "src": "web-app-manifest-192x192.png",

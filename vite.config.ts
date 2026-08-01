@@ -3,6 +3,7 @@ import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { fileURLToPath, URL } from 'node:url';
 import { defineConfig } from 'vite';
+import { VitePWA } from 'vite-plugin-pwa';
 
 const resolvePath = (path: string) => fileURLToPath(new URL(path, import.meta.url));
 
@@ -11,7 +12,31 @@ export default defineConfig(({ command }) => ({
     // (username.github.io/expense-splitter/), not at the domain root, so only the
     // actual build needs this prefix — applying it to dev/test would break both.
     base: command === 'build' ? '/expense-splitter/' : '/',
-    plugins: [react(), tailwindcss()],
+    plugins: [
+        react(),
+        tailwindcss(),
+        VitePWA({
+            registerType: 'autoUpdate',
+            // The real manifest (name, icons, theme/background color, display mode)
+            // already exists as public/site.webmanifest, linked from index.html since
+            // the Phase 2/3 icon work — this just adds the service worker on top of
+            // it rather than having the plugin generate a second, competing manifest.
+            manifest: false,
+            includeAssets: [
+                'favicon.ico',
+                'favicon-96x96.png',
+                'apple-touch-icon.png',
+                'web-app-manifest-192x192.png',
+                'web-app-manifest-512x512.png',
+            ],
+            workbox: {
+                // No backend yet — every read/write already goes straight to local
+                // IndexedDB, so there's no API traffic to runtime-cache. Precaching
+                // the built app shell is what makes a hard refresh work offline.
+                globPatterns: ['**/*.{js,css,html,woff2}'],
+            },
+        }),
+    ],
     resolve: {
         alias: {
             '@app': resolvePath('./src/app'),
