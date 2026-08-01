@@ -4,8 +4,8 @@ import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
+import { useCurrentUser } from '@app/hooks';
 import type { SplitType, User } from '@data/entities';
-import { CURRENT_USER_ID } from '@data/seed';
 import type {
     ExactSplitEntry,
     PercentageSplitEntry,
@@ -64,6 +64,7 @@ export function UpsertExpenseForm({
     onSubmit,
     onCancel,
 }: UpsertExpenseFormProps) {
+    const { data: currentUser } = useCurrentUser();
     const {
         register,
         handleSubmit,
@@ -74,7 +75,7 @@ export function UpsertExpenseForm({
         defaultValues: {
             description: initialValues?.description ?? '',
             amount: initialValues?.amount,
-            paidByUserId: initialValues?.paidByUserId ?? CURRENT_USER_ID,
+            paidByUserId: initialValues?.paidByUserId ?? currentUser?.id ?? '',
         },
     });
     const [participantUserIds, setParticipantUserIds] = useState<string[]>(

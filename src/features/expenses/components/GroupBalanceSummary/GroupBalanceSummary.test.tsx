@@ -11,6 +11,13 @@ vi.mock('@features/expenses/hooks/useExpenses', () => ({
     useExpenses: vi.fn(),
 }));
 
+vi.mock('@app/hooks', async (importOriginal) => ({
+    ...(await importOriginal<typeof import('@app/hooks')>()),
+    useCurrentUser: () => ({
+        data: { id: CURRENT_USER_ID, name: 'Alex Morgan', email: 'alex@example.com' },
+    }),
+}));
+
 function expense(overrides: Partial<Expense>): Expense {
     return {
         id: 'expense-1',

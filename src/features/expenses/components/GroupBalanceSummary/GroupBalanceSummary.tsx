@@ -1,7 +1,7 @@
 import { Link } from 'react-router';
 
+import { useCurrentUser } from '@app/hooks';
 import type { User } from '@data/entities';
-import { CURRENT_USER_ID } from '@data/seed';
 import { useExpenses } from '@features/expenses/hooks/useExpenses';
 import { calculateNetBalance } from '@features/expenses/utils/calculateNetBalance';
 import { Skeleton } from '@shared/components';
@@ -12,6 +12,7 @@ interface GroupBalanceSummaryProps {
 }
 
 export function GroupBalanceSummary({ groupId, members }: GroupBalanceSummaryProps) {
+    const { data: currentUser } = useCurrentUser();
     const { data: expenses, isLoading, isError } = useExpenses(groupId);
 
     if (isLoading) {
@@ -22,7 +23,7 @@ export function GroupBalanceSummary({ groupId, members }: GroupBalanceSummaryPro
         return <p className="text-muted-foreground text-sm">Couldn't load balance.</p>;
     }
 
-    const balance = calculateNetBalance(expenses ?? [], CURRENT_USER_ID);
+    const balance = calculateNetBalance(expenses ?? [], currentUser?.id ?? '');
     // members is briefly [] while useGroupMembers is still loading (this component's
     // own expenses query can resolve first) — members.every() on an empty array is
     // vacuously true, so guard against treating that transient state as "settled".

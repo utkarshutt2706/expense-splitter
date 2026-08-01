@@ -34,6 +34,7 @@ function renderAccordion(
                 netAmount={netAmount}
                 transactions={transactions}
                 membersById={membersById}
+                currentUserId={CURRENT_USER_ID}
             />
         </Accordion.Root>,
     );

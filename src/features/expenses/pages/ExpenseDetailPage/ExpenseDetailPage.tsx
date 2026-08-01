@@ -4,8 +4,8 @@ import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 import { toast } from 'sonner';
 
+import { useCurrentUser } from '@app/hooks';
 import type { Expense, User } from '@data/entities';
-import { CURRENT_USER_ID } from '@data/seed';
 import { UpsertExpenseDialog } from '@features/expenses/components/UpsertExpenseDialog';
 import type {
     UpsertExpenseFormInitialValues,
@@ -23,9 +23,9 @@ const dateFormatter = new Intl.DateTimeFormat('en-US', {
     year: 'numeric',
 });
 
-function memberLabel(member: User | undefined): string {
+function memberLabel(member: User | undefined, currentUserId: string | undefined): string {
     if (!member) return 'Someone';
-    return member.id === CURRENT_USER_ID ? 'You' : member.name;
+    return member.id === currentUserId ? 'You' : member.name;
 }
 
 function buildEditInitialValues(expense: Expense): UpsertExpenseFormInitialValues {
@@ -58,6 +58,7 @@ function buildEditInitialValues(expense: Expense): UpsertExpenseFormInitialValue
 export function ExpenseDetailPage() {
     const { groupId, expenseId } = useParams<{ groupId: string; expenseId: string }>();
     const navigate = useNavigate();
+    const { data: currentUser } = useCurrentUser();
     const {
         data: expense,
         isLoading: isExpenseLoading,
@@ -146,7 +147,7 @@ export function ExpenseDetailPage() {
         const splitsByUserId = new Map(expense.splits.map((split) => [split.userId, split.amount]));
         const payer = membersById.get(expense.paidByUserId);
         const participants = (members ?? []).filter((member) => splitsByUserId.has(member.id));
-        const addedBy = membersById.get(CURRENT_USER_ID);
+        const addedBy = currentUser ? membersById.get(currentUser.id) : undefined;
         const createdDate = dateFormatter.format(new Date(expense.createdAt));
         // No dedicated payment-date field yet — createdAt stands in until the
         // add-expense form gains one.
@@ -159,7 +160,7 @@ export function ExpenseDetailPage() {
                         ₹{expense.amount.toFixed(2)}
                     </p>
                     <p className="text-muted-foreground text-sm">
-                        {`Added by ${memberLabel(addedBy).toLocaleLowerCase()} on ${createdDate}`}
+                        {`Added by ${memberLabel(addedBy, currentUser?.id).toLocaleLowerCase()} on ${createdDate}`}
                     </p>
                 </div>
 
@@ -167,7 +168,7 @@ export function ExpenseDetailPage() {
                     <div className="flex items-center gap-3">
                         <Avatar name={payer?.name ?? '?'} />
                         <p className="text-surface-foreground font-medium">
-                            {`${memberLabel(payer)} paid ₹${expense.amount.toFixed(2)} `}
+                            {`${memberLabel(payer, currentUser?.id)} paid ₹${expense.amount.toFixed(2)} `}
                             <span className="text-muted-foreground">{`on ${paidDate}`}</span>
                         </p>
                     </div>
@@ -179,7 +180,7 @@ export function ExpenseDetailPage() {
                         />
                         {participants.map((member, index) => {
                             const share = splitsByUserId.get(member.id)!;
-                            const isCurrentUser = member.id === CURRENT_USER_ID;
+                            const isCurrentUser = member.id === currentUser?.id;
                             const isLast = index === participants.length - 1;
 
                             return (
@@ -200,7 +201,7 @@ export function ExpenseDetailPage() {
                                     )}
                                     <Avatar name={member.name} size="sm" />
                                     <span className="text-surface-foreground text-sm">
-                                        {`${memberLabel(member)} owe${isCurrentUser ? '' : 's'} ₹${share.toFixed(2)}`}
+                                        {`${memberLabel(member, currentUser?.id)} owe${isCurrentUser ? '' : 's'} ₹${share.toFixed(2)}`}
                                     </span>
                                 </li>
                             );

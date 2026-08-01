@@ -48,6 +48,13 @@ vi.mock('sonner', () => ({
     },
 }));
 
+vi.mock('@app/hooks', async (importOriginal) => ({
+    ...(await importOriginal<typeof import('@app/hooks')>()),
+    useCurrentUser: () => ({
+        data: { id: CURRENT_USER_ID, name: 'Utkarsh Srivastava', email: 'utkarsh@example.com' },
+    }),
+}));
+
 const group: Group = {
     id: 'group-1',
     name: 'Daaru Party',

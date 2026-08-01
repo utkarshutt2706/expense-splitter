@@ -13,6 +13,13 @@ vi.mock('@services/instances', () => ({
     },
 }));
 
+vi.mock('@app/hooks', async (importOriginal) => ({
+    ...(await importOriginal<typeof import('@app/hooks')>()),
+    useCurrentUser: () => ({
+        data: { id: CURRENT_USER_ID, name: 'Alex Morgan', email: 'alex@example.com' },
+    }),
+}));
+
 describe('useCreateGroup', () => {
     it('creates a group with a generated id, timestamp, and the current user included', async () => {
         const { groupService } = await import('@services/instances');
