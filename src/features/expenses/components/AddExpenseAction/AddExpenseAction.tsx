@@ -10,9 +10,13 @@ import type { UpsertExpenseFormValues } from '../UpsertExpenseForm';
 interface AddExpenseActionProps {
     readonly groupId: string;
     readonly members: User[];
+    // Fired when the trigger button is clicked, before the dialog opens — lets a
+    // parent fan-out menu (GroupFabMenu) collapse itself without this component
+    // needing to know that menu exists.
+    readonly onTriggerClick?: () => void;
 }
 
-export function AddExpenseAction({ groupId, members }: AddExpenseActionProps) {
+export function AddExpenseAction({ groupId, members, onTriggerClick }: AddExpenseActionProps) {
     const createExpense = useCreateExpense();
     const [isAddingExpense, setIsAddingExpense] = useState(false);
 
@@ -53,11 +57,13 @@ export function AddExpenseAction({ groupId, members }: AddExpenseActionProps) {
                     type="button"
                     aria-label="Add expense"
                     title="Add expense"
-                    onClick={() => setIsAddingExpense(true)}
-                    className="bg-brand-600 hover:bg-brand-700 fixed right-6 bottom-6 inline-flex cursor-pointer items-center gap-1 rounded-md px-4 py-2 text-sm font-medium text-white capitalize shadow-lg"
+                    onClick={() => {
+                        onTriggerClick?.();
+                        setIsAddingExpense(true);
+                    }}
+                    className="bg-brand-600 hover:bg-brand-700 inline-flex size-12 cursor-pointer items-center justify-center rounded-full text-white shadow-lg"
                 >
-                    <ReceiptIndianRupee className="size-4" />
-                    Add expense
+                    <ReceiptIndianRupee className="size-5" />
                 </button>
             )}
 

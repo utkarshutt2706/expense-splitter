@@ -71,6 +71,22 @@ describe('AddExpenseAction', () => {
         expect(screen.queryByRole('button', { name: 'Add expense' })).not.toBeInTheDocument();
     });
 
+    it('calls onTriggerClick when the add expense button is clicked', async () => {
+        const onTriggerClick = vi.fn();
+        const user = userEvent.setup();
+        render(
+            <AddExpenseAction
+                groupId="group-1"
+                members={members}
+                onTriggerClick={onTriggerClick}
+            />,
+        );
+
+        await user.click(screen.getByRole('button', { name: 'Add expense' }));
+
+        expect(onTriggerClick).toHaveBeenCalled();
+    });
+
     it('adds an expense and shows a loading toast, then success', async () => {
         let onSuccess: (() => void) | undefined;
         const mutate = vi.fn((_values, options: { onSuccess?: () => void }) => {
