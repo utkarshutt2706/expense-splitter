@@ -10,9 +10,17 @@ import type { RecordPaymentFormValues } from '../RecordPaymentForm';
 interface RecordPaymentActionProps {
     readonly groupId: string;
     readonly members: User[];
+    // Fired when the trigger button is clicked, before the dialog opens — lets a
+    // parent fan-out menu (GroupFabMenu) collapse itself without this component
+    // needing to know that menu exists.
+    readonly onTriggerClick?: () => void;
 }
 
-export function RecordPaymentAction({ groupId, members }: RecordPaymentActionProps) {
+export function RecordPaymentAction({
+    groupId,
+    members,
+    onTriggerClick,
+}: RecordPaymentActionProps) {
     const createPayment = useCreatePayment();
     const [isRecordingPayment, setIsRecordingPayment] = useState(false);
 
@@ -34,11 +42,13 @@ export function RecordPaymentAction({ groupId, members }: RecordPaymentActionPro
                     type="button"
                     aria-label="Record a payment"
                     title="Record a payment"
-                    onClick={() => setIsRecordingPayment(true)}
-                    className="border-border text-surface-foreground hover:bg-muted bg-surface fixed right-6 bottom-20 inline-flex cursor-pointer items-center gap-1 rounded-md border px-4 py-2 text-sm font-medium capitalize shadow-lg"
+                    onClick={() => {
+                        onTriggerClick?.();
+                        setIsRecordingPayment(true);
+                    }}
+                    className="bg-owed inline-flex size-12 cursor-pointer items-center justify-center rounded-full text-white shadow-lg"
                 >
-                    <ArrowRightLeft className="size-4" />
-                    Record payment
+                    <ArrowRightLeft className="size-5" />
                 </button>
             )}
 

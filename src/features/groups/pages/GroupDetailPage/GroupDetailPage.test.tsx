@@ -45,9 +45,6 @@ vi.mock('@features/groups/components/MemberAvatarsSkeleton', () => ({
 }));
 
 vi.mock('@features/expenses', () => ({
-    AddExpenseAction: ({ groupId, members }: { groupId: string; members: User[] }) => (
-        <div data-testid="add-expense-action">{`${groupId}-${members.length}`}</div>
-    ),
     GroupActivityList: ({ groupId, members }: { groupId: string; members: User[] }) => (
         <div data-testid="group-activity-list">{`${groupId}-${members.length}`}</div>
     ),
@@ -56,9 +53,9 @@ vi.mock('@features/expenses', () => ({
     ),
 }));
 
-vi.mock('@features/payments', () => ({
-    RecordPaymentAction: ({ groupId, members }: { groupId: string; members: User[] }) => (
-        <div data-testid="record-payment-action">{`${groupId}-${members.length}`}</div>
+vi.mock('@features/groups/components/GroupFabMenu', () => ({
+    GroupFabMenu: ({ groupId, members }: { groupId: string; members: User[] }) => (
+        <div data-testid="group-fab-menu">{`${groupId}-${members.length}`}</div>
     ),
 }));
 
@@ -100,7 +97,7 @@ describe('GroupDetailPage', () => {
 
         expect(screen.getByRole('status', { name: /loading group/i })).toBeInTheDocument();
         expect(screen.queryByTestId('group-name-editor')).not.toBeInTheDocument();
-        expect(screen.queryByTestId('add-expense-action')).not.toBeInTheDocument();
+        expect(screen.queryByTestId('group-fab-menu')).not.toBeInTheDocument();
         // Balance/expenses don't need the group query to resolve — groupId comes
         // straight from the route — so they mount and start fetching immediately
         // instead of waiting behind the group query, avoiding a skeleton waterfall.
@@ -160,7 +157,7 @@ describe('GroupDetailPage', () => {
             } as unknown as ReturnType<typeof useGroupMembers>);
         });
 
-        it('renders the name editor, members section, settings button, balance summary, activity list, and add-expense/record-payment actions', () => {
+        it('renders the name editor, members section, settings button, balance summary, activity list, and the fab menu', () => {
             renderPage();
 
             expect(screen.getByTestId('group-name-editor')).toHaveTextContent('Weekend Trip');
@@ -169,8 +166,7 @@ describe('GroupDetailPage', () => {
             expect(screen.getByTestId('group-balance-summary')).toHaveTextContent('group-1');
             expect(screen.getByRole('heading', { name: /activity/i })).toBeInTheDocument();
             expect(screen.getByTestId('group-activity-list')).toHaveTextContent('group-1-2');
-            expect(screen.getByTestId('add-expense-action')).toHaveTextContent('group-1-2');
-            expect(screen.getByTestId('record-payment-action')).toHaveTextContent('group-1-2');
+            expect(screen.getByTestId('group-fab-menu')).toHaveTextContent('group-1-2');
         });
 
         it('hides the members section while the group name is being edited', async () => {
@@ -182,13 +178,13 @@ describe('GroupDetailPage', () => {
             expect(screen.queryByTestId('group-members-section')).not.toBeInTheDocument();
         });
 
-        it('still shows the add-expense action while the group name is being edited', async () => {
+        it('still shows the fab menu while the group name is being edited', async () => {
             const user = userEvent.setup();
             renderPage();
 
             await user.click(screen.getByRole('button', { name: /toggle editing/i }));
 
-            expect(screen.getByTestId('add-expense-action')).toBeInTheDocument();
+            expect(screen.getByTestId('group-fab-menu')).toBeInTheDocument();
         });
     });
 });

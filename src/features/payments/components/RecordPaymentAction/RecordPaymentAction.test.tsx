@@ -62,6 +62,22 @@ describe('RecordPaymentAction', () => {
         expect(screen.queryByRole('button', { name: 'Record a payment' })).not.toBeInTheDocument();
     });
 
+    it('calls onTriggerClick when the record-payment button is clicked', async () => {
+        const onTriggerClick = vi.fn();
+        const user = userEvent.setup();
+        render(
+            <RecordPaymentAction
+                groupId="group-1"
+                members={members}
+                onTriggerClick={onTriggerClick}
+            />,
+        );
+
+        await user.click(screen.getByRole('button', { name: 'Record a payment' }));
+
+        expect(onTriggerClick).toHaveBeenCalled();
+    });
+
     it('records a payment and shows a loading toast, then success', async () => {
         let onSuccess: (() => void) | undefined;
         const mutate = vi.fn((_values, options: { onSuccess?: () => void }) => {
