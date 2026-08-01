@@ -1,0 +1,1 @@
+export { GroupActivityList } from './GroupActivityList';

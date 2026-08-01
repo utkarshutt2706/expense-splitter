@@ -11,7 +11,7 @@ import type {
     PercentageSplitEntry,
     SharesSplitEntry,
 } from '@features/expenses/utils/splitCalculator';
-import { PaidByPicker } from '../PaidByPicker';
+import { MemberPicker } from '@shared/components';
 import { SplitParticipantList } from '../SplitParticipantList';
 import { SplitTypeTabs } from '../SplitTypeTabs';
 
@@ -278,10 +278,12 @@ export function UpsertExpenseForm({
                     name="paidByUserId"
                     control={control}
                     render={({ field }) => (
-                        <PaidByPicker
+                        <MemberPicker
                             members={members}
                             value={field.value}
                             onChange={field.onChange}
+                            ariaLabel="Paid by"
+                            placeholder="Select who paid"
                         />
                     )}
                 />

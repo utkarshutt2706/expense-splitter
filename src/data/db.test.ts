@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { db, expenseRepository, groupRepository, userRepository } from './db';
+import { db, expenseRepository, groupRepository, paymentRepository, userRepository } from './db';
 import { AppDatabase } from './dexie/database';
 import { DexieExpenseRepository } from './dexie/expenseRepository';
 import { DexieGroupRepository } from './dexie/groupRepository';
+import { DexiePaymentRepository } from './dexie/paymentRepository';
 import { DexieUserRepository } from './dexie/userRepository';
 
 describe('db', () => {
@@ -12,5 +13,6 @@ describe('db', () => {
         expect(userRepository).toBeInstanceOf(DexieUserRepository);
         expect(groupRepository).toBeInstanceOf(DexieGroupRepository);
         expect(expenseRepository).toBeInstanceOf(DexieExpenseRepository);
+        expect(paymentRepository).toBeInstanceOf(DexiePaymentRepository);
     });
 });

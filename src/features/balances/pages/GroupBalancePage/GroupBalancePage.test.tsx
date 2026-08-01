@@ -1,11 +1,12 @@
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { Expense, Group, User } from '@data/entities';
 import { CURRENT_USER_ID } from '@data/seed';
 import { useExpenses } from '@features/expenses/hooks/useExpenses';
 import { useGroup, useGroupMembers } from '@features/groups';
+import { usePayments } from '@features/payments';
 import { GroupBalancePage } from './GroupBalancePage';
 
 vi.mock('react-router', async () => {
@@ -20,6 +21,10 @@ vi.mock('@features/groups', () => ({
 
 vi.mock('@features/expenses/hooks/useExpenses', () => ({
     useExpenses: vi.fn(),
+}));
+
+vi.mock('@features/payments', () => ({
+    usePayments: vi.fn(),
 }));
 
 vi.mock('../../components/GroupBalanceAccordionList', () => ({
@@ -67,6 +72,14 @@ function renderPage() {
 }
 
 describe('GroupBalancePage', () => {
+    beforeEach(() => {
+        vi.mocked(usePayments).mockReturnValue({
+            data: [],
+            isLoading: false,
+            isError: false,
+        } as unknown as ReturnType<typeof usePayments>);
+    });
+
     it('shows a loading message while fetching', () => {
         vi.mocked(useGroup).mockReturnValue({
             data: undefined,
@@ -153,6 +166,32 @@ describe('GroupBalancePage', () => {
             '/groups/group-1',
         );
         expect(screen.getByRole('heading', { name: 'Daaru Party' })).toBeInTheDocument();
+    });
+
+    it('shows an error message when payments fail to load', () => {
+        vi.mocked(useGroup).mockReturnValue({
+            data: group,
+            isLoading: false,
+            isError: false,
+        } as unknown as ReturnType<typeof useGroup>);
+        vi.mocked(useGroupMembers).mockReturnValue({
+            data: members,
+            isLoading: false,
+        } as unknown as ReturnType<typeof useGroupMembers>);
+        vi.mocked(useExpenses).mockReturnValue({
+            data: [],
+            isLoading: false,
+            isError: false,
+        } as unknown as ReturnType<typeof useExpenses>);
+        vi.mocked(usePayments).mockReturnValue({
+            data: undefined,
+            isLoading: false,
+            isError: true,
+        } as unknown as ReturnType<typeof usePayments>);
+
+        renderPage();
+
+        expect(screen.getByText(/couldn't load balances/i)).toBeInTheDocument();
     });
 
     it('includes every member, including the current user, in the accordion list', () => {

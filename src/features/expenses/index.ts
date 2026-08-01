@@ -1,1 +1,1 @@
-export { AddExpenseAction, ExpenseList, GroupBalanceSummary } from './components';
+export { AddExpenseAction, GroupActivityList, GroupBalanceSummary } from './components';
