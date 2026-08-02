@@ -65,7 +65,7 @@ export function Sidebar() {
                     ))}
                 </nav>
                 <div
-                    className={`shrink-0 ${isExpanded ? 'border-border mt-1 border-t pt-4' : ''} md:border-border md:mt-1 md:border-t md:pt-4`}
+                    className={`shrink-0 ${isExpanded ? 'border-border mt-1 border-t pt-4' : 'flex items-center justify-center'} md:border-border md:mt-1 md:border-t md:pt-4`}
                 >
                     <UserMenu expanded={isExpanded} />
                 </div>

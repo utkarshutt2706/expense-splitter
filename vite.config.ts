@@ -50,7 +50,7 @@ export default defineConfig(({ command }) => ({
     },
     test: {
         environment: 'jsdom',
-        setupFiles: ['./src/test/setup.ts'],
+        setupFiles: ['./src/test/animationEventPolyfill.ts', './src/test/setup.ts'],
         globals: false,
         coverage: {
             provider: 'v8',
