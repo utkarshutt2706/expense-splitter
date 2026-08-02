@@ -11,9 +11,10 @@ import {
     useGroups,
     type CreateGroupFormValues,
 } from '@features/groups';
+import { ActionButtonSkeleton } from '@shared/components/ActionButtonSkeleton';
 import { FetchingIndicator } from '@shared/components/FetchingIndicator';
 import { SearchInput } from '@shared/components/SearchInput';
-import { Skeleton } from '@shared/components/Skeleton';
+import { SearchInputSkeleton } from '@shared/components/SearchInputSkeleton';
 import { SkeletonList } from '@shared/components/SkeletonList';
 
 export function GroupsPage() {
@@ -89,7 +90,7 @@ export function GroupsPage() {
         <div>
             <div className="mb-4 flex items-center justify-between gap-3">
                 {isLoading ? (
-                    <Skeleton className="h-9 w-full max-w-xs" />
+                    <SearchInputSkeleton />
                 ) : (
                     !hasNoGroups && (
                         <SearchInput
@@ -105,7 +106,7 @@ export function GroupsPage() {
                     {isRefreshing && <FetchingIndicator />}
 
                     {isLoading ? (
-                        <Skeleton className="h-9 w-36 shrink-0" />
+                        <ActionButtonSkeleton className="w-36" />
                     ) : (
                         <button
                             type="button"

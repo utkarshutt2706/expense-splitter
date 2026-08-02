@@ -1,0 +1,1 @@
+export { GroupDetailHeaderSkeleton } from './GroupDetailHeaderSkeleton';
