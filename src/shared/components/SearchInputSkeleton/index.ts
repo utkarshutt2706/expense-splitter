@@ -1,0 +1,1 @@
+export { SearchInputSkeleton } from './SearchInputSkeleton';

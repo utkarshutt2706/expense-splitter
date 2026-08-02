@@ -12,11 +12,12 @@ import { useCreateFriend } from '@features/friends/hooks/useCreateFriend';
 import { useRemoveFriend } from '@features/friends/hooks/useRemoveFriend';
 import { useUpdateFriend } from '@features/friends/hooks/useUpdateFriend';
 import {
+    ActionButtonSkeleton,
     Avatar,
     ConfirmationDialog,
     FetchingIndicator,
     SearchInput,
-    Skeleton,
+    SearchInputSkeleton,
     SkeletonList,
 } from '@shared/components';
 
@@ -126,7 +127,7 @@ export function FriendsPage() {
         <div>
             <div className="mb-4 flex items-center justify-between gap-3">
                 {isLoading ? (
-                    <Skeleton className="h-9 w-full max-w-xs" />
+                    <SearchInputSkeleton />
                 ) : (
                     !hasNoFriends && (
                         <SearchInput
@@ -142,7 +143,7 @@ export function FriendsPage() {
                     {isRefreshing && <FetchingIndicator />}
 
                     {isLoading ? (
-                        <Skeleton className="h-9 w-32 shrink-0" />
+                        <ActionButtonSkeleton className="w-32" />
                     ) : (
                         <button
                             type="button"

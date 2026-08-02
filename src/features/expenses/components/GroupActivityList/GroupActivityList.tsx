@@ -3,10 +3,11 @@ import { Link } from 'react-router';
 
 import { useCurrentUser } from '@app/hooks';
 import type { Expense, Payment, User } from '@data/entities';
+import { ActivityRowSkeleton } from '@features/expenses/components/ActivityRowSkeleton';
 import { useExpenses } from '@features/expenses/hooks/useExpenses';
 import { calculateExpenseInvolvement } from '@features/expenses/utils/calculateExpenseInvolvement';
 import { usePayments } from '@features/payments';
-import { Avatar, FetchingIndicator, Skeleton } from '@shared/components';
+import { Avatar, FetchingIndicator } from '@shared/components';
 
 interface GroupActivityListProps {
     readonly groupId: string;
@@ -23,22 +24,6 @@ const dateFormatter = new Intl.DateTimeFormat('en-US', {
 function memberLabel(member: User | undefined, currentUserId: string | undefined): string {
     if (!member) return 'Someone';
     return member.id === currentUserId ? 'You' : member.name;
-}
-
-function ActivityRowSkeleton() {
-    return (
-        <li className="border-border flex items-center gap-3 rounded-lg border p-3">
-            <Skeleton className="size-9 shrink-0 rounded-full" />
-            <div className="flex-1 space-y-2">
-                <Skeleton className="h-4 w-1/3" />
-                <Skeleton className="h-3 w-1/2" />
-            </div>
-            <div className="flex flex-col items-end gap-1.5">
-                <Skeleton className="h-4 w-14" />
-                <Skeleton className="h-3 w-24" />
-            </div>
-        </li>
-    );
 }
 
 function involvementLabel(

@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 
 import { useCurrentUser } from '@app/hooks';
 import type { Expense, User } from '@data/entities';
+import { ExpenseDetailSkeleton } from '@features/expenses/components/ExpenseDetailSkeleton';
 import { UpsertExpenseDialog } from '@features/expenses/components/UpsertExpenseDialog';
 import type {
     UpsertExpenseFormInitialValues,
@@ -111,38 +112,7 @@ export function ExpenseDetailPage() {
     if (isLoading) {
         content = (
             <output aria-label="Loading expense…" className="flex flex-col gap-6">
-                <div>
-                    <Skeleton className="h-8 w-32" />
-                    <Skeleton className="mt-2 h-4 w-56" />
-                </div>
-
-                <div>
-                    <div className="flex items-center gap-3">
-                        <Skeleton className="size-9 shrink-0 rounded-full" />
-                        <Skeleton className="h-5 w-48" />
-                    </div>
-
-                    <ul className="relative mt-3 ml-4.5 flex flex-col gap-4">
-                        <span
-                            aria-hidden="true"
-                            className="bg-border absolute top-0 bottom-6 left-0 w-px"
-                        />
-                        {[0, 1].map((index) => (
-                            <li key={index} className="relative flex items-center gap-2 pl-6">
-                                <span
-                                    aria-hidden="true"
-                                    className={
-                                        index === 1
-                                            ? 'border-border absolute top-0 left-0 h-1/2 w-5 rounded-bl-md border-b border-l'
-                                            : 'bg-border absolute top-1/2 left-0 h-px w-5 -translate-y-1/2'
-                                    }
-                                />
-                                <Skeleton className="size-6 shrink-0 rounded-full" />
-                                <Skeleton className="h-4 w-32" />
-                            </li>
-                        ))}
-                    </ul>
-                </div>
+                <ExpenseDetailSkeleton />
             </output>
         );
     } else if (isExpenseError || !expense) {

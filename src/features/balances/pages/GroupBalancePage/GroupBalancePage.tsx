@@ -8,6 +8,7 @@ import { useGroup, useGroupMembers } from '@features/groups';
 import { usePayments } from '@features/payments';
 import { FetchingIndicator, Skeleton } from '@shared/components';
 import { GroupBalanceAccordionList } from '../../components/GroupBalanceAccordionList';
+import { GroupBalanceListSkeleton } from '../../components/GroupBalanceListSkeleton';
 import { simplifyDebts } from '../../utils/simplifyDebts';
 
 export function GroupBalancePage() {
@@ -50,15 +51,7 @@ export function GroupBalancePage() {
     if (isLoading) {
         content = (
             <output aria-label="Loading balances…" className="flex flex-col gap-3">
-                {[0, 1, 2].map((index) => (
-                    <div
-                        key={index}
-                        className="border-border flex items-center justify-between gap-2 rounded-lg border p-3"
-                    >
-                        <Skeleton className="h-4 w-48" />
-                        <Skeleton className="size-4 shrink-0 rounded-full" />
-                    </div>
-                ))}
+                <GroupBalanceListSkeleton />
             </output>
         );
     } else if (isError || !group) {

@@ -1,0 +1,1 @@
+export { ExpenseDetailSkeleton } from './ExpenseDetailSkeleton';

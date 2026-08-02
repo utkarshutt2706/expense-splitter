@@ -4,10 +4,9 @@ import { Link, useParams } from 'react-router';
 
 import { GroupActivityList, GroupBalanceSummary } from '@features/expenses';
 import { useGroup, useGroupMembers } from '@features/groups';
+import { GroupDetailHeaderSkeleton } from '@features/groups/components/GroupDetailHeaderSkeleton';
 import { GroupFabMenu } from '@features/groups/components/GroupFabMenu';
 import { GroupMembersSection } from '@features/groups/components/GroupMembersSection';
-import { MemberAvatarsSkeleton } from '@features/groups/components/MemberAvatarsSkeleton';
-import { Skeleton } from '@shared/components';
 
 export function GroupDetailPage() {
     const { groupId } = useParams<{ groupId: string }>();
@@ -27,9 +26,7 @@ export function GroupDetailPage() {
     if (isLoading) {
         content = (
             <output aria-label="Loading group…" className="flex items-center gap-3">
-                <Skeleton className="h-9 w-40" />
-                <MemberAvatarsSkeleton />
-                <Skeleton className="ml-auto h-9 w-9 rounded-md md:w-32" />
+                <GroupDetailHeaderSkeleton />
             </output>
         );
     } else if (isError || !group) {
