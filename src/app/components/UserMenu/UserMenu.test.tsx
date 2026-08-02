@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { useAuthStore } from '@app/stores';
+import { useAuthStore, useThemeStore, useThemeTransitionStore } from '@app/stores';
 import { UserMenu } from './UserMenu';
 
 vi.mock('@app/hooks', async (importOriginal) => ({
@@ -28,6 +28,8 @@ describe('UserMenu', () => {
     beforeEach(() => {
         localStorage.clear();
         useAuthStore.setState({ currentUserId: 'current-user' });
+        useThemeStore.setState({ theme: 'light' });
+        useThemeTransitionStore.setState({ direction: null });
     });
 
     it('shows the current user name and email inside the popover', async () => {
@@ -55,7 +57,7 @@ describe('UserMenu', () => {
         expect(positions).toEqual([...positions].sort((a, b) => a - b));
     });
 
-    it('toggles the theme switch visually without navigating or throwing', async () => {
+    it('toggles the real theme preference when the theme switch is clicked', async () => {
         const user = userEvent.setup();
         renderMenu();
 
@@ -67,6 +69,24 @@ describe('UserMenu', () => {
         await user.click(toggle);
 
         expect(toggle).toHaveAttribute('aria-checked', 'true');
+        expect(useThemeStore.getState().theme).toBe('dark');
+        expect(useThemeTransitionStore.getState().direction).toBe('dark');
+
+        await user.click(toggle);
+
+        expect(toggle).toHaveAttribute('aria-checked', 'false');
+        expect(useThemeStore.getState().theme).toBe('light');
+        expect(useThemeTransitionStore.getState().direction).toBe('light');
+    });
+
+    it('reflects the persisted theme preference as the switch state on open', async () => {
+        useThemeStore.setState({ theme: 'dark' });
+        const user = userEvent.setup();
+        renderMenu();
+
+        await user.click(screen.getByRole('button', { name: /open user menu/i }));
+
+        expect(screen.getByRole('switch')).toHaveAttribute('aria-checked', 'true');
     });
 
     it('logs out and navigates to the login page when Logout is clicked', async () => {

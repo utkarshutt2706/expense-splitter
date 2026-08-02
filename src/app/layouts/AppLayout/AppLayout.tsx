@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import { Navigate, Outlet } from 'react-router';
 
-import { Header, Sidebar } from '@app/components';
+import { Header, Sidebar, ThemeTransitionOverlay } from '@app/components';
 import { useThemeAttribute } from '@app/hooks';
 import { useAuthStore } from '@app/stores';
 import { TopProgressBar } from '@shared/components';
@@ -25,6 +25,7 @@ export function AppLayout() {
                     </Suspense>
                 </main>
             </div>
+            <ThemeTransitionOverlay />
         </div>
     );
 }
