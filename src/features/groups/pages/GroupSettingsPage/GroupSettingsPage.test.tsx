@@ -63,6 +63,7 @@ describe('GroupSettingsPage', () => {
         } as unknown as ReturnType<typeof useGroup>);
         vi.mocked(useGroupMembers).mockReturnValue({
             data: [],
+            isLoading: false,
         } as unknown as ReturnType<typeof useGroupMembers>);
 
         renderPage();
@@ -78,6 +79,7 @@ describe('GroupSettingsPage', () => {
         } as unknown as ReturnType<typeof useGroup>);
         vi.mocked(useGroupMembers).mockReturnValue({
             data: [],
+            isLoading: false,
         } as unknown as ReturnType<typeof useGroupMembers>);
 
         renderPage();
@@ -93,6 +95,7 @@ describe('GroupSettingsPage', () => {
         } as unknown as ReturnType<typeof useGroup>);
         vi.mocked(useGroupMembers).mockReturnValue({
             data: [],
+            isLoading: false,
         } as unknown as ReturnType<typeof useGroupMembers>);
 
         renderPage();
@@ -101,6 +104,27 @@ describe('GroupSettingsPage', () => {
             'href',
             '/groups/group-1',
         );
+    });
+
+    it('renders the group as soon as it loads, even while members are still fetching', () => {
+        vi.mocked(useGroup).mockReturnValue({
+            data: group,
+            isLoading: false,
+            isError: false,
+        } as unknown as ReturnType<typeof useGroup>);
+        vi.mocked(useGroupMembers).mockReturnValue({
+            data: undefined,
+            isLoading: true,
+        } as unknown as ReturnType<typeof useGroupMembers>);
+
+        renderPage();
+
+        expect(
+            screen.queryByRole('status', { name: /loading group settings/i }),
+        ).not.toBeInTheDocument();
+        expect(screen.getByTestId('group-name-editor')).toHaveTextContent('Weekend Trip');
+        expect(screen.getByRole('button', { name: /leave group/i })).toBeInTheDocument();
+        expect(screen.queryByTestId('member-list')).not.toBeInTheDocument();
     });
 
     describe('once the group has loaded', () => {
@@ -112,6 +136,7 @@ describe('GroupSettingsPage', () => {
             } as unknown as ReturnType<typeof useGroup>);
             vi.mocked(useGroupMembers).mockReturnValue({
                 data: members,
+                isLoading: false,
             } as unknown as ReturnType<typeof useGroupMembers>);
         });
 
