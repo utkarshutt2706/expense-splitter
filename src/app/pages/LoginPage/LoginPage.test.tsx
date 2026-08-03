@@ -37,8 +37,22 @@ describe('LoginPage', () => {
         renderPage();
 
         expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
-        expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
+        expect(screen.getByLabelText('Password')).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument();
+    });
+
+    it('masks the password by default and reveals it via the show-password toggle', async () => {
+        vi.mocked(useLogin).mockReturnValue({
+            mutateAsync: vi.fn(),
+        } as unknown as ReturnType<typeof useLogin>);
+        const user = userEvent.setup();
+        renderPage();
+
+        expect(screen.getByLabelText('Password')).toHaveAttribute('type', 'password');
+
+        await user.click(screen.getByRole('button', { name: /show password/i }));
+
+        expect(screen.getByLabelText('Password')).toHaveAttribute('type', 'text');
     });
 
     it('shows validation errors when submitted empty', async () => {
@@ -65,7 +79,7 @@ describe('LoginPage', () => {
         renderPage();
 
         await user.type(screen.getByLabelText(/email/i), 'utkarsh@example.com');
-        await user.type(screen.getByLabelText(/password/i), 'wrong-password');
+        await user.type(screen.getByLabelText('Password'), 'wrong-password');
         await user.click(screen.getByRole('button', { name: /sign in/i }));
 
         expect(await screen.findByText(/invalid email or password/i)).toBeInTheDocument();
@@ -81,7 +95,7 @@ describe('LoginPage', () => {
         renderPage();
 
         await user.type(screen.getByLabelText(/email/i), 'utkarsh@example.com');
-        await user.type(screen.getByLabelText(/password/i), 'correct-horse-battery-staple');
+        await user.type(screen.getByLabelText('Password'), 'correct-horse-battery-staple');
         await user.click(screen.getByRole('button', { name: /sign in/i }));
 
         expect(await screen.findByText(/home page/i)).toBeInTheDocument();
@@ -106,7 +120,7 @@ describe('LoginPage', () => {
         renderPage();
 
         await user.type(screen.getByLabelText(/email/i), 'utkarsh@example.com');
-        await user.type(screen.getByLabelText(/password/i), 'correct-horse-battery-staple');
+        await user.type(screen.getByLabelText('Password'), 'correct-horse-battery-staple');
         await user.click(screen.getByRole('button', { name: /sign in/i }));
 
         const submitButton = await screen.findByRole('button', { name: /signing in/i });
@@ -126,7 +140,7 @@ describe('LoginPage', () => {
         renderPage();
 
         await user.type(screen.getByLabelText(/email/i), 'utkarsh@example.com');
-        await user.type(screen.getByLabelText(/password/i), 'correct-horse-battery-staple');
+        await user.type(screen.getByLabelText('Password'), 'correct-horse-battery-staple');
         await user.click(screen.getByRole('button', { name: /sign in/i }));
 
         expect(await screen.findByText(/something went wrong logging in/i)).toBeInTheDocument();

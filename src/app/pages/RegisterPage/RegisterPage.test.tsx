@@ -39,8 +39,25 @@ describe('RegisterPage', () => {
         expect(screen.getByLabelText(/name/i)).toBeInTheDocument();
         expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
         expect(screen.getByLabelText(/phone/i)).toBeInTheDocument();
-        expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
+        expect(screen.getByLabelText('Password')).toBeInTheDocument();
+        expect(screen.getByLabelText('Confirm password')).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /create account/i })).toBeInTheDocument();
+    });
+
+    it('masks both password fields by default and reveals each independently via its own toggle', async () => {
+        vi.mocked(useRegister).mockReturnValue({
+            mutateAsync: vi.fn(),
+        } as unknown as ReturnType<typeof useRegister>);
+        const user = userEvent.setup();
+        renderPage();
+
+        expect(screen.getByLabelText('Password')).toHaveAttribute('type', 'password');
+        expect(screen.getByLabelText('Confirm password')).toHaveAttribute('type', 'password');
+
+        await user.click(screen.getAllByRole('button', { name: /show password/i })[0]!);
+
+        expect(screen.getByLabelText('Password')).toHaveAttribute('type', 'text');
+        expect(screen.getByLabelText('Confirm password')).toHaveAttribute('type', 'password');
     });
 
     it('shows validation errors when submitted empty', async () => {
@@ -55,6 +72,90 @@ describe('RegisterPage', () => {
         expect(await screen.findByText(/name is required/i)).toBeInTheDocument();
         expect(screen.getByText(/enter a valid email address/i)).toBeInTheDocument();
         expect(screen.getByText(/password must be at least 8 characters/i)).toBeInTheDocument();
+        expect(screen.getByText(/confirm your password/i)).toBeInTheDocument();
+    });
+
+    it('shows an error when the passwords do not match', async () => {
+        vi.mocked(useRegister).mockReturnValue({
+            mutateAsync: vi.fn(),
+        } as unknown as ReturnType<typeof useRegister>);
+        const user = userEvent.setup();
+        renderPage();
+
+        await user.type(screen.getByLabelText(/name/i), 'New Friend');
+        await user.type(screen.getByLabelText(/email/i), 'new.friend@example.com');
+        await user.type(screen.getByLabelText('Password'), 'correct-horse-battery-staple');
+        await user.type(screen.getByLabelText('Confirm password'), 'a-different-password');
+        await user.click(screen.getByRole('button', { name: /create account/i }));
+
+        expect(await screen.findByText(/passwords do not match/i)).toBeInTheDocument();
+    });
+
+    it('strips non-digit characters as they are typed into the phone field', async () => {
+        vi.mocked(useRegister).mockReturnValue({
+            mutateAsync: vi.fn(),
+        } as unknown as ReturnType<typeof useRegister>);
+        const user = userEvent.setup();
+        renderPage();
+
+        await user.type(screen.getByLabelText(/phone/i), '98-7654 3210');
+
+        expect(screen.getByLabelText(/phone/i)).toHaveValue('9876543210');
+    });
+
+    it('caps the phone field at 10 digits as they are typed', async () => {
+        vi.mocked(useRegister).mockReturnValue({
+            mutateAsync: vi.fn(),
+        } as unknown as ReturnType<typeof useRegister>);
+        const user = userEvent.setup();
+        renderPage();
+
+        await user.type(screen.getByLabelText(/phone/i), '987654321099');
+
+        expect(screen.getByLabelText(/phone/i)).toHaveValue('9876543210');
+    });
+
+    it('shows a validation error for a phone number that does not start with 6-9', async () => {
+        vi.mocked(useRegister).mockReturnValue({
+            mutateAsync: vi.fn(),
+        } as unknown as ReturnType<typeof useRegister>);
+        const user = userEvent.setup();
+        renderPage();
+
+        await user.type(screen.getByLabelText(/name/i), 'New Friend');
+        await user.type(screen.getByLabelText(/email/i), 'new.friend@example.com');
+        await user.type(screen.getByLabelText(/phone/i), '5876543210');
+        await user.type(screen.getByLabelText('Password'), 'correct-horse-battery-staple');
+        await user.type(screen.getByLabelText('Confirm password'), 'correct-horse-battery-staple');
+        await user.click(screen.getByRole('button', { name: /create account/i }));
+
+        expect(
+            await screen.findByText(/enter a valid 10-digit number starting with 6, 7, 8, or 9/i),
+        ).toBeInTheDocument();
+    });
+
+    it('registers with a valid phone number included in the payload', async () => {
+        const mutateAsync = vi.fn().mockResolvedValue(undefined);
+        vi.mocked(useRegister).mockReturnValue({
+            mutateAsync,
+        } as unknown as ReturnType<typeof useRegister>);
+        const user = userEvent.setup();
+        renderPage();
+
+        await user.type(screen.getByLabelText(/name/i), 'New Friend');
+        await user.type(screen.getByLabelText(/email/i), 'new.friend@example.com');
+        await user.type(screen.getByLabelText(/phone/i), '9876543210');
+        await user.type(screen.getByLabelText('Password'), 'correct-horse-battery-staple');
+        await user.type(screen.getByLabelText('Confirm password'), 'correct-horse-battery-staple');
+        await user.click(screen.getByRole('button', { name: /create account/i }));
+
+        expect(await screen.findByText(/home page/i)).toBeInTheDocument();
+        expect(mutateAsync).toHaveBeenCalledWith({
+            name: 'New Friend',
+            email: 'new.friend@example.com',
+            phone: '9876543210',
+            password: 'correct-horse-battery-staple',
+        });
     });
 
     it('registers, omitting an empty optional phone, and navigates to the home page', async () => {
@@ -67,7 +168,8 @@ describe('RegisterPage', () => {
 
         await user.type(screen.getByLabelText(/name/i), 'New Friend');
         await user.type(screen.getByLabelText(/email/i), 'new.friend@example.com');
-        await user.type(screen.getByLabelText(/password/i), 'correct-horse-battery-staple');
+        await user.type(screen.getByLabelText('Password'), 'correct-horse-battery-staple');
+        await user.type(screen.getByLabelText('Confirm password'), 'correct-horse-battery-staple');
         await user.click(screen.getByRole('button', { name: /create account/i }));
 
         expect(await screen.findByText(/home page/i)).toBeInTheDocument();
@@ -93,7 +195,8 @@ describe('RegisterPage', () => {
 
         await user.type(screen.getByLabelText(/name/i), 'New Friend');
         await user.type(screen.getByLabelText(/email/i), 'taken@example.com');
-        await user.type(screen.getByLabelText(/password/i), 'correct-horse-battery-staple');
+        await user.type(screen.getByLabelText('Password'), 'correct-horse-battery-staple');
+        await user.type(screen.getByLabelText('Confirm password'), 'correct-horse-battery-staple');
         await user.click(screen.getByRole('button', { name: /create account/i }));
 
         expect(
@@ -112,7 +215,8 @@ describe('RegisterPage', () => {
 
         await user.type(screen.getByLabelText(/name/i), 'New Friend');
         await user.type(screen.getByLabelText(/email/i), 'new.friend@example.com');
-        await user.type(screen.getByLabelText(/password/i), 'correct-horse-battery-staple');
+        await user.type(screen.getByLabelText('Password'), 'correct-horse-battery-staple');
+        await user.type(screen.getByLabelText('Confirm password'), 'correct-horse-battery-staple');
         await user.click(screen.getByRole('button', { name: /create account/i }));
 
         expect(

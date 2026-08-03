@@ -1,19 +1,35 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2, UserPlus } from 'lucide-react';
+import type { ChangeEvent } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, Navigate, useNavigate } from 'react-router';
 import { z } from 'zod';
 
 import { useAuthStore } from '@app/stores';
+import logo from '@assets/logo.svg';
 import { useRegister } from '@features/auth';
 import { ApiError } from '@lib/api/apiError';
+import { LogoBackdrop, PasswordInput } from '@shared/components';
+import { sanitizePhoneInput } from '@shared/utils';
 
-const registerSchema = z.object({
-    name: z.string().trim().min(1, 'Name is required'),
-    email: z.email('Enter a valid email address'),
-    phone: z.string().trim().optional(),
-    password: z.string().min(8, 'Password must be at least 8 characters'),
-});
+const registerSchema = z
+    .object({
+        name: z.string().trim().min(1, 'Name is required'),
+        email: z.email('Enter a valid email address'),
+        phone: z
+            .string()
+            .trim()
+            .refine((value) => value === '' || /^[6-9]\d{9}$/.test(value), {
+                message: 'Enter a valid 10-digit number starting with 6, 7, 8, or 9',
+            })
+            .optional(),
+        password: z.string().min(8, 'Password must be at least 8 characters'),
+        confirmPassword: z.string().min(1, 'Confirm your password'),
+    })
+    .refine((values) => values.password === values.confirmPassword, {
+        message: 'Passwords do not match',
+        path: ['confirmPassword'],
+    });
 
 type RegisterInput = z.infer<typeof registerSchema>;
 
@@ -34,7 +50,12 @@ export function RegisterPage() {
 
     const submit = handleSubmit(async (values) => {
         try {
-            await registerUser({ ...values, phone: values.phone || undefined });
+            await registerUser({
+                name: values.name,
+                email: values.email,
+                password: values.password,
+                phone: values.phone || undefined,
+            });
             navigate('/', { replace: true });
         } catch (error) {
             const message =
@@ -46,19 +67,24 @@ export function RegisterPage() {
     });
 
     return (
-        <div className="bg-surface flex min-h-svh items-center justify-center p-4">
+        <div className="bg-surface relative flex min-h-svh items-center justify-center overflow-hidden p-4">
+            <LogoBackdrop />
+
             <form
                 onSubmit={submit}
                 noValidate
-                className="border-border bg-surface flex w-full max-w-sm flex-col gap-4 rounded-lg border p-6 shadow-lg"
+                className="border-border bg-surface relative flex w-full max-w-sm flex-col gap-4 rounded-lg border p-6 shadow-lg"
             >
-                <div>
-                    <h1 className="font-display text-surface-foreground text-xl font-medium">
-                        Expense Splitter
-                    </h1>
-                    <p className="text-muted-foreground mt-1 text-sm">
-                        Create an account to get started.
-                    </p>
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h1 className="font-display text-surface-foreground text-xl font-medium">
+                            Expense Splitter
+                        </h1>
+                        <p className="text-muted-foreground mt-1 text-sm">
+                            Create an account to get started.
+                        </p>
+                    </div>
+                    <img src={logo} alt="" className="size-16" />
                 </div>
 
                 <div className="flex flex-col gap-1">
@@ -105,10 +131,17 @@ export function RegisterPage() {
                     <input
                         id="register-phone"
                         type="tel"
+                        inputMode="numeric"
                         autoComplete="tel"
-                        {...register('phone')}
+                        maxLength={10}
+                        {...register('phone', {
+                            onChange: (event: ChangeEvent<HTMLInputElement>) => {
+                                event.target.value = sanitizePhoneInput(event.target.value);
+                            },
+                        })}
                         className="border-border bg-surface text-surface-foreground focus-visible:ring-brand-500 rounded-md border px-3 py-2 text-sm outline-none focus-visible:ring-2"
                     />
+                    {errors.phone && <p className="text-xs text-red-600">{errors.phone.message}</p>}
                 </div>
 
                 <div className="flex flex-col gap-1">
@@ -118,15 +151,30 @@ export function RegisterPage() {
                     >
                         Password
                     </label>
-                    <input
+                    <PasswordInput
                         id="register-password"
-                        type="password"
                         autoComplete="new-password"
                         {...register('password')}
-                        className="border-border bg-surface text-surface-foreground focus-visible:ring-brand-500 rounded-md border px-3 py-2 text-sm outline-none focus-visible:ring-2"
                     />
                     {errors.password && (
                         <p className="text-xs text-red-600">{errors.password.message}</p>
+                    )}
+                </div>
+
+                <div className="flex flex-col gap-1">
+                    <label
+                        htmlFor="register-confirm-password"
+                        className="text-surface-foreground text-sm font-medium"
+                    >
+                        Confirm password
+                    </label>
+                    <PasswordInput
+                        id="register-confirm-password"
+                        autoComplete="new-password"
+                        {...register('confirmPassword')}
+                    />
+                    {errors.confirmPassword && (
+                        <p className="text-xs text-red-600">{errors.confirmPassword.message}</p>
                     )}
                 </div>
 
