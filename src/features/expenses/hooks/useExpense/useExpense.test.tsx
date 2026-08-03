@@ -4,17 +4,23 @@ import type { ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { Expense } from '@data/entities';
+import * as expensesApi from '@features/expenses/api/expensesApi';
 import { useExpense } from './useExpense';
 
-vi.mock('@services/instances', () => ({
-    expenseService: {
-        getById: vi.fn(),
-    },
+vi.mock('@features/expenses/api/expensesApi', () => ({
+    getById: vi.fn(),
 }));
+
+function renderUseExpense(groupId: string, id: string) {
+    const queryClient = new QueryClient();
+    const wrapper = ({ children }: { children: ReactNode }) => (
+        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    );
+    return renderHook(() => useExpense(groupId, id), { wrapper });
+}
 
 describe('useExpense', () => {
     it('returns the expense with the given id', async () => {
-        const { expenseService } = await import('@services/instances');
         const expense: Expense = {
             id: 'expense-1',
             groupId: 'group-1',
@@ -28,28 +34,24 @@ describe('useExpense', () => {
             ],
             createdAt: '2026-07-25T00:00:00.000Z',
         };
-        vi.mocked(expenseService.getById).mockResolvedValue(expense);
+        vi.mocked(expensesApi.getById).mockResolvedValue(expense);
 
-        const queryClient = new QueryClient();
-        const wrapper = ({ children }: { children: ReactNode }) => (
-            <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-        );
-
-        const { result } = renderHook(() => useExpense('expense-1'), { wrapper });
+        const { result } = renderUseExpense('group-1', 'expense-1');
 
         await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
         expect(result.current.data).toEqual(expense);
-        expect(expenseService.getById).toHaveBeenCalledWith('expense-1');
+        expect(expensesApi.getById).toHaveBeenCalledWith('group-1', 'expense-1');
     });
 
     it('does not fetch when the id is empty', () => {
-        const queryClient = new QueryClient();
-        const wrapper = ({ children }: { children: ReactNode }) => (
-            <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-        );
+        const { result } = renderUseExpense('group-1', '');
 
-        const { result } = renderHook(() => useExpense(''), { wrapper });
+        expect(result.current.fetchStatus).toBe('idle');
+    });
+
+    it('does not fetch when the group id is empty', () => {
+        const { result } = renderUseExpense('', 'expense-1');
 
         expect(result.current.fetchStatus).toBe('idle');
     });
