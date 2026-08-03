@@ -17,6 +17,7 @@ export function useCreatePayment() {
             create(groupId, { fromUserId, toUserId, amount }),
         onSuccess: (_, { groupId }) => {
             queryClient.invalidateQueries({ queryKey: ['payments', groupId] });
+            queryClient.invalidateQueries({ queryKey: ['balances', groupId] });
         },
     });
 }

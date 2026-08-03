@@ -7,8 +7,9 @@ function toCents(amount: number): number {
     return Math.round(amount * 100);
 }
 
-// The current user's relationship to a single expense — distinct from
-// calculateNetBalance, which aggregates this across every expense in a group.
+// The current user's relationship to a single expense — distinct from a group's
+// overall balance, which the backend derives across every expense and payment
+// (see @features/balances/api/balancesApi).
 export function calculateExpenseInvolvement(expense: Expense, userId: string): ExpenseInvolvement {
     if (expense.paidByUserId === userId) {
         const lentCents = expense.splits.reduce(

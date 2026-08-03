@@ -14,6 +14,7 @@ export function useDeleteExpense() {
         mutationFn: ({ id, groupId }: DeleteExpenseInput) => remove(groupId, id),
         onSuccess: (_, { groupId }) => {
             queryClient.invalidateQueries({ queryKey: ['expenses', groupId] });
+            queryClient.invalidateQueries({ queryKey: ['balances', groupId] });
         },
     });
 }

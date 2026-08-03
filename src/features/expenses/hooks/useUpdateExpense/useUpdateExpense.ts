@@ -60,6 +60,7 @@ export function useUpdateExpense() {
         onSuccess: (_, { id, groupId }) => {
             queryClient.invalidateQueries({ queryKey: ['expenses', groupId] });
             queryClient.invalidateQueries({ queryKey: ['expenses', 'detail', id] });
+            queryClient.invalidateQueries({ queryKey: ['balances', groupId] });
         },
     });
 }

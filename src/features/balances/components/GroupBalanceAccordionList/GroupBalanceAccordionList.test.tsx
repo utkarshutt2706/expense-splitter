@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type { User } from '@data/entities';
 import { CURRENT_USER_ID } from '@data/seed';
-import type { SettlementTransaction } from '../../utils/simplifyDebts';
+import type { SettlementTransaction } from '@features/balances/api/balancesApi';
 import { GroupBalanceAccordionList } from './GroupBalanceAccordionList';
 
 vi.mock('@app/hooks', async (importOriginal) => ({
