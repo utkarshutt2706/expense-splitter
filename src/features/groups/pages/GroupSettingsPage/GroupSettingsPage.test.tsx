@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { Group, User } from '@data/entities';
 import { useGroup, useGroupMembers } from '@features/groups';
+import { ApiError } from '@lib/api/apiError';
 import { GroupSettingsPage } from './GroupSettingsPage';
 
 vi.mock('react-router', async () => {
@@ -85,6 +86,23 @@ describe('GroupSettingsPage', () => {
         renderPage();
 
         expect(screen.getByText(/couldn't load this group/i)).toBeInTheDocument();
+    });
+
+    it('shows an access-denied message when the caller is not a member of the group', () => {
+        vi.mocked(useGroup).mockReturnValue({
+            data: undefined,
+            isLoading: false,
+            isError: true,
+            error: new ApiError('FORBIDDEN', 'You are not a member of this group', 403),
+        } as unknown as ReturnType<typeof useGroup>);
+        vi.mocked(useGroupMembers).mockReturnValue({
+            data: [],
+            isLoading: false,
+        } as unknown as ReturnType<typeof useGroupMembers>);
+
+        renderPage();
+
+        expect(screen.getByText(/you don't have access to this group/i)).toBeInTheDocument();
     });
 
     it('renders the back link to the group', () => {

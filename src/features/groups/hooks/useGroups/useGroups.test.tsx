@@ -4,17 +4,15 @@ import type { ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { Group } from '@data/entities';
+import * as groupsApi from '@features/groups/api/groupsApi';
 import { useGroups } from './useGroups';
 
-vi.mock('@services/instances', () => ({
-    groupService: {
-        getAll: vi.fn(),
-    },
+vi.mock('@features/groups/api/groupsApi', () => ({
+    getAll: vi.fn(),
 }));
 
 describe('useGroups', () => {
     it('returns all groups', async () => {
-        const { groupService } = await import('@services/instances');
         const groups: Group[] = [
             {
                 id: 'group-1',
@@ -23,7 +21,7 @@ describe('useGroups', () => {
                 createdAt: '2026-07-01T00:00:00.000Z',
             },
         ];
-        vi.mocked(groupService.getAll).mockResolvedValue(groups);
+        vi.mocked(groupsApi.getAll).mockResolvedValue(groups);
 
         const queryClient = new QueryClient();
         const wrapper = ({ children }: { children: ReactNode }) => (

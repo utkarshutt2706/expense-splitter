@@ -4,24 +4,22 @@ import type { ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { Group } from '@data/entities';
+import * as groupsApi from '@features/groups/api/groupsApi';
 import { useRenameGroup } from './useRenameGroup';
 
-vi.mock('@services/instances', () => ({
-    groupService: {
-        update: vi.fn(),
-    },
+vi.mock('@features/groups/api/groupsApi', () => ({
+    update: vi.fn(),
 }));
 
 describe('useRenameGroup', () => {
-    it('renames a group by id and invalidates the groups queries', async () => {
-        const { groupService } = await import('@services/instances');
+    it('renames a group via the API and invalidates the groups queries', async () => {
         const updated: Group = {
             id: 'group-1',
             name: 'Ski Trip',
             memberIds: ['current-user'],
             createdAt: '2026-07-01T00:00:00.000Z',
         };
-        vi.mocked(groupService.update).mockResolvedValue(updated);
+        vi.mocked(groupsApi.update).mockResolvedValue(updated);
 
         const queryClient = new QueryClient();
         const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
@@ -35,7 +33,7 @@ describe('useRenameGroup', () => {
 
         await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-        expect(groupService.update).toHaveBeenCalledWith('group-1', { name: 'Ski Trip' });
+        expect(groupsApi.update).toHaveBeenCalledWith('group-1', { name: 'Ski Trip' });
         expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['groups'] });
     });
 });

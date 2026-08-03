@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { groupService } from '@services/instances';
+import { update } from '@features/groups/api/groupsApi';
 
 interface UpdateGroupMembersInput {
     id: string;
@@ -11,8 +11,7 @@ export function useUpdateGroupMembers() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({ id, memberIds }: UpdateGroupMembersInput) =>
-            groupService.update(id, { memberIds }),
+        mutationFn: ({ id, memberIds }: UpdateGroupMembersInput) => update(id, { memberIds }),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['groups'] });
         },

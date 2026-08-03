@@ -5,12 +5,11 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type { Group } from '@data/entities';
 import { CURRENT_USER_ID } from '@data/seed';
+import * as groupsApi from '@features/groups/api/groupsApi';
 import { useCreateGroup } from './useCreateGroup';
 
-vi.mock('@services/instances', () => ({
-    groupService: {
-        create: vi.fn(),
-    },
+vi.mock('@features/groups/api/groupsApi', () => ({
+    create: vi.fn(),
 }));
 
 vi.mock('@app/hooks', async (importOriginal) => ({
@@ -21,15 +20,14 @@ vi.mock('@app/hooks', async (importOriginal) => ({
 }));
 
 describe('useCreateGroup', () => {
-    it('creates a group with a generated id, timestamp, and the current user included', async () => {
-        const { groupService } = await import('@services/instances');
+    it('creates a group via the API with the current user included', async () => {
         const created: Group = {
-            id: 'generated-id',
+            id: 'server-generated-id',
             name: 'Weekend Trip',
             memberIds: [CURRENT_USER_ID, 'friend-1'],
             createdAt: '2026-07-01T00:00:00.000Z',
         };
-        vi.mocked(groupService.create).mockResolvedValue(created);
+        vi.mocked(groupsApi.create).mockResolvedValue(created);
 
         const queryClient = new QueryClient();
         const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
@@ -43,19 +41,16 @@ describe('useCreateGroup', () => {
 
         await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-        expect(groupService.create).toHaveBeenCalledWith(
-            expect.objectContaining({
-                name: 'Weekend Trip',
-                memberIds: [CURRENT_USER_ID, 'friend-1'],
-            }),
-        );
+        expect(groupsApi.create).toHaveBeenCalledWith({
+            name: 'Weekend Trip',
+            memberIds: [CURRENT_USER_ID, 'friend-1'],
+        });
         expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['groups'] });
     });
 
     it('includes the current user even when no members are selected', async () => {
-        const { groupService } = await import('@services/instances');
-        vi.mocked(groupService.create).mockResolvedValue({
-            id: 'generated-id',
+        vi.mocked(groupsApi.create).mockResolvedValue({
+            id: 'server-generated-id',
             name: 'Solo Group',
             memberIds: [CURRENT_USER_ID],
             createdAt: '2026-07-01T00:00:00.000Z',
@@ -72,7 +67,7 @@ describe('useCreateGroup', () => {
 
         await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-        expect(groupService.create).toHaveBeenCalledWith(
+        expect(groupsApi.create).toHaveBeenCalledWith(
             expect.objectContaining({ memberIds: [CURRENT_USER_ID] }),
         );
     });
