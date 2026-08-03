@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { paymentService } from '@services/instances';
+import { create } from '@features/payments/api/paymentsApi';
 
 interface CreatePaymentInput {
     groupId: string;
@@ -14,14 +14,7 @@ export function useCreatePayment() {
 
     return useMutation({
         mutationFn: ({ groupId, fromUserId, toUserId, amount }: CreatePaymentInput) =>
-            paymentService.create({
-                id: crypto.randomUUID(),
-                groupId,
-                fromUserId,
-                toUserId,
-                amount,
-                createdAt: new Date().toISOString(),
-            }),
+            create(groupId, { fromUserId, toUserId, amount }),
         onSuccess: (_, { groupId }) => {
             queryClient.invalidateQueries({ queryKey: ['payments', groupId] });
         },
