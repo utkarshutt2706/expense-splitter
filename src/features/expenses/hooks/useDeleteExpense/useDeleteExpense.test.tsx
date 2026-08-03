@@ -3,18 +3,16 @@ import { renderHook, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
+import * as expensesApi from '@features/expenses/api/expensesApi';
 import { useDeleteExpense } from './useDeleteExpense';
 
-vi.mock('@services/instances', () => ({
-    expenseService: {
-        delete: vi.fn(),
-    },
+vi.mock('@features/expenses/api/expensesApi', () => ({
+    remove: vi.fn(),
 }));
 
 describe('useDeleteExpense', () => {
     it('deletes the expense and invalidates the group expense list', async () => {
-        const { expenseService } = await import('@services/instances');
-        vi.mocked(expenseService.delete).mockResolvedValue(undefined);
+        vi.mocked(expensesApi.remove).mockResolvedValue(undefined);
 
         const queryClient = new QueryClient();
         const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
@@ -28,7 +26,7 @@ describe('useDeleteExpense', () => {
 
         await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-        expect(expenseService.delete).toHaveBeenCalledWith('expense-1');
+        expect(expensesApi.remove).toHaveBeenCalledWith('group-1', 'expense-1');
         expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['expenses', 'group-1'] });
     });
 });

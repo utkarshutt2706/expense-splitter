@@ -1,11 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
 
-import { expenseService } from '@services/instances';
+import { getById } from '@features/expenses/api/expensesApi';
 
-export function useExpense(id: string) {
+export function useExpense(groupId: string, id: string) {
     return useQuery({
         queryKey: ['expenses', 'detail', id],
-        queryFn: () => expenseService.getById(id),
-        enabled: id !== '',
+        queryFn: () => getById(groupId, id),
+        enabled: groupId !== '' && id !== '',
     });
 }

@@ -1,13 +1,13 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import type { SplitType } from '@data/entities';
+import { create } from '@features/expenses/api/expensesApi';
 import { resolveSplits } from '@features/expenses/utils/resolveSplits';
 import type {
     ExactSplitEntry,
     PercentageSplitEntry,
     SharesSplitEntry,
 } from '@features/expenses/utils/splitCalculator';
-import { expenseService } from '@services/instances';
 
 interface CreateExpenseInput {
     groupId: string;
@@ -45,15 +45,14 @@ export function useCreateExpense() {
                 sharesSplits,
             });
 
-            return expenseService.create({
-                id: crypto.randomUUID(),
-                groupId,
+            return create(groupId, {
                 description,
                 amount,
                 paidByUserId,
                 splitType,
                 splits,
-                createdAt: new Date().toISOString(),
+                ...(splitType === 'percentage' && { percentages: percentageSplits }),
+                ...(splitType === 'shares' && { shares: sharesSplits }),
             });
         },
         onSuccess: (_, { groupId }) => {

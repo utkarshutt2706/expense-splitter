@@ -4,12 +4,11 @@ import type { ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { Expense } from '@data/entities';
+import * as expensesApi from '@features/expenses/api/expensesApi';
 import { useExpenses } from './useExpenses';
 
-vi.mock('@services/instances', () => ({
-    expenseService: {
-        getByGroupId: vi.fn(),
-    },
+vi.mock('@features/expenses/api/expensesApi', () => ({
+    getByGroupId: vi.fn(),
 }));
 
 const olderExpense: Expense = {
@@ -44,14 +43,13 @@ function renderUseExpenses(groupId: string) {
 
 describe('useExpenses', () => {
     it('fetches expenses for the given group, newest first', async () => {
-        const { expenseService } = await import('@services/instances');
-        vi.mocked(expenseService.getByGroupId).mockResolvedValue([olderExpense, newerExpense]);
+        vi.mocked(expensesApi.getByGroupId).mockResolvedValue([olderExpense, newerExpense]);
 
         const { result } = renderUseExpenses('group-1');
 
         await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-        expect(expenseService.getByGroupId).toHaveBeenCalledWith('group-1');
+        expect(expensesApi.getByGroupId).toHaveBeenCalledWith('group-1');
         expect(result.current.data).toEqual([newerExpense, olderExpense]);
     });
 });

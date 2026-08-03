@@ -32,7 +32,7 @@ export function ExpenseDetailPage() {
         isLoading: isExpenseLoading,
         isFetching: isExpenseFetching,
         isError: isExpenseError,
-    } = useExpense(expenseId ?? '');
+    } = useExpense(groupId ?? '', expenseId ?? '');
     const { data: group } = useGroup(groupId ?? '');
     const { data: members, isLoading: isMembersLoading } = useGroupMembers(group?.memberIds ?? []);
     const deleteExpense = useDeleteExpense();

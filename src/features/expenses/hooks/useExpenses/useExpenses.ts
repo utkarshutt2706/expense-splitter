@@ -1,12 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 
-import { expenseService } from '@services/instances';
+import { getByGroupId } from '@features/expenses/api/expensesApi';
 
 export function useExpenses(groupId: string) {
     return useQuery({
         queryKey: ['expenses', groupId],
         queryFn: async () => {
-            const expenses = await expenseService.getByGroupId(groupId);
+            const expenses = await getByGroupId(groupId);
             return [...expenses].sort(
                 (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
             );

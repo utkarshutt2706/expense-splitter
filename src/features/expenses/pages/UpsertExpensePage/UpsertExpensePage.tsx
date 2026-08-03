@@ -25,7 +25,7 @@ export function UpsertExpensePage() {
         data: expense,
         isLoading: isExpenseLoading,
         isError: isExpenseError,
-    } = useExpense(isEditMode ? (expenseId ?? '') : '');
+    } = useExpense(groupId ?? '', isEditMode ? (expenseId ?? '') : '');
     const createExpense = useCreateExpense();
     const updateExpense = useUpdateExpense();
 

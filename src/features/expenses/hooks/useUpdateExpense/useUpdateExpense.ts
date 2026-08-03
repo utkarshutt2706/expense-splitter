@@ -1,13 +1,13 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import type { SplitType } from '@data/entities';
+import { update } from '@features/expenses/api/expensesApi';
 import { resolveSplits } from '@features/expenses/utils/resolveSplits';
 import type {
     ExactSplitEntry,
     PercentageSplitEntry,
     SharesSplitEntry,
 } from '@features/expenses/utils/splitCalculator';
-import { expenseService } from '@services/instances';
 
 interface UpdateExpenseInput {
     id: string;
@@ -28,6 +28,7 @@ export function useUpdateExpense() {
     return useMutation({
         mutationFn: ({
             id,
+            groupId,
             description,
             amount,
             paidByUserId,
@@ -46,12 +47,14 @@ export function useUpdateExpense() {
                 sharesSplits,
             });
 
-            return expenseService.update(id, {
+            return update(groupId, id, {
                 description,
                 amount,
                 paidByUserId,
                 splitType,
                 splits,
+                ...(splitType === 'percentage' && { percentages: percentageSplits }),
+                ...(splitType === 'shares' && { shares: sharesSplits }),
             });
         },
         onSuccess: (_, { id, groupId }) => {
