@@ -9,7 +9,7 @@ import * as friendsApi from '@features/friends/api/friendsApi';
 import { useFriends } from './useFriends';
 
 vi.mock('@features/friends/api/friendsApi', () => ({
-    getAll: vi.fn(),
+    getFriends: vi.fn(),
 }));
 
 vi.mock('@app/hooks', async (importOriginal) => ({
@@ -20,13 +20,12 @@ vi.mock('@app/hooks', async (importOriginal) => ({
 }));
 
 describe('useFriends', () => {
-    it('excludes the current user from the friends list', async () => {
+    it('returns the derived friend list as-is from the server', async () => {
         const users: User[] = [
-            { id: CURRENT_USER_ID, name: 'Alex Morgan', email: 'alex@example.com' },
             { id: 'friend-1', name: 'Priya Sharma', email: 'priya@example.com' },
             { id: 'friend-2', name: 'Jordan Lee', email: 'jordan@example.com' },
         ];
-        vi.mocked(friendsApi.getAll).mockResolvedValue(users);
+        vi.mocked(friendsApi.getFriends).mockResolvedValue(users);
 
         const queryClient = new QueryClient();
         const wrapper = ({ children }: { children: ReactNode }) => (
@@ -37,6 +36,6 @@ describe('useFriends', () => {
 
         await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-        expect(result.current.data).toEqual([users[1], users[2]]);
+        expect(result.current.data).toEqual(users);
     });
 });

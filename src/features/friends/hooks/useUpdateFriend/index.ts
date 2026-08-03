@@ -1,1 +1,0 @@
-export { useUpdateFriend } from './useUpdateFriend';

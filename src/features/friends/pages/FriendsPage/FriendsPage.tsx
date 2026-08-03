@@ -1,20 +1,10 @@
-import { Mail, Phone, UserPlus } from 'lucide-react';
+import { Mail, Phone } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
-import { toast } from 'sonner';
 
-import type { User } from '@data/entities';
 import { useFriends } from '@features/friends';
-import { type FriendFormValues } from '@features/friends/components/FriendForm';
-import { FriendRowMenu } from '@features/friends/components/FriendRowMenu';
-import { UpsertFriendDialog } from '@features/friends/components/UpsertFriendDialog';
-import { useCreateFriend } from '@features/friends/hooks/useCreateFriend';
-import { useRemoveFriend } from '@features/friends/hooks/useRemoveFriend';
-import { useUpdateFriend } from '@features/friends/hooks/useUpdateFriend';
 import {
-    ActionButtonSkeleton,
     Avatar,
-    ConfirmationDialog,
     FetchingIndicator,
     SearchInput,
     SearchInputSkeleton,
@@ -23,20 +13,14 @@ import {
 
 export function FriendsPage() {
     const { data: friends, isLoading, isFetching, isError } = useFriends();
-    const createFriend = useCreateFriend();
-    const updateFriend = useUpdateFriend();
-    const removeFriend = useRemoveFriend();
 
-    const [addDialogOpen, setAddDialogOpen] = useState(false);
-    const [editingFriend, setEditingFriend] = useState<User | null>(null);
-    const [removingFriend, setRemovingFriend] = useState<User | null>(null);
     const [search, setSearch] = useState('');
 
     const hasNoFriends = !isLoading && (!friends || friends.length === 0);
-    // isLoading only covers the very first fetch — adding/editing/removing a
-    // friend refetches the list in the background with isLoading staying false,
-    // so without this the list would just silently sit stale for that refetch's
-    // own latency.
+    // isLoading only covers the very first fetch — a mutation elsewhere that
+    // invalidates this list (e.g. adding a group member) refetches it in the
+    // background with isLoading staying false, so without this the list would
+    // just silently sit stale for that refetch's own latency.
     const isRefreshing = !isLoading && isFetching;
 
     const query = search.trim().toLowerCase();
@@ -48,42 +32,18 @@ export function FriendsPage() {
             friend.phone?.toLowerCase().includes(query),
     );
 
-    const handleAddFriend = (values: FriendFormValues) => {
-        const toastId = toast.loading('Friend is being added…');
-        createFriend.mutate(values, {
-            onSuccess: () => toast.success('Friend added', { id: toastId }),
-            onError: (error) => toast.error(error.message, { id: toastId }),
-        });
-    };
-
-    const handleEditFriend = (values: FriendFormValues) => {
-        if (!editingFriend) return;
-        const toastId = toast.loading('Friend is being updated…');
-        updateFriend.mutate(
-            { id: editingFriend.id, ...values },
-            {
-                onSuccess: () => toast.success('Friend updated', { id: toastId }),
-                onError: (error) => toast.error(error.message, { id: toastId }),
-            },
-        );
-    };
-
-    const handleRemoveFriend = () => {
-        if (!removingFriend) return;
-        const toastId = toast.loading('Friend is being removed…');
-        removeFriend.mutate(removingFriend.id, {
-            onSuccess: () => toast.success('Friend removed', { id: toastId }),
-            onError: (error) => toast.error(error.message, { id: toastId }),
-        });
-    };
-
     let content: ReactNode;
     if (isLoading) {
         content = <SkeletonList label="Loading friends…" />;
     } else if (isError) {
         content = <div className="text-red-600">Couldn't load friends.</div>;
     } else if (!friends || friends.length === 0) {
-        content = <div className="text-muted-foreground">No friends yet.</div>;
+        content = (
+            <div className="text-muted-foreground">
+                You don&apos;t have any friends yet — friends appear here once you share a group
+                with someone.
+            </div>
+        );
     } else if (!filteredFriends || filteredFriends.length === 0) {
         content = <div className="text-muted-foreground">No friends match your search.</div>;
     } else {
@@ -112,11 +72,6 @@ export function FriendsPage() {
                                 )}
                             </div>
                         </div>
-                        <FriendRowMenu
-                            friendName={friend.name}
-                            onEdit={() => setEditingFriend(friend)}
-                            onRemove={() => setRemovingFriend(friend)}
-                        />
                     </li>
                 ))}
             </ul>
@@ -139,61 +94,10 @@ export function FriendsPage() {
                     )
                 )}
 
-                <div className="ml-auto flex shrink-0 items-center gap-2">
-                    {isRefreshing && <FetchingIndicator />}
-
-                    {isLoading ? (
-                        <ActionButtonSkeleton className="w-32" />
-                    ) : (
-                        <button
-                            type="button"
-                            onClick={() => setAddDialogOpen(true)}
-                            className="border-border text-surface-foreground hover:bg-muted inline-flex shrink-0 cursor-pointer items-center gap-1 rounded-md border px-4 py-2 text-sm font-medium"
-                        >
-                            <UserPlus className="size-4" />
-                            Add friend
-                        </button>
-                    )}
-                </div>
+                {isRefreshing && <FetchingIndicator />}
             </div>
 
             {content}
-
-            <UpsertFriendDialog
-                mode="add"
-                open={addDialogOpen}
-                onOpenChange={setAddDialogOpen}
-                onSubmit={handleAddFriend}
-            />
-
-            <UpsertFriendDialog
-                mode="edit"
-                open={editingFriend !== null}
-                onOpenChange={(open) => {
-                    if (!open) setEditingFriend(null);
-                }}
-                initialValues={{
-                    name: editingFriend?.name ?? '',
-                    email: editingFriend?.email,
-                    phone: editingFriend?.phone,
-                }}
-                onSubmit={handleEditFriend}
-            />
-
-            <ConfirmationDialog
-                open={removingFriend !== null}
-                onOpenChange={(open) => {
-                    if (!open) setRemovingFriend(null);
-                }}
-                title={`Remove ${removingFriend?.name ?? ''}?`}
-                description="This removes them from your friends list. You can add them again later."
-                confirmLabel="Remove"
-                destructive
-                onConfirm={() => {
-                    setRemovingFriend(null);
-                    handleRemoveFriend();
-                }}
-            />
         </div>
     );
 }
