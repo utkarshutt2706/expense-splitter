@@ -1,5 +1,4 @@
 export { AddExpenseAction } from './AddExpenseAction';
-export { UpsertExpenseDialog } from './UpsertExpenseDialog';
 export {
     UpsertExpenseForm,
     type UpsertExpenseFormInitialValues,

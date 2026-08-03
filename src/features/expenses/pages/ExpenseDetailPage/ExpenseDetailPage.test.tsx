@@ -8,7 +8,6 @@ import type { Expense, Group, User } from '@data/entities';
 import { CURRENT_USER_ID } from '@data/seed';
 import { useDeleteExpense } from '@features/expenses/hooks/useDeleteExpense';
 import { useExpense } from '@features/expenses/hooks/useExpense';
-import { useUpdateExpense } from '@features/expenses/hooks/useUpdateExpense';
 import { useGroup, useGroupMembers } from '@features/groups';
 import { ExpenseDetailPage } from './ExpenseDetailPage';
 
@@ -34,10 +33,6 @@ vi.mock('@features/expenses/hooks/useExpense', () => ({
 
 vi.mock('@features/expenses/hooks/useDeleteExpense', () => ({
     useDeleteExpense: vi.fn(),
-}));
-
-vi.mock('@features/expenses/hooks/useUpdateExpense', () => ({
-    useUpdateExpense: vi.fn(),
 }));
 
 vi.mock('sonner', () => ({
@@ -95,9 +90,6 @@ beforeEach(() => {
     vi.mocked(useDeleteExpense).mockReturnValue({
         mutate: vi.fn(),
     } as unknown as ReturnType<typeof useDeleteExpense>);
-    vi.mocked(useUpdateExpense).mockReturnValue({
-        mutate: vi.fn(),
-    } as unknown as ReturnType<typeof useUpdateExpense>);
 });
 
 describe('ExpenseDetailPage', () => {
@@ -119,6 +111,8 @@ describe('ExpenseDetailPage', () => {
         renderPage();
 
         expect(screen.getByRole('status', { name: /loading expense/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /edit expense/i })).toBeDisabled();
+        expect(screen.queryByRole('link', { name: /edit expense/i })).not.toBeInTheDocument();
     });
 
     it('shows an error message when the expense fails to load', () => {
@@ -289,7 +283,10 @@ describe('ExpenseDetailPage', () => {
 
         renderPage();
 
-        expect(screen.getByRole('button', { name: /edit expense/i })).toBeInTheDocument();
+        expect(screen.getByRole('link', { name: /edit expense/i })).toHaveAttribute(
+            'href',
+            '/groups/group-1/expenses/expense-1/edit',
+        );
     });
 
     it('renders a delete expense button', () => {
@@ -391,85 +388,6 @@ describe('ExpenseDetailPage', () => {
 
             await user.click(screen.getByRole('button', { name: /delete expense/i }));
             await user.click(screen.getByRole('button', { name: 'Delete' }));
-            onError?.(new Error('Something went wrong'));
-
-            expect(toast.error).toHaveBeenCalledWith('Something went wrong', { id: 'toast-id' });
-        });
-    });
-
-    describe('editing the expense', () => {
-        beforeEach(() => {
-            vi.mocked(useExpense).mockReturnValue({
-                data: expense,
-                isLoading: false,
-                isError: false,
-            } as unknown as ReturnType<typeof useExpense>);
-            vi.mocked(useGroup).mockReturnValue({
-                data: group,
-                isLoading: false,
-            } as unknown as ReturnType<typeof useGroup>);
-            vi.mocked(useGroupMembers).mockReturnValue({
-                data: members,
-                isLoading: false,
-            } as unknown as ReturnType<typeof useGroupMembers>);
-        });
-
-        it('opens the edit dialog prefilled with the expense details', async () => {
-            const user = userEvent.setup();
-            renderPage();
-
-            await user.click(screen.getByRole('button', { name: /edit expense/i }));
-
-            expect(screen.getByText(/edit expense/i)).toBeInTheDocument();
-            expect(screen.getByLabelText(/description/i)).toHaveValue('Chicken');
-            expect(screen.getByLabelText(/amount/i)).toHaveValue(90);
-        });
-
-        it('updates the expense and shows a toast on save', async () => {
-            let onSuccess: (() => void) | undefined;
-            const mutate = vi.fn((_values, options: { onSuccess?: () => void }) => {
-                onSuccess = options.onSuccess;
-            });
-            vi.mocked(useUpdateExpense).mockReturnValue({
-                mutate,
-            } as unknown as ReturnType<typeof useUpdateExpense>);
-            const user = userEvent.setup();
-            renderPage();
-
-            await user.click(screen.getByRole('button', { name: /edit expense/i }));
-            await user.click(screen.getByRole('button', { name: /save changes/i }));
-
-            expect(toast.loading).toHaveBeenCalledWith('Expense is being updated…');
-            expect(mutate).toHaveBeenCalledWith(
-                expect.objectContaining({
-                    id: 'expense-1',
-                    groupId: 'group-1',
-                    description: 'Chicken',
-                    amount: 90,
-                    paidByUserId: CURRENT_USER_ID,
-                    splitType: 'equal',
-                }),
-                expect.anything(),
-            );
-
-            onSuccess?.();
-
-            expect(toast.success).toHaveBeenCalledWith('Expense updated', { id: 'toast-id' });
-        });
-
-        it('shows an error toast when the update fails', async () => {
-            let onError: ((error: Error) => void) | undefined;
-            const mutate = vi.fn((_values, options: { onError?: (error: Error) => void }) => {
-                onError = options.onError;
-            });
-            vi.mocked(useUpdateExpense).mockReturnValue({
-                mutate,
-            } as unknown as ReturnType<typeof useUpdateExpense>);
-            const user = userEvent.setup();
-            renderPage();
-
-            await user.click(screen.getByRole('button', { name: /edit expense/i }));
-            await user.click(screen.getByRole('button', { name: /save changes/i }));
             onError?.(new Error('Something went wrong'));
 
             expect(toast.error).toHaveBeenCalledWith('Something went wrong', { id: 'toast-id' });

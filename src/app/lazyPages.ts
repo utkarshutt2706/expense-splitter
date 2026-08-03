@@ -41,3 +41,9 @@ export const ExpenseDetailPage = lazy(() =>
         default: module.ExpenseDetailPage,
     })),
 );
+
+export const UpsertExpensePage = lazy(() =>
+    import('@features/expenses/pages/UpsertExpensePage').then((module) => ({
+        default: module.UpsertExpensePage,
+    })),
+);

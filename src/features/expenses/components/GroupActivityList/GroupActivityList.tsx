@@ -1,17 +1,13 @@
 import { ArrowRightLeft, Pencil, Trash2 } from 'lucide-react';
 import { useState } from 'react';
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { toast } from 'sonner';
 
 import { useCurrentUser } from '@app/hooks';
 import type { Expense, Payment, User } from '@data/entities';
 import { ActivityRowSkeleton } from '@features/expenses/components/ActivityRowSkeleton';
-import { UpsertExpenseDialog } from '@features/expenses/components/UpsertExpenseDialog';
-import type { UpsertExpenseFormValues } from '@features/expenses/components/UpsertExpenseForm';
 import { useDeleteExpense } from '@features/expenses/hooks/useDeleteExpense';
 import { useExpenses } from '@features/expenses/hooks/useExpenses';
-import { useUpdateExpense } from '@features/expenses/hooks/useUpdateExpense';
-import { buildEditExpenseInitialValues } from '@features/expenses/utils/buildEditExpenseInitialValues';
 import { calculateExpenseInvolvement } from '@features/expenses/utils/calculateExpenseInvolvement';
 import { usePayments } from '@features/payments';
 import { Avatar, ConfirmationDialog, FetchingIndicator, SwipeableRow } from '@shared/components';
@@ -172,6 +168,7 @@ export function GroupActivityList({
     members,
     isMembersLoading = false,
 }: GroupActivityListProps) {
+    const navigate = useNavigate();
     const { data: currentUser } = useCurrentUser();
     const {
         data: expenses,
@@ -185,23 +182,8 @@ export function GroupActivityList({
         isFetching: isPaymentsFetching,
         isError: isPaymentsError,
     } = usePayments(groupId);
-    const updateExpense = useUpdateExpense();
     const deleteExpense = useDeleteExpense();
-    const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
     const [deletingExpense, setDeletingExpense] = useState<Expense | null>(null);
-
-    const handleUpdateExpense = (values: UpsertExpenseFormValues) => {
-        if (!editingExpense) return;
-
-        const toastId = toast.loading('Expense is being updated…');
-        updateExpense.mutate(
-            { id: editingExpense.id, groupId, ...values },
-            {
-                onSuccess: () => toast.success('Expense updated', { id: toastId }),
-                onError: (error) => toast.error(error.message, { id: toastId }),
-            },
-        );
-    };
 
     const handleDeleteExpense = () => {
         if (!deletingExpense) return;
@@ -281,7 +263,9 @@ export function GroupActivityList({
                                 expense={item.expense}
                                 membersById={membersById}
                                 currentUserId={currentUser?.id}
-                                onEdit={() => setEditingExpense(item.expense)}
+                                onEdit={() =>
+                                    navigate(`/groups/${groupId}/expenses/${item.expense.id}/edit`)
+                                }
                                 onDelete={() => setDeletingExpense(item.expense)}
                             />
                         ) : (
@@ -294,19 +278,6 @@ export function GroupActivityList({
                     </li>
                 ))}
             </ul>
-
-            <UpsertExpenseDialog
-                mode="edit"
-                open={editingExpense !== null}
-                onOpenChange={(open) => {
-                    if (!open) setEditingExpense(null);
-                }}
-                members={members}
-                initialValues={
-                    editingExpense ? buildEditExpenseInitialValues(editingExpense) : undefined
-                }
-                onSubmit={handleUpdateExpense}
-            />
 
             <ConfirmationDialog
                 open={deletingExpense !== null}
