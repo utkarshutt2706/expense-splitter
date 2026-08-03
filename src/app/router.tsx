@@ -10,6 +10,7 @@ import {
     GroupSettingsPage,
     GroupsPage,
     LoginPage,
+    UpsertExpensePage,
 } from '@app/lazyPages';
 import { ErrorPage } from '@app/pages/ErrorPage';
 import { NotFoundPage } from '@app/pages/NotFoundPage';
@@ -40,9 +41,14 @@ export const routes: RouteObject[] = [
             { path: 'groups/:groupId', element: <GroupDetailPage /> },
             { path: 'groups/:groupId/settings', element: <GroupSettingsPage /> },
             { path: 'groups/:groupId/balance', element: <GroupBalancePage /> },
+            { path: 'groups/:groupId/expenses/new', element: <UpsertExpensePage /> },
             {
                 path: 'groups/:groupId/expenses/:expenseId',
                 element: <ExpenseDetailPage />,
+            },
+            {
+                path: 'groups/:groupId/expenses/:expenseId/edit',
+                element: <UpsertExpensePage />,
             },
             { path: 'activity', element: <PlaceholderPage title="Activity coming soon" /> },
             { path: 'settings', element: <PlaceholderPage title="Settings coming soon" /> },

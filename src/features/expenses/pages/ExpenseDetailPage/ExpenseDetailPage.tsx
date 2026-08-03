@@ -7,12 +7,8 @@ import { toast } from 'sonner';
 import { useCurrentUser } from '@app/hooks';
 import type { User } from '@data/entities';
 import { ExpenseDetailSkeleton } from '@features/expenses/components/ExpenseDetailSkeleton';
-import { UpsertExpenseDialog } from '@features/expenses/components/UpsertExpenseDialog';
-import type { UpsertExpenseFormValues } from '@features/expenses/components/UpsertExpenseForm';
 import { useDeleteExpense } from '@features/expenses/hooks/useDeleteExpense';
 import { useExpense } from '@features/expenses/hooks/useExpense';
-import { useUpdateExpense } from '@features/expenses/hooks/useUpdateExpense';
-import { buildEditExpenseInitialValues } from '@features/expenses/utils/buildEditExpenseInitialValues';
 import { useGroup, useGroupMembers } from '@features/groups';
 import { Avatar, ConfirmationDialog, FetchingIndicator, Skeleton } from '@shared/components';
 
@@ -40,9 +36,7 @@ export function ExpenseDetailPage() {
     const { data: group } = useGroup(groupId ?? '');
     const { data: members, isLoading: isMembersLoading } = useGroupMembers(group?.memberIds ?? []);
     const deleteExpense = useDeleteExpense();
-    const updateExpense = useUpdateExpense();
     const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
-    const [isEditingExpense, setIsEditingExpense] = useState(false);
 
     const isLoading = isExpenseLoading || isMembersLoading;
     // isLoading only covers the very first fetch — editing this expense refetches
@@ -61,19 +55,6 @@ export function ExpenseDetailPage() {
                     toast.success('Expense deleted', { id: toastId });
                     navigate(`/groups/${groupId}`);
                 },
-                onError: (error) => toast.error(error.message, { id: toastId }),
-            },
-        );
-    };
-
-    const handleUpdateExpense = (values: UpsertExpenseFormValues) => {
-        if (!expense || !groupId) return;
-
-        const toastId = toast.loading('Expense is being updated…');
-        updateExpense.mutate(
-            { id: expense.id, groupId, ...values },
-            {
-                onSuccess: () => toast.success('Expense updated', { id: toastId }),
                 onError: (error) => toast.error(error.message, { id: toastId }),
             },
         );
@@ -180,17 +161,28 @@ export function ExpenseDetailPage() {
                 {isRefreshing && <FetchingIndicator />}
 
                 <div className="ml-auto flex items-center gap-2">
-                    <button
-                        type="button"
-                        aria-label="Edit expense"
-                        title="Edit expense"
-                        disabled={isLoading}
-                        onClick={() => setIsEditingExpense(true)}
-                        className="border-border text-surface-foreground hover:bg-muted inline-flex cursor-pointer items-center gap-1 rounded-md border p-2 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-60 md:px-3 md:py-1.5"
-                    >
-                        <Pencil className="size-4" />
-                        <span className="hidden md:inline">Edit</span>
-                    </button>
+                    {isLoading ? (
+                        <button
+                            type="button"
+                            aria-label="Edit expense"
+                            title="Edit expense"
+                            disabled
+                            className="border-border text-surface-foreground inline-flex cursor-not-allowed items-center gap-1 rounded-md border p-2 text-sm font-medium opacity-60 md:px-3 md:py-1.5"
+                        >
+                            <Pencil className="size-4" />
+                            <span className="hidden md:inline">Edit</span>
+                        </button>
+                    ) : (
+                        <Link
+                            to={`/groups/${groupId}/expenses/${expenseId}/edit`}
+                            aria-label="Edit expense"
+                            title="Edit expense"
+                            className="border-border text-surface-foreground hover:bg-muted inline-flex items-center gap-1 rounded-md border p-2 text-sm font-medium md:px-3 md:py-1.5"
+                        >
+                            <Pencil className="size-4" />
+                            <span className="hidden md:inline">Edit</span>
+                        </Link>
+                    )}
                     <button
                         type="button"
                         aria-label="Delete expense"
@@ -218,15 +210,6 @@ export function ExpenseDetailPage() {
                     setIsConfirmingDelete(false);
                     handleDelete();
                 }}
-            />
-
-            <UpsertExpenseDialog
-                mode="edit"
-                open={isEditingExpense}
-                onOpenChange={setIsEditingExpense}
-                members={members ?? []}
-                initialValues={expense ? buildEditExpenseInitialValues(expense) : undefined}
-                onSubmit={handleUpdateExpense}
             />
         </div>
     );

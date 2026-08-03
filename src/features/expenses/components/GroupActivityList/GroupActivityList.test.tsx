@@ -8,16 +8,18 @@ import type { Expense, Payment, User } from '@data/entities';
 import { CURRENT_USER_ID } from '@data/seed';
 import { useDeleteExpense } from '@features/expenses/hooks/useDeleteExpense';
 import { useExpenses } from '@features/expenses/hooks/useExpenses';
-import { useUpdateExpense } from '@features/expenses/hooks/useUpdateExpense';
 import { usePayments } from '@features/payments';
 import { GroupActivityList } from './GroupActivityList';
 
+const navigateMock = vi.fn();
+
+vi.mock('react-router', async () => {
+    const actual = await vi.importActual('react-router');
+    return { ...actual, useNavigate: () => navigateMock };
+});
+
 vi.mock('@features/expenses/hooks/useExpenses', () => ({
     useExpenses: vi.fn(),
-}));
-
-vi.mock('@features/expenses/hooks/useUpdateExpense', () => ({
-    useUpdateExpense: vi.fn(),
 }));
 
 vi.mock('@features/expenses/hooks/useDeleteExpense', () => ({
@@ -93,9 +95,7 @@ function renderList(isMembersLoading = false) {
 }
 
 beforeEach(() => {
-    vi.mocked(useUpdateExpense).mockReturnValue({
-        mutate: vi.fn(),
-    } as unknown as ReturnType<typeof useUpdateExpense>);
+    navigateMock.mockClear();
     vi.mocked(useDeleteExpense).mockReturnValue({
         mutate: vi.fn(),
     } as unknown as ReturnType<typeof useDeleteExpense>);
@@ -276,40 +276,13 @@ describe('GroupActivityList', () => {
             mockPayments([]);
         });
 
-        it('opens the edit dialog prefilled with the expense details', async () => {
+        it('navigates to the edit page for the expense when Edit is clicked', async () => {
             const user = userEvent.setup();
             renderList();
 
             await user.click(screen.getByRole('button', { name: 'Edit', hidden: true }));
 
-            expect(screen.getByText(/edit expense/i)).toBeInTheDocument();
-            expect(screen.getByLabelText(/description/i)).toHaveValue('Groceries');
-            expect(screen.getByLabelText(/amount/i)).toHaveValue(42.5);
-        });
-
-        it('updates the expense and shows a toast on save', async () => {
-            let onSuccess: (() => void) | undefined;
-            const mutate = vi.fn((_values, options: { onSuccess?: () => void }) => {
-                onSuccess = options.onSuccess;
-            });
-            vi.mocked(useUpdateExpense).mockReturnValue({
-                mutate,
-            } as unknown as ReturnType<typeof useUpdateExpense>);
-            const user = userEvent.setup();
-            renderList();
-
-            await user.click(screen.getByRole('button', { name: 'Edit', hidden: true }));
-            await user.click(screen.getByRole('button', { name: /save changes/i }));
-
-            expect(toast.loading).toHaveBeenCalledWith('Expense is being updated…');
-            expect(mutate).toHaveBeenCalledWith(
-                expect.objectContaining({ id: 'expense-1', groupId: 'group-1' }),
-                expect.anything(),
-            );
-
-            onSuccess?.();
-
-            expect(toast.success).toHaveBeenCalledWith('Expense updated', { id: 'toast-id' });
+            expect(navigateMock).toHaveBeenCalledWith('/groups/group-1/expenses/expense-1/edit');
         });
 
         it('shows a confirmation dialog before deleting', async () => {
