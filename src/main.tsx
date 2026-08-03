@@ -6,15 +6,7 @@ import { RouterProvider } from 'react-router';
 
 import { AppProviders } from '@app/providers';
 import { router } from '@app/router.tsx';
-import { expenseRepository, groupRepository, userRepository } from '@data/db';
-import { seedDatabase } from '@data/seed';
 import './index.css';
-
-await seedDatabase({
-    users: userRepository,
-    groups: groupRepository,
-    expenses: expenseRepository,
-});
 
 createRoot(document.getElementById('root')!).render(
     <StrictMode>
