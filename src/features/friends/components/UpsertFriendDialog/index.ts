@@ -1,1 +1,0 @@
-export { UpsertFriendDialog } from './UpsertFriendDialog';

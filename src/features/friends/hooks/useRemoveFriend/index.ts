@@ -1,1 +1,0 @@
-export { useRemoveFriend } from './useRemoveFriend';
