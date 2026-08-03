@@ -4,12 +4,11 @@ import type { ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { Payment } from '@data/entities';
+import * as paymentsApi from '@features/payments/api/paymentsApi';
 import { usePayments } from './usePayments';
 
-vi.mock('@services/instances', () => ({
-    paymentService: {
-        getByGroupId: vi.fn(),
-    },
+vi.mock('@features/payments/api/paymentsApi', () => ({
+    getByGroupId: vi.fn(),
 }));
 
 const olderPayment: Payment = {
@@ -40,14 +39,13 @@ function renderUsePayments(groupId: string) {
 
 describe('usePayments', () => {
     it('fetches payments for the given group, newest first', async () => {
-        const { paymentService } = await import('@services/instances');
-        vi.mocked(paymentService.getByGroupId).mockResolvedValue([olderPayment, newerPayment]);
+        vi.mocked(paymentsApi.getByGroupId).mockResolvedValue([olderPayment, newerPayment]);
 
         const { result } = renderUsePayments('group-1');
 
         await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-        expect(paymentService.getByGroupId).toHaveBeenCalledWith('group-1');
+        expect(paymentsApi.getByGroupId).toHaveBeenCalledWith('group-1');
         expect(result.current.data).toEqual([newerPayment, olderPayment]);
     });
 });
