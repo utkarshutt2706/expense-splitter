@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { toast } from 'sonner';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { User } from '@data/entities';
@@ -11,6 +12,15 @@ vi.mock('@app/hooks', async (importOriginal) => ({
     useCurrentUser: () => ({
         data: { id: CURRENT_USER_ID, name: 'Alex Morgan', email: 'alex@example.com' },
     }),
+}));
+
+vi.mock('sonner', () => ({
+    toast: {
+        loading: vi.fn(() => 'toast-id'),
+        success: vi.fn(),
+        error: vi.fn(),
+        warning: vi.fn(),
+    },
 }));
 
 const members: User[] = [
@@ -158,6 +168,7 @@ describe('UpsertExpenseForm', () => {
             const user = userEvent.setup();
             render(<UpsertExpenseForm members={members} onSubmit={vi.fn()} onCancel={vi.fn()} />);
 
+            await user.type(screen.getByLabelText(/amount/i), '42.50');
             await user.click(screen.getByRole('button', { name: 'Exact' }));
 
             expect(screen.getByRole('spinbutton', { name: 'You amount' })).toBeInTheDocument();
@@ -170,6 +181,7 @@ describe('UpsertExpenseForm', () => {
             const user = userEvent.setup();
             render(<UpsertExpenseForm members={members} onSubmit={vi.fn()} onCancel={vi.fn()} />);
 
+            await user.type(screen.getByLabelText(/amount/i), '42.50');
             await user.click(screen.getByRole('button', { name: 'Percentage' }));
 
             expect(screen.getByRole('spinbutton', { name: 'You percentage' })).toBeInTheDocument();
@@ -179,6 +191,7 @@ describe('UpsertExpenseForm', () => {
             const user = userEvent.setup();
             render(<UpsertExpenseForm members={members} onSubmit={vi.fn()} onCancel={vi.fn()} />);
 
+            await user.type(screen.getByLabelText(/amount/i), '42.50');
             await user.click(screen.getByRole('button', { name: 'Shares' }));
 
             expect(screen.getByRole('spinbutton', { name: 'You shares' })).toBeInTheDocument();
@@ -359,11 +372,119 @@ describe('UpsertExpenseForm', () => {
             const user = userEvent.setup();
             render(<UpsertExpenseForm members={members} onSubmit={vi.fn()} onCancel={vi.fn()} />);
 
+            await user.type(screen.getByLabelText(/amount/i), '42.50');
             await user.click(screen.getByRole('button', { name: 'Exact' }));
             await user.type(screen.getByRole('spinbutton', { name: 'You amount' }), '20');
             await user.click(screen.getByRole('button', { name: 'Shares' }));
 
             expect(screen.getByRole('spinbutton', { name: 'You shares' })).toHaveValue(null);
+        });
+
+        it('blocks changing the split type until an amount is entered, with a toast', async () => {
+            const user = userEvent.setup();
+            render(<UpsertExpenseForm members={members} onSubmit={vi.fn()} onCancel={vi.fn()} />);
+
+            await user.click(screen.getByRole('button', { name: 'Exact' }));
+
+            expect(toast.warning).toHaveBeenCalledWith(
+                'Enter an amount before choosing how to split it',
+            );
+            expect(screen.getByRole('button', { name: 'Equal' })).toHaveAttribute(
+                'aria-pressed',
+                'true',
+            );
+            expect(screen.queryByRole('spinbutton', { name: /you/i })).not.toBeInTheDocument();
+        });
+
+        it('allows changing the split type once a valid amount is entered', async () => {
+            const user = userEvent.setup();
+            render(<UpsertExpenseForm members={members} onSubmit={vi.fn()} onCancel={vi.fn()} />);
+
+            await user.type(screen.getByLabelText(/amount/i), '0');
+            await user.click(screen.getByRole('button', { name: 'Exact' }));
+
+            expect(toast.warning).toHaveBeenCalledWith(
+                'Enter an amount before choosing how to split it',
+            );
+            expect(screen.getByRole('button', { name: 'Equal' })).toHaveAttribute(
+                'aria-pressed',
+                'true',
+            );
+
+            await user.clear(screen.getByLabelText(/amount/i));
+            await user.type(screen.getByLabelText(/amount/i), '42.50');
+            await user.click(screen.getByRole('button', { name: 'Exact' }));
+
+            expect(screen.getByRole('button', { name: 'Exact' })).toHaveAttribute(
+                'aria-pressed',
+                'true',
+            );
+        });
+    });
+
+    describe('split helper text', () => {
+        it('shows the equal-split helper text by default', () => {
+            render(<UpsertExpenseForm members={members} onSubmit={vi.fn()} onCancel={vi.fn()} />);
+
+            expect(
+                screen.getByText('Splitting equally between selected members'),
+            ).toBeInTheDocument();
+        });
+
+        it('shows how much of the expense amount is left to allocate for an exact split', async () => {
+            const user = userEvent.setup();
+            render(<UpsertExpenseForm members={members} onSubmit={vi.fn()} onCancel={vi.fn()} />);
+
+            await user.type(screen.getByLabelText(/amount/i), '42.50');
+            await user.click(screen.getByRole('button', { name: 'Exact' }));
+
+            expect(
+                screen.getByText('Remaining ₹42.50 of ₹42.50 expense amount'),
+            ).toBeInTheDocument();
+
+            await user.type(screen.getByRole('spinbutton', { name: 'You amount' }), '50');
+
+            expect(
+                screen.getByText('Remaining ₹-7.50 of ₹42.50 expense amount'),
+            ).toBeInTheDocument();
+        });
+
+        it('shows how many percentage points are left to allocate for a percentage split', async () => {
+            const user = userEvent.setup();
+            render(<UpsertExpenseForm members={members} onSubmit={vi.fn()} onCancel={vi.fn()} />);
+
+            await user.type(screen.getByLabelText(/amount/i), '42.50');
+            await user.click(screen.getByRole('button', { name: 'Percentage' }));
+
+            expect(screen.getByText('Remaining 100 of 100 percent')).toBeInTheDocument();
+
+            await user.type(screen.getByRole('spinbutton', { name: 'You percentage' }), '60');
+
+            expect(screen.getByText('Remaining 40 of 100 percent')).toBeInTheDocument();
+        });
+
+        it('shows the running total of entered shares for a shares split', async () => {
+            const user = userEvent.setup();
+            render(<UpsertExpenseForm members={members} onSubmit={vi.fn()} onCancel={vi.fn()} />);
+
+            await user.type(screen.getByLabelText(/amount/i), '42.50');
+            await user.click(screen.getByRole('button', { name: 'Shares' }));
+
+            expect(
+                screen.getByText('Splitting into 0 shares between the selected members'),
+            ).toBeInTheDocument();
+
+            await user.type(screen.getByRole('spinbutton', { name: 'You shares' }), '1');
+
+            expect(
+                screen.getByText('Splitting into 1 share between the selected members'),
+            ).toBeInTheDocument();
+
+            await user.type(screen.getByRole('spinbutton', { name: /priya sharma shares/i }), '2');
+
+            expect(
+                screen.getByText('Splitting into 3 shares between the selected members'),
+            ).toBeInTheDocument();
         });
     });
 

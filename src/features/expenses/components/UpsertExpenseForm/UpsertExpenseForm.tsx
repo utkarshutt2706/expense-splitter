@@ -2,6 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Check, Receipt } from 'lucide-react';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
+import { toast } from 'sonner';
 import { z } from 'zod';
 
 import { useCurrentUser } from '@app/hooks';
@@ -28,6 +29,23 @@ const upsertExpenseSchema = z.object({
 type UpsertExpenseInput = z.infer<typeof upsertExpenseSchema>;
 
 const PERCENTAGE_TOLERANCE = 0.01;
+
+function sumEnteredValues(ids: string[], values: Record<string, string>): number {
+    return ids.reduce((sum, id) => {
+        const raw = values[id];
+        const parsed = raw === undefined || raw === '' ? 0 : Number(raw);
+        return sum + (Number.isFinite(parsed) ? parsed : 0);
+    }, 0);
+}
+
+function formatAmount(value: number): string {
+    return `₹${value.toFixed(2)}`;
+}
+
+// Trims to at most 2 decimals without trailing zeros, e.g. 25 -> "25", 33.333 -> "33.33".
+function formatNumber(value: number): string {
+    return Number(value.toFixed(2)).toString();
+}
 
 export interface UpsertExpenseFormValues {
     description: string;
@@ -69,6 +87,7 @@ export function UpsertExpenseForm({
         register,
         handleSubmit,
         control,
+        watch,
         formState: { errors },
     } = useForm<UpsertExpenseInput>({
         resolver: zodResolver(upsertExpenseSchema),
@@ -78,6 +97,8 @@ export function UpsertExpenseForm({
             paidByUserId: initialValues?.paidByUserId ?? currentUser?.id ?? '',
         },
     });
+    const amount = watch('amount');
+    const isAmountFilled = typeof amount === 'number' && Number.isFinite(amount) && amount > 0;
     const [participantUserIds, setParticipantUserIds] = useState<string[]>(
         initialValues?.participantUserIds ?? members.map((member) => member.id),
     );
@@ -88,6 +109,20 @@ export function UpsertExpenseForm({
     );
     const [splitError, setSplitError] = useState<string | undefined>();
 
+    let splitHelperText: string;
+    if (splitType === 'exact') {
+        const remaining = (amount ?? 0) - sumEnteredValues(participantUserIds, splitValues);
+        splitHelperText = `Remaining ${formatAmount(remaining)} of ${formatAmount(amount ?? 0)} expense amount`;
+    } else if (splitType === 'percentage') {
+        const remaining = 100 - sumEnteredValues(participantUserIds, splitValues);
+        splitHelperText = `Remaining ${formatNumber(remaining)} of 100 percent`;
+    } else if (splitType === 'shares') {
+        const totalShares = Math.round(sumEnteredValues(participantUserIds, splitValues));
+        splitHelperText = `Splitting into ${totalShares} share${totalShares === 1 ? '' : 's'} between the selected members`;
+    } else {
+        splitHelperText = 'Splitting equally between selected members';
+    }
+
     const toggleParticipant = (id: string) => {
         setParticipantUserIds((current) =>
             current.includes(id) ? current.filter((memberId) => memberId !== id) : [...current, id],
@@ -95,6 +130,10 @@ export function UpsertExpenseForm({
     };
 
     const changeSplitType = (type: SplitType) => {
+        if (!isAmountFilled) {
+            toast.warning('Enter an amount before choosing how to split it');
+            return;
+        }
         setSplitType(type);
         setSplitValues({});
         setSplitError(undefined);
@@ -293,7 +332,7 @@ export function UpsertExpenseForm({
             </div>
 
             <div className="flex flex-col gap-2">
-                <span className="text-surface-foreground text-sm font-medium">Split</span>
+                <span className="text-surface-foreground text-sm font-medium">Split type</span>
                 <SplitTypeTabs value={splitType} onChange={changeSplitType} />
                 <SplitParticipantList
                     users={members}
@@ -307,6 +346,8 @@ export function UpsertExpenseForm({
                 {participantsError && <p className="text-xs text-red-600">{participantsError}</p>}
                 {splitError && <p className="text-xs text-red-600">{splitError}</p>}
             </div>
+
+            <p className="text-muted-foreground text-sm">{splitHelperText}</p>
 
             <div className="flex justify-end gap-2">
                 <button
