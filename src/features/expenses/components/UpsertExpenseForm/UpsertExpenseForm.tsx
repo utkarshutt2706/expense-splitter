@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Check, Receipt } from 'lucide-react';
 import { useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
@@ -87,7 +87,6 @@ export function UpsertExpenseForm({
         register,
         handleSubmit,
         control,
-        watch,
         formState: { errors },
     } = useForm<UpsertExpenseInput>({
         resolver: zodResolver(upsertExpenseSchema),
@@ -97,7 +96,7 @@ export function UpsertExpenseForm({
             paidByUserId: initialValues?.paidByUserId ?? currentUser?.id ?? '',
         },
     });
-    const amount = watch('amount');
+    const amount = useWatch({ control, name: 'amount' });
     const isAmountFilled = typeof amount === 'number' && Number.isFinite(amount) && amount > 0;
     const [participantUserIds, setParticipantUserIds] = useState<string[]>(
         initialValues?.participantUserIds ?? members.map((member) => member.id),

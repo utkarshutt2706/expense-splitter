@@ -5,12 +5,11 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type { User } from '@data/entities';
 import { CURRENT_USER_ID } from '@data/seed';
+import * as friendsApi from '@features/friends/api/friendsApi';
 import { useFriends } from './useFriends';
 
-vi.mock('@services/instances', () => ({
-    userService: {
-        getAll: vi.fn(),
-    },
+vi.mock('@features/friends/api/friendsApi', () => ({
+    getAll: vi.fn(),
 }));
 
 vi.mock('@app/hooks', async (importOriginal) => ({
@@ -22,13 +21,12 @@ vi.mock('@app/hooks', async (importOriginal) => ({
 
 describe('useFriends', () => {
     it('excludes the current user from the friends list', async () => {
-        const { userService } = await import('@services/instances');
         const users: User[] = [
             { id: CURRENT_USER_ID, name: 'Alex Morgan', email: 'alex@example.com' },
             { id: 'friend-1', name: 'Priya Sharma', email: 'priya@example.com' },
             { id: 'friend-2', name: 'Jordan Lee', email: 'jordan@example.com' },
         ];
-        vi.mocked(userService.getAll).mockResolvedValue(users);
+        vi.mocked(friendsApi.getAll).mockResolvedValue(users);
 
         const queryClient = new QueryClient();
         const wrapper = ({ children }: { children: ReactNode }) => (

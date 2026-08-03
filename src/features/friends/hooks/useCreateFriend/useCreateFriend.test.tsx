@@ -4,14 +4,14 @@ import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { User } from '@data/entities';
+import * as friendsApi from '@features/friends/api/friendsApi';
 import { DuplicateFriendError } from '@features/friends/utils/duplicateFriend';
+import { ApiError } from '@lib/api/apiError';
 import { useCreateFriend } from './useCreateFriend';
 
-vi.mock('@services/instances', () => ({
-    userService: {
-        getAll: vi.fn(),
-        create: vi.fn(),
-    },
+vi.mock('@features/friends/api/friendsApi', () => ({
+    getAll: vi.fn(),
+    create: vi.fn(),
 }));
 
 function renderCreateFriend() {
@@ -29,15 +29,14 @@ describe('useCreateFriend', () => {
         vi.clearAllMocks();
     });
 
-    it('creates a user with a generated id and invalidates the friends list', async () => {
-        const { userService } = await import('@services/instances');
-        vi.mocked(userService.getAll).mockResolvedValue([]);
+    it('creates a friend via the API and invalidates the friends list', async () => {
+        vi.mocked(friendsApi.getAll).mockResolvedValue([]);
         const created: User = {
-            id: 'generated-id',
+            id: 'server-generated-id',
             name: 'Priya Sharma',
             email: 'priya@example.com',
         };
-        vi.mocked(userService.create).mockResolvedValue(created);
+        vi.mocked(friendsApi.create).mockResolvedValue(created);
 
         const { result, invalidateSpy } = renderCreateFriend();
 
@@ -45,20 +44,20 @@ describe('useCreateFriend', () => {
 
         await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-        expect(userService.create).toHaveBeenCalledWith(
-            expect.objectContaining({ name: 'Priya Sharma', email: 'priya@example.com' }),
-        );
+        expect(friendsApi.create).toHaveBeenCalledWith({
+            name: 'Priya Sharma',
+            email: 'priya@example.com',
+        });
         expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['users', 'friends'] });
     });
 
     it('blocks creation when a friend already exists with the same email', async () => {
-        const { userService } = await import('@services/instances');
         const existing: User = {
             id: 'friend-1',
             name: 'Priya Sharma',
             email: 'priya@example.com',
         };
-        vi.mocked(userService.getAll).mockResolvedValue([existing]);
+        vi.mocked(friendsApi.getAll).mockResolvedValue([existing]);
 
         const { result } = renderCreateFriend();
 
@@ -67,17 +66,16 @@ describe('useCreateFriend', () => {
         await waitFor(() => expect(result.current.isError).toBe(true));
 
         expect(result.current.error).toBeInstanceOf(DuplicateFriendError);
-        expect(userService.create).not.toHaveBeenCalled();
+        expect(friendsApi.create).not.toHaveBeenCalled();
     });
 
     it('blocks creation when a friend already exists with the same phone number', async () => {
-        const { userService } = await import('@services/instances');
         const existing: User = {
             id: 'friend-1',
             name: 'Priya Sharma',
             phone: '5551234567',
         };
-        vi.mocked(userService.getAll).mockResolvedValue([existing]);
+        vi.mocked(friendsApi.getAll).mockResolvedValue([existing]);
 
         const { result } = renderCreateFriend();
 
@@ -86,6 +84,21 @@ describe('useCreateFriend', () => {
         await waitFor(() => expect(result.current.isError).toBe(true));
 
         expect(result.current.error).toBeInstanceOf(DuplicateFriendError);
-        expect(userService.create).not.toHaveBeenCalled();
+        expect(friendsApi.create).not.toHaveBeenCalled();
+    });
+
+    it('surfaces a server-side conflict as a DuplicateFriendError', async () => {
+        vi.mocked(friendsApi.getAll).mockResolvedValue([]);
+        vi.mocked(friendsApi.create).mockRejectedValue(
+            new ApiError('CONFLICT', 'A user with this email already exists', 409),
+        );
+
+        const { result } = renderCreateFriend();
+
+        result.current.mutate({ name: 'Priya Sharma', email: 'priya@example.com' });
+
+        await waitFor(() => expect(result.current.isError).toBe(true));
+
+        expect(result.current.error).toBeInstanceOf(DuplicateFriendError);
     });
 });

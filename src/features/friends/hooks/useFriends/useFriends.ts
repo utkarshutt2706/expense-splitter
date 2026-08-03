@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { useCurrentUser } from '@app/hooks';
-import { userService } from '@services/instances';
+import { getAll } from '@features/friends/api/friendsApi';
 
 export function useFriends() {
     const { data: currentUser } = useCurrentUser();
@@ -9,7 +9,7 @@ export function useFriends() {
     return useQuery({
         queryKey: ['users', 'friends', currentUser?.id],
         queryFn: async () => {
-            const users = await userService.getAll();
+            const users = await getAll();
             return users.filter((user) => user.id !== currentUser?.id);
         },
     });
