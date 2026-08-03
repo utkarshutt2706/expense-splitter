@@ -1,0 +1,65 @@
+import { describe, expect, it, vi } from 'vitest';
+
+import type { Group } from '@data/entities';
+import { httpClient } from '@lib/api/httpClient';
+import { create, getAll, getById, update } from './groupsApi';
+
+vi.mock('@lib/api/httpClient', () => ({
+    httpClient: {
+        get: vi.fn(),
+        post: vi.fn(),
+        patch: vi.fn(),
+    },
+}));
+
+const group: Group = {
+    id: 'group-1',
+    name: 'Weekend Trip',
+    memberIds: ['current-user', 'friend-1'],
+    createdAt: '2026-07-01T00:00:00.000Z',
+};
+
+describe('groupsApi', () => {
+    it('getAll fetches the group list from /groups', async () => {
+        vi.mocked(httpClient.get).mockResolvedValue({ data: [group] });
+
+        const groups = await getAll();
+
+        expect(httpClient.get).toHaveBeenCalledWith('/groups');
+        expect(groups).toEqual([group]);
+    });
+
+    it('getById fetches a single group from /groups/:id', async () => {
+        vi.mocked(httpClient.get).mockResolvedValue({ data: group });
+
+        const result = await getById('group-1');
+
+        expect(httpClient.get).toHaveBeenCalledWith('/groups/group-1');
+        expect(result).toEqual(group);
+    });
+
+    it('create posts a new group to /groups', async () => {
+        vi.mocked(httpClient.post).mockResolvedValue({ data: group });
+
+        const result = await create({
+            name: 'Weekend Trip',
+            memberIds: ['current-user', 'friend-1'],
+        });
+
+        expect(httpClient.post).toHaveBeenCalledWith('/groups', {
+            name: 'Weekend Trip',
+            memberIds: ['current-user', 'friend-1'],
+        });
+        expect(result).toEqual(group);
+    });
+
+    it('update patches the group at /groups/:id', async () => {
+        const renamed = { ...group, name: 'Ski Trip' };
+        vi.mocked(httpClient.patch).mockResolvedValue({ data: renamed });
+
+        const result = await update('group-1', { name: 'Ski Trip' });
+
+        expect(httpClient.patch).toHaveBeenCalledWith('/groups/group-1', { name: 'Ski Trip' });
+        expect(result).toEqual(renamed);
+    });
+});

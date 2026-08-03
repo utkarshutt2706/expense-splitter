@@ -1,11 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
 
-import { groupService } from '@services/instances';
+import { getById } from '@features/groups/api/groupsApi';
 
 export function useGroup(id: string) {
     return useQuery({
         queryKey: ['groups', id],
-        queryFn: () => groupService.getById(id),
+        queryFn: () => getById(id),
         enabled: id !== '',
     });
 }

@@ -8,11 +8,12 @@ import { EditGroupMembersAction } from '@features/groups/components/EditGroupMem
 import { GroupNameEditor } from '@features/groups/components/GroupNameEditor';
 import { MemberList } from '@features/groups/components/MemberList';
 import { MemberListSkeleton } from '@features/groups/components/MemberListSkeleton';
+import { groupErrorMessage } from '@features/groups/utils/groupErrorMessage';
 import { Skeleton } from '@shared/components';
 
 export function GroupSettingsPage() {
     const { groupId } = useParams<{ groupId: string }>();
-    const { data: group, isLoading: isGroupLoading, isError } = useGroup(groupId ?? '');
+    const { data: group, isLoading: isGroupLoading, isError, error } = useGroup(groupId ?? '');
     const { data: members, isLoading: isMembersLoading } = useGroupMembers(group?.memberIds ?? []);
     const [isEditingName, setIsEditingName] = useState(false);
 
@@ -34,7 +35,7 @@ export function GroupSettingsPage() {
             </output>
         );
     } else if (isError || !group) {
-        content = <div className="text-red-600">Couldn't load this group.</div>;
+        content = <div className="text-red-600">{groupErrorMessage(error)}</div>;
     } else {
         content = (
             <div className="flex flex-col gap-6">

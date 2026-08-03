@@ -4,24 +4,22 @@ import type { ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { Group } from '@data/entities';
+import * as groupsApi from '@features/groups/api/groupsApi';
 import { useGroup } from './useGroup';
 
-vi.mock('@services/instances', () => ({
-    groupService: {
-        getById: vi.fn(),
-    },
+vi.mock('@features/groups/api/groupsApi', () => ({
+    getById: vi.fn(),
 }));
 
 describe('useGroup', () => {
     it('returns the group with the given id', async () => {
-        const { groupService } = await import('@services/instances');
         const group: Group = {
             id: 'group-1',
             name: 'Weekend Trip',
             memberIds: ['current-user', 'friend-1'],
             createdAt: '2026-07-01T00:00:00.000Z',
         };
-        vi.mocked(groupService.getById).mockResolvedValue(group);
+        vi.mocked(groupsApi.getById).mockResolvedValue(group);
 
         const queryClient = new QueryClient();
         const wrapper = ({ children }: { children: ReactNode }) => (
@@ -33,7 +31,7 @@ describe('useGroup', () => {
         await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
         expect(result.current.data).toEqual(group);
-        expect(groupService.getById).toHaveBeenCalledWith('group-1');
+        expect(groupsApi.getById).toHaveBeenCalledWith('group-1');
     });
 
     it('does not fetch when the id is empty', () => {

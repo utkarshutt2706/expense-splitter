@@ -7,6 +7,7 @@ import { useGroup, useGroupMembers } from '@features/groups';
 import { GroupDetailHeaderSkeleton } from '@features/groups/components/GroupDetailHeaderSkeleton';
 import { GroupFabMenu } from '@features/groups/components/GroupFabMenu';
 import { GroupMembersSection } from '@features/groups/components/GroupMembersSection';
+import { groupErrorMessage } from '@features/groups/utils/groupErrorMessage';
 
 export function GroupDetailPage() {
     const { groupId } = useParams<{ groupId: string }>();
@@ -14,6 +15,7 @@ export function GroupDetailPage() {
         data: group,
         isLoading,
         isError,
+        error,
         isFetching: isGroupFetching,
     } = useGroup(groupId ?? '');
     const {
@@ -30,7 +32,7 @@ export function GroupDetailPage() {
             </output>
         );
     } else if (isError || !group) {
-        content = <div className="text-red-600">Couldn't load this group.</div>;
+        content = <div className="text-red-600">{groupErrorMessage(error)}</div>;
     } else {
         content = (
             <div className="flex items-center gap-3">

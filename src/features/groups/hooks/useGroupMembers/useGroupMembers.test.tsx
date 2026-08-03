@@ -4,23 +4,21 @@ import type { ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { User } from '@data/entities';
+import * as friendsApi from '@features/friends/api/friendsApi';
 import { useGroupMembers } from './useGroupMembers';
 
-vi.mock('@services/instances', () => ({
-    userService: {
-        getAll: vi.fn(),
-    },
+vi.mock('@features/friends/api/friendsApi', () => ({
+    getAll: vi.fn(),
 }));
 
 describe('useGroupMembers', () => {
     it('resolves member ids to user records, preserving order', async () => {
-        const { userService } = await import('@services/instances');
         const users: User[] = [
             { id: 'current-user', name: 'Alex Morgan', email: 'alex@example.com' },
             { id: 'friend-1', name: 'Priya Sharma', email: 'priya@example.com' },
             { id: 'friend-2', name: 'Jordan Lee', phone: '5551234567' },
         ];
-        vi.mocked(userService.getAll).mockResolvedValue(users);
+        vi.mocked(friendsApi.getAll).mockResolvedValue(users);
 
         const queryClient = new QueryClient();
         const wrapper = ({ children }: { children: ReactNode }) => (
@@ -37,8 +35,7 @@ describe('useGroupMembers', () => {
     });
 
     it('skips ids that no longer resolve to a user', async () => {
-        const { userService } = await import('@services/instances');
-        vi.mocked(userService.getAll).mockResolvedValue([]);
+        vi.mocked(friendsApi.getAll).mockResolvedValue([]);
 
         const queryClient = new QueryClient();
         const wrapper = ({ children }: { children: ReactNode }) => (
