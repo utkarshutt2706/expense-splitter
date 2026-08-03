@@ -10,6 +10,7 @@ import {
     GroupSettingsPage,
     GroupsPage,
     LoginPage,
+    RegisterPage,
     UpsertExpensePage,
 } from '@app/lazyPages';
 import { ErrorPage } from '@app/pages/ErrorPage';
@@ -26,6 +27,15 @@ export const routes: RouteObject[] = [
         element: (
             <Suspense fallback={<TopProgressBar />}>
                 <LoginPage />
+            </Suspense>
+        ),
+        errorElement: <ErrorPage />,
+    },
+    {
+        path: 'register',
+        element: (
+            <Suspense fallback={<TopProgressBar />}>
+                <RegisterPage />
             </Suspense>
         ),
         errorElement: <ErrorPage />,

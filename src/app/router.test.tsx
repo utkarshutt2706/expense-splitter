@@ -13,6 +13,11 @@ vi.mock('@features/groups', () => ({
     useGroup: () => ({ data: undefined }),
 }));
 
+vi.mock('@features/auth', () => ({
+    useLogin: () => ({ mutateAsync: vi.fn() }),
+    useRegister: () => ({ mutateAsync: vi.fn() }),
+}));
+
 describe('router', () => {
     beforeEach(() => {
         localStorage.clear();
@@ -22,7 +27,7 @@ describe('router', () => {
     it('redirects to the login page at the root path when not logged in', async () => {
         render(<RouterProvider router={router} />);
 
-        expect(await screen.findByLabelText(/username/i)).toBeInTheDocument();
+        expect(await screen.findByLabelText(/email/i)).toBeInTheDocument();
     });
 
     it('renders the dashboard at the root path when logged in', () => {

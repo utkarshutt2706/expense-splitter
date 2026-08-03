@@ -10,10 +10,15 @@ import {
     GroupSettingsPage,
     GroupsPage,
     LoginPage,
+    RegisterPage,
 } from './lazyPages';
 
 vi.mock('@app/pages/LoginPage', () => ({
     LoginPage: () => <p>Login page</p>,
+}));
+
+vi.mock('@app/pages/RegisterPage', () => ({
+    RegisterPage: () => <p>Register page</p>,
 }));
 
 vi.mock('@features/friends/pages/FriendsPage', () => ({
@@ -49,6 +54,16 @@ describe('lazyPages', () => {
         );
 
         expect(await screen.findByText('Login page')).toBeInTheDocument();
+    });
+
+    it('resolves RegisterPage to the real named export once loaded', async () => {
+        render(
+            <Suspense fallback="loading">
+                <RegisterPage />
+            </Suspense>,
+        );
+
+        expect(await screen.findByText('Register page')).toBeInTheDocument();
     });
 
     it('resolves FriendsPage to the real named export once loaded', async () => {
