@@ -4,14 +4,14 @@ import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { User } from '@data/entities';
+import * as friendsApi from '@features/friends/api/friendsApi';
 import { DuplicateFriendError } from '@features/friends/utils/duplicateFriend';
+import { ApiError } from '@lib/api/apiError';
 import { useUpdateFriend } from './useUpdateFriend';
 
-vi.mock('@services/instances', () => ({
-    userService: {
-        getAll: vi.fn(),
-        update: vi.fn(),
-    },
+vi.mock('@features/friends/api/friendsApi', () => ({
+    getAll: vi.fn(),
+    update: vi.fn(),
 }));
 
 function renderUpdateFriend() {
@@ -29,12 +29,11 @@ describe('useUpdateFriend', () => {
         vi.clearAllMocks();
     });
 
-    it('updates a user by id and invalidates the friends list', async () => {
-        const { userService } = await import('@services/instances');
+    it('updates a friend via the API and invalidates the friends list', async () => {
         const existing: User = { id: 'friend-1', name: 'Priya Sharma', email: 'priya@example.com' };
-        vi.mocked(userService.getAll).mockResolvedValue([existing]);
+        vi.mocked(friendsApi.getAll).mockResolvedValue([existing]);
         const updated: User = { id: 'friend-1', name: 'Priya S.', email: 'priya@example.com' };
-        vi.mocked(userService.update).mockResolvedValue(updated);
+        vi.mocked(friendsApi.update).mockResolvedValue(updated);
 
         const { result, invalidateSpy } = renderUpdateFriend();
 
@@ -42,7 +41,7 @@ describe('useUpdateFriend', () => {
 
         await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-        expect(userService.update).toHaveBeenCalledWith('friend-1', {
+        expect(friendsApi.update).toHaveBeenCalledWith('friend-1', {
             name: 'Priya S.',
             email: 'priya@example.com',
         });
@@ -50,10 +49,9 @@ describe('useUpdateFriend', () => {
     });
 
     it('does not block updating a friend against their own existing email', async () => {
-        const { userService } = await import('@services/instances');
         const existing: User = { id: 'friend-1', name: 'Priya Sharma', email: 'priya@example.com' };
-        vi.mocked(userService.getAll).mockResolvedValue([existing]);
-        vi.mocked(userService.update).mockResolvedValue(existing);
+        vi.mocked(friendsApi.getAll).mockResolvedValue([existing]);
+        vi.mocked(friendsApi.update).mockResolvedValue(existing);
 
         const { result } = renderUpdateFriend();
 
@@ -61,13 +59,12 @@ describe('useUpdateFriend', () => {
 
         await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-        expect(userService.update).toHaveBeenCalled();
+        expect(friendsApi.update).toHaveBeenCalled();
     });
 
     it('blocks the update when another friend already has the same email', async () => {
-        const { userService } = await import('@services/instances');
         const other: User = { id: 'friend-2', name: 'Jordan Lee', email: 'jordan@example.com' };
-        vi.mocked(userService.getAll).mockResolvedValue([other]);
+        vi.mocked(friendsApi.getAll).mockResolvedValue([other]);
 
         const { result } = renderUpdateFriend();
 
@@ -76,6 +73,21 @@ describe('useUpdateFriend', () => {
         await waitFor(() => expect(result.current.isError).toBe(true));
 
         expect(result.current.error).toBeInstanceOf(DuplicateFriendError);
-        expect(userService.update).not.toHaveBeenCalled();
+        expect(friendsApi.update).not.toHaveBeenCalled();
+    });
+
+    it('surfaces a server-side conflict as a DuplicateFriendError', async () => {
+        vi.mocked(friendsApi.getAll).mockResolvedValue([]);
+        vi.mocked(friendsApi.update).mockRejectedValue(
+            new ApiError('CONFLICT', 'A user with this email already exists', 409),
+        );
+
+        const { result } = renderUpdateFriend();
+
+        result.current.mutate({ id: 'friend-1', name: 'Priya S.', email: 'priya@example.com' });
+
+        await waitFor(() => expect(result.current.isError).toBe(true));
+
+        expect(result.current.error).toBeInstanceOf(DuplicateFriendError);
     });
 });

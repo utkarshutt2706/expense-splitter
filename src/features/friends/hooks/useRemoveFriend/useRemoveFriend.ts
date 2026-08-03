@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { groupService, userService } from '@services/instances';
+import { remove } from '@features/friends/api/friendsApi';
+import { ApiError } from '@lib/api/apiError';
 
 export class FriendInGroupError extends Error {
     constructor() {
@@ -14,12 +15,14 @@ export function useRemoveFriend() {
 
     return useMutation({
         mutationFn: async (friendId: string) => {
-            const groups = await groupService.getAll();
-            const isInGroup = groups.some((group) => group.memberIds.includes(friendId));
-            if (isInGroup) {
-                throw new FriendInGroupError();
+            try {
+                await remove(friendId);
+            } catch (error) {
+                if (error instanceof ApiError && error.code === 'CONFLICT') {
+                    throw new FriendInGroupError();
+                }
+                throw error;
             }
-            await userService.delete(friendId);
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['users', 'friends'] });

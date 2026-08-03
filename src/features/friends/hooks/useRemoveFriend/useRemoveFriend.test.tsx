@@ -3,16 +3,12 @@ import { renderHook, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { Group } from '@data/entities';
+import * as friendsApi from '@features/friends/api/friendsApi';
+import { ApiError } from '@lib/api/apiError';
 import { FriendInGroupError, useRemoveFriend } from './useRemoveFriend';
 
-vi.mock('@services/instances', () => ({
-    groupService: {
-        getAll: vi.fn(),
-    },
-    userService: {
-        delete: vi.fn(),
-    },
+vi.mock('@features/friends/api/friendsApi', () => ({
+    remove: vi.fn(),
 }));
 
 function renderRemoveFriend() {
@@ -30,10 +26,8 @@ describe('useRemoveFriend', () => {
         vi.clearAllMocks();
     });
 
-    it('deletes the friend when they are not part of any group', async () => {
-        const { groupService, userService } = await import('@services/instances');
-        vi.mocked(groupService.getAll).mockResolvedValue([]);
-        vi.mocked(userService.delete).mockResolvedValue(undefined);
+    it('deletes the friend via the API and invalidates the friends list', async () => {
+        vi.mocked(friendsApi.remove).mockResolvedValue(undefined);
 
         const { result, invalidateSpy } = renderRemoveFriend();
 
@@ -41,19 +35,18 @@ describe('useRemoveFriend', () => {
 
         await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-        expect(userService.delete).toHaveBeenCalledWith('friend-1');
+        expect(friendsApi.remove).toHaveBeenCalledWith('friend-1');
         expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['users', 'friends'] });
     });
 
-    it('blocks deletion when the friend is a member of a group', async () => {
-        const { groupService, userService } = await import('@services/instances');
-        const group: Group = {
-            id: 'group-1',
-            name: 'Trip',
-            memberIds: ['friend-1'],
-            createdAt: new Date().toISOString(),
-        };
-        vi.mocked(groupService.getAll).mockResolvedValue([group]);
+    it('surfaces a server-side conflict as a FriendInGroupError', async () => {
+        vi.mocked(friendsApi.remove).mockRejectedValue(
+            new ApiError(
+                'CONFLICT',
+                'Cannot delete a user referenced by an existing group or expense',
+                409,
+            ),
+        );
 
         const { result } = renderRemoveFriend();
 
@@ -62,6 +55,20 @@ describe('useRemoveFriend', () => {
         await waitFor(() => expect(result.current.isError).toBe(true));
 
         expect(result.current.error).toBeInstanceOf(FriendInGroupError);
-        expect(userService.delete).not.toHaveBeenCalled();
+    });
+
+    it('propagates other errors unchanged', async () => {
+        vi.mocked(friendsApi.remove).mockRejectedValue(
+            new ApiError('NOT_FOUND', 'User friend-1 not found', 404),
+        );
+
+        const { result } = renderRemoveFriend();
+
+        result.current.mutate('friend-1');
+
+        await waitFor(() => expect(result.current.isError).toBe(true));
+
+        expect(result.current.error).not.toBeInstanceOf(FriendInGroupError);
+        expect(result.current.error).toBeInstanceOf(ApiError);
     });
 });
