@@ -5,16 +5,14 @@ import { Link, useNavigate, useParams } from 'react-router';
 import { toast } from 'sonner';
 
 import { useCurrentUser } from '@app/hooks';
-import type { Expense, User } from '@data/entities';
+import type { User } from '@data/entities';
 import { ExpenseDetailSkeleton } from '@features/expenses/components/ExpenseDetailSkeleton';
 import { UpsertExpenseDialog } from '@features/expenses/components/UpsertExpenseDialog';
-import type {
-    UpsertExpenseFormInitialValues,
-    UpsertExpenseFormValues,
-} from '@features/expenses/components/UpsertExpenseForm';
+import type { UpsertExpenseFormValues } from '@features/expenses/components/UpsertExpenseForm';
 import { useDeleteExpense } from '@features/expenses/hooks/useDeleteExpense';
 import { useExpense } from '@features/expenses/hooks/useExpense';
 import { useUpdateExpense } from '@features/expenses/hooks/useUpdateExpense';
+import { buildEditExpenseInitialValues } from '@features/expenses/utils/buildEditExpenseInitialValues';
 import { useGroup, useGroupMembers } from '@features/groups';
 import { Avatar, ConfirmationDialog, FetchingIndicator, Skeleton } from '@shared/components';
 
@@ -27,33 +25,6 @@ const dateFormatter = new Intl.DateTimeFormat('en-US', {
 function memberLabel(member: User | undefined, currentUserId: string | undefined): string {
     if (!member) return 'Someone';
     return member.id === currentUserId ? 'You' : member.name;
-}
-
-function buildEditInitialValues(expense: Expense): UpsertExpenseFormInitialValues {
-    const splitValues: Record<string, string> = {};
-
-    if (expense.splitType === 'exact') {
-        for (const split of expense.splits) {
-            splitValues[split.userId] = split.amount.toString();
-        }
-    } else if (expense.splitType === 'percentage') {
-        for (const split of expense.splits) {
-            splitValues[split.userId] = ((split.amount / expense.amount) * 100).toFixed(2);
-        }
-    }
-    // Shares are left blank: only the resulting dollar amounts are persisted, not the
-    // original share counts, and share counts aren't recoverable from amounts alone
-    // (e.g. 2:1 and 4:2 produce identical splits) — editing a shares split means
-    // re-entering shares.
-
-    return {
-        description: expense.description,
-        amount: expense.amount,
-        paidByUserId: expense.paidByUserId,
-        participantUserIds: expense.splits.map((split) => split.userId),
-        splitType: expense.splitType,
-        splitValues,
-    };
 }
 
 export function ExpenseDetailPage() {
@@ -254,7 +225,7 @@ export function ExpenseDetailPage() {
                 open={isEditingExpense}
                 onOpenChange={setIsEditingExpense}
                 members={members ?? []}
-                initialValues={expense ? buildEditInitialValues(expense) : undefined}
+                initialValues={expense ? buildEditExpenseInitialValues(expense) : undefined}
                 onSubmit={handleUpdateExpense}
             />
         </div>

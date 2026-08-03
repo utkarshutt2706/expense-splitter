@@ -8,4 +8,5 @@ export { SearchInput } from './SearchInput';
 export { SearchInputSkeleton } from './SearchInputSkeleton';
 export { Skeleton } from './Skeleton';
 export { SkeletonList } from './SkeletonList';
+export { SwipeableRow, type SwipeAction } from './SwipeableRow';
 export { TopProgressBar } from './TopProgressBar';

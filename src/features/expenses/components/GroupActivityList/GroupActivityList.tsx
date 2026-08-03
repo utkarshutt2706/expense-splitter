@@ -1,13 +1,20 @@
-import { ArrowRightLeft } from 'lucide-react';
+import { ArrowRightLeft, Pencil, Trash2 } from 'lucide-react';
+import { useState } from 'react';
 import { Link } from 'react-router';
+import { toast } from 'sonner';
 
 import { useCurrentUser } from '@app/hooks';
 import type { Expense, Payment, User } from '@data/entities';
 import { ActivityRowSkeleton } from '@features/expenses/components/ActivityRowSkeleton';
+import { UpsertExpenseDialog } from '@features/expenses/components/UpsertExpenseDialog';
+import type { UpsertExpenseFormValues } from '@features/expenses/components/UpsertExpenseForm';
+import { useDeleteExpense } from '@features/expenses/hooks/useDeleteExpense';
 import { useExpenses } from '@features/expenses/hooks/useExpenses';
+import { useUpdateExpense } from '@features/expenses/hooks/useUpdateExpense';
+import { buildEditExpenseInitialValues } from '@features/expenses/utils/buildEditExpenseInitialValues';
 import { calculateExpenseInvolvement } from '@features/expenses/utils/calculateExpenseInvolvement';
 import { usePayments } from '@features/payments';
-import { Avatar, FetchingIndicator } from '@shared/components';
+import { Avatar, ConfirmationDialog, FetchingIndicator, SwipeableRow } from '@shared/components';
 
 interface GroupActivityListProps {
     readonly groupId: string;
@@ -48,30 +55,54 @@ interface ExpenseRowProps {
     readonly expense: Expense;
     readonly membersById: Map<string, User>;
     readonly currentUserId: string | undefined;
+    readonly onEdit: () => void;
+    readonly onDelete: () => void;
 }
 
-function ExpenseRow({ groupId, expense, membersById, currentUserId }: ExpenseRowProps) {
+function ExpenseRow({
+    groupId,
+    expense,
+    membersById,
+    currentUserId,
+    onEdit,
+    onDelete,
+}: ExpenseRowProps) {
     const payer = membersById.get(expense.paidByUserId);
     const involvement = involvementLabel(expense, currentUserId);
 
     return (
-        <Link
-            to={`/groups/${groupId}/expenses/${expense.id}`}
-            className="border-border hover:bg-muted flex items-center gap-3 rounded-lg border p-3"
+        <SwipeableRow
+            actions={[
+                { key: 'edit', label: 'Edit', icon: Pencil, onClick: onEdit },
+                {
+                    key: 'delete',
+                    label: 'Delete',
+                    icon: Trash2,
+                    tone: 'destructive',
+                    onClick: onDelete,
+                },
+            ]}
         >
-            <Avatar name={payer?.name ?? '?'} />
-            <div className="flex-1">
-                <p className="text-surface-foreground font-medium">{expense.description}</p>
-                <p className="text-muted-foreground text-sm">
-                    {memberLabel(payer, currentUserId)} paid ·{' '}
-                    {dateFormatter.format(new Date(expense.createdAt))}
-                </p>
-            </div>
-            <div className="flex flex-col items-end gap-0.5">
-                <p className="text-surface-foreground font-medium">₹{expense.amount.toFixed(2)}</p>
-                <p className={`text-xs ${involvement.className}`}>{involvement.text}</p>
-            </div>
-        </Link>
+            <Link
+                to={`/groups/${groupId}/expenses/${expense.id}`}
+                className="border-border hover:bg-muted flex items-center gap-3 rounded-lg border p-3"
+            >
+                <Avatar name={payer?.name ?? '?'} />
+                <div className="min-w-0 flex-1">
+                    <p className="text-surface-foreground font-medium">{expense.description}</p>
+                    <p className="text-muted-foreground text-sm">
+                        {memberLabel(payer, currentUserId)} paid ·{' '}
+                        {dateFormatter.format(new Date(expense.createdAt))}
+                    </p>
+                </div>
+                <div className="flex flex-col items-end gap-0.5">
+                    <p className="text-surface-foreground font-medium">
+                        ₹{expense.amount.toFixed(2)}
+                    </p>
+                    <p className={`text-xs ${involvement.className}`}>{involvement.text}</p>
+                </div>
+            </Link>
+        </SwipeableRow>
     );
 }
 
@@ -81,27 +112,54 @@ interface PaymentRowProps {
     readonly currentUserId: string | undefined;
 }
 
+function noop() {}
+
 // No detail page exists for a payment (it's a single atomic record, nothing to
 // drill into), so this renders as a plain div rather than a Link like ExpenseRow.
+// The drag-to-reveal actions are visible here but not yet functional — the
+// data layer has no update/delete for payments yet (IPaymentRepository only
+// has create + list-by-group); wiring these up is follow-up work.
 function PaymentRow({ payment, membersById, currentUserId }: PaymentRowProps) {
     const from = membersById.get(payment.fromUserId);
     const to = membersById.get(payment.toUserId);
 
     return (
-        <div className="border-border bg-owed/5 flex items-center gap-3 rounded-lg border p-3">
-            <span className="bg-owed/10 text-owed flex size-9 shrink-0 items-center justify-center rounded-full">
-                <ArrowRightLeft className="size-4" />
-            </span>
-            <div className="flex-1">
-                <p className="text-surface-foreground font-medium">
-                    {memberLabel(from, currentUserId)} paid {memberLabel(to, currentUserId)}
-                </p>
-                <p className="text-muted-foreground text-sm">
-                    {dateFormatter.format(new Date(payment.createdAt))}
-                </p>
+        <SwipeableRow
+            actions={[
+                {
+                    key: 'edit',
+                    label: 'Edit',
+                    icon: Pencil,
+                    onClick: noop,
+                    disabled: true,
+                    title: 'Editing payments is coming soon',
+                },
+                {
+                    key: 'delete',
+                    label: 'Delete',
+                    icon: Trash2,
+                    tone: 'destructive',
+                    onClick: noop,
+                    disabled: true,
+                    title: 'Deleting payments is coming soon',
+                },
+            ]}
+        >
+            <div className="border-border bg-owed/5 flex items-center gap-3 rounded-lg border p-3">
+                <span className="bg-owed/10 text-owed flex size-9 shrink-0 items-center justify-center rounded-full">
+                    <ArrowRightLeft className="size-4" />
+                </span>
+                <div className="min-w-0 flex-1">
+                    <p className="text-surface-foreground font-medium">
+                        {memberLabel(from, currentUserId)} paid {memberLabel(to, currentUserId)}
+                    </p>
+                    <p className="text-muted-foreground text-sm">
+                        {dateFormatter.format(new Date(payment.createdAt))}
+                    </p>
+                </div>
+                <p className="text-owed font-medium">₹{payment.amount.toFixed(2)}</p>
             </div>
-            <p className="text-owed font-medium">₹{payment.amount.toFixed(2)}</p>
-        </div>
+        </SwipeableRow>
     );
 }
 
@@ -127,6 +185,36 @@ export function GroupActivityList({
         isFetching: isPaymentsFetching,
         isError: isPaymentsError,
     } = usePayments(groupId);
+    const updateExpense = useUpdateExpense();
+    const deleteExpense = useDeleteExpense();
+    const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
+    const [deletingExpense, setDeletingExpense] = useState<Expense | null>(null);
+
+    const handleUpdateExpense = (values: UpsertExpenseFormValues) => {
+        if (!editingExpense) return;
+
+        const toastId = toast.loading('Expense is being updated…');
+        updateExpense.mutate(
+            { id: editingExpense.id, groupId, ...values },
+            {
+                onSuccess: () => toast.success('Expense updated', { id: toastId }),
+                onError: (error) => toast.error(error.message, { id: toastId }),
+            },
+        );
+    };
+
+    const handleDeleteExpense = () => {
+        if (!deletingExpense) return;
+
+        const toastId = toast.loading('Expense is being deleted…');
+        deleteExpense.mutate(
+            { id: deletingExpense.id, groupId },
+            {
+                onSuccess: () => toast.success('Expense deleted', { id: toastId }),
+                onError: (error) => toast.error(error.message, { id: toastId }),
+            },
+        );
+    };
 
     if (isExpensesLoading || isPaymentsLoading || isMembersLoading) {
         return (
@@ -177,31 +265,63 @@ export function GroupActivityList({
     const membersById = new Map(members.map((member) => [member.id, member]));
 
     return (
-        <ul className="flex flex-col gap-3">
-            {isRefreshing && (
-                <li className="text-muted-foreground flex items-center gap-2 text-sm">
-                    <FetchingIndicator />
-                    Updating…
-                </li>
-            )}
-            {items.map((item) => (
-                <li key={`${item.type}-${item.id}`}>
-                    {item.type === 'expense' ? (
-                        <ExpenseRow
-                            groupId={groupId}
-                            expense={item.expense}
-                            membersById={membersById}
-                            currentUserId={currentUser?.id}
-                        />
-                    ) : (
-                        <PaymentRow
-                            payment={item.payment}
-                            membersById={membersById}
-                            currentUserId={currentUser?.id}
-                        />
-                    )}
-                </li>
-            ))}
-        </ul>
+        <>
+            <ul className="flex flex-col gap-3">
+                {isRefreshing && (
+                    <li className="text-muted-foreground flex items-center gap-2 text-sm">
+                        <FetchingIndicator />
+                        Updating…
+                    </li>
+                )}
+                {items.map((item) => (
+                    <li key={`${item.type}-${item.id}`}>
+                        {item.type === 'expense' ? (
+                            <ExpenseRow
+                                groupId={groupId}
+                                expense={item.expense}
+                                membersById={membersById}
+                                currentUserId={currentUser?.id}
+                                onEdit={() => setEditingExpense(item.expense)}
+                                onDelete={() => setDeletingExpense(item.expense)}
+                            />
+                        ) : (
+                            <PaymentRow
+                                payment={item.payment}
+                                membersById={membersById}
+                                currentUserId={currentUser?.id}
+                            />
+                        )}
+                    </li>
+                ))}
+            </ul>
+
+            <UpsertExpenseDialog
+                mode="edit"
+                open={editingExpense !== null}
+                onOpenChange={(open) => {
+                    if (!open) setEditingExpense(null);
+                }}
+                members={members}
+                initialValues={
+                    editingExpense ? buildEditExpenseInitialValues(editingExpense) : undefined
+                }
+                onSubmit={handleUpdateExpense}
+            />
+
+            <ConfirmationDialog
+                open={deletingExpense !== null}
+                onOpenChange={(open) => {
+                    if (!open) setDeletingExpense(null);
+                }}
+                title={`Delete "${deletingExpense?.description ?? 'this expense'}"?`}
+                description="This will permanently remove the expense from this group."
+                confirmLabel="Delete"
+                destructive
+                onConfirm={() => {
+                    setDeletingExpense(null);
+                    handleDeleteExpense();
+                }}
+            />
+        </>
     );
 }

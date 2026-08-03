@@ -1,5 +1,5 @@
-export const MIN_LATENCY_MS = 100;
-export const MAX_LATENCY_MS = 200;
+export const MIN_LATENCY_MS = 500;
+export const MAX_LATENCY_MS = 600;
 
 function randomUnitInterval(): number {
     const [value] = crypto.getRandomValues(new Uint32Array(1));
