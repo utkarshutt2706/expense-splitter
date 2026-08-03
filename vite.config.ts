@@ -44,7 +44,6 @@ export default defineConfig(({ command }) => ({
             '@data': resolvePath('./src/data'),
             '@features': resolvePath('./src/features'),
             '@lib': resolvePath('./src/lib'),
-            '@services': resolvePath('./src/services'),
             '@shared': resolvePath('./src/shared'),
         },
     },

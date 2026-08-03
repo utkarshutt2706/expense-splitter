@@ -113,8 +113,8 @@ function noop() {}
 // No detail page exists for a payment (it's a single atomic record, nothing to
 // drill into), so this renders as a plain div rather than a Link like ExpenseRow.
 // The drag-to-reveal actions are visible here but not yet functional — the
-// data layer has no update/delete for payments yet (IPaymentRepository only
-// has create + list-by-group); wiring these up is follow-up work.
+// backend has no update/delete for payments (create + list-by-group only,
+// immutable once created); wiring these up is follow-up work.
 function PaymentRow({ payment, membersById, currentUserId }: PaymentRowProps) {
     const from = membersById.get(payment.fromUserId);
     const to = membersById.get(payment.toUserId);

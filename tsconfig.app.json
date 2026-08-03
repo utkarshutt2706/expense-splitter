@@ -21,7 +21,6 @@
             "@data/*": ["./src/data/*"],
             "@features/*": ["./src/features/*"],
             "@lib/*": ["./src/lib/*"],
-            "@services/*": ["./src/services/*"],
             "@shared/*": ["./src/shared/*"]
         },
 
