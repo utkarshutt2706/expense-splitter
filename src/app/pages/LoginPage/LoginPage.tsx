@@ -5,8 +5,10 @@ import { Link, Navigate, useNavigate } from 'react-router';
 import { z } from 'zod';
 
 import { useAuthStore } from '@app/stores';
+import logo from '@assets/logo.svg';
 import { useLogin } from '@features/auth';
 import { ApiError } from '@lib/api/apiError';
+import { LogoBackdrop, PasswordInput } from '@shared/components';
 
 const loginSchema = z.object({
     email: z.email('Enter a valid email address'),
@@ -44,19 +46,24 @@ export function LoginPage() {
     });
 
     return (
-        <div className="bg-surface flex min-h-svh items-center justify-center p-4">
+        <div className="bg-surface relative flex min-h-svh items-center justify-center overflow-hidden p-4">
+            <LogoBackdrop />
+
             <form
                 onSubmit={submit}
                 noValidate
-                className="border-border bg-surface flex w-full max-w-sm flex-col gap-4 rounded-lg border p-6 shadow-lg"
+                className="border-border bg-surface relative flex w-full max-w-sm flex-col gap-4 rounded-lg border p-6 shadow-lg"
             >
-                <div>
-                    <h1 className="font-display text-surface-foreground text-xl font-medium">
-                        Expense Splitter
-                    </h1>
-                    <p className="text-muted-foreground mt-1 text-sm">
-                        Sign in with your email and password.
-                    </p>
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h1 className="font-display text-surface-foreground text-xl font-medium">
+                            Expense Splitter
+                        </h1>
+                        <p className="text-muted-foreground mt-1 text-sm">
+                            Sign in with your email and password.
+                        </p>
+                    </div>
+                    <img src={logo} alt="" className="size-16" />
                 </div>
 
                 <div className="flex flex-col gap-1">
@@ -83,12 +90,10 @@ export function LoginPage() {
                     >
                         Password
                     </label>
-                    <input
+                    <PasswordInput
                         id="login-password"
-                        type="password"
                         autoComplete="current-password"
                         {...register('password')}
-                        className="border-border bg-surface text-surface-foreground focus-visible:ring-brand-500 rounded-md border px-3 py-2 text-sm outline-none focus-visible:ring-2"
                     />
                     {errors.password && (
                         <p className="text-xs text-red-600">{errors.password.message}</p>
