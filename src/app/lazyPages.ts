@@ -6,6 +6,12 @@ export const LoginPage = lazy(() =>
     })),
 );
 
+export const RegisterPage = lazy(() =>
+    import('@app/pages/RegisterPage').then((module) => ({
+        default: module.RegisterPage,
+    })),
+);
+
 export const FriendsPage = lazy(() =>
     import('@features/friends/pages/FriendsPage').then((module) => ({
         default: module.FriendsPage,

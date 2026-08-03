@@ -6,9 +6,9 @@ import type { User } from '@data/entities';
 interface AuthState {
     currentUserId: string | null;
     cachedUser: User | null;
-    login: (userId: string) => void;
+    accessToken: string | null;
+    login: (user: User, accessToken: string) => void;
     logout: () => void;
-    setCachedUser: (user: User) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -16,9 +16,10 @@ export const useAuthStore = create<AuthState>()(
         (set) => ({
             currentUserId: null,
             cachedUser: null,
-            login: (userId) => set({ currentUserId: userId }),
-            logout: () => set({ currentUserId: null, cachedUser: null }),
-            setCachedUser: (user) => set({ cachedUser: user }),
+            accessToken: null,
+            login: (user, accessToken) =>
+                set({ currentUserId: user.id, cachedUser: user, accessToken }),
+            logout: () => set({ currentUserId: null, cachedUser: null, accessToken: null }),
         }),
         { name: 'auth' },
     ),
