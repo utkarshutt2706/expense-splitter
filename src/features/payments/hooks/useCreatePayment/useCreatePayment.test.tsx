@@ -46,5 +46,6 @@ describe('useCreatePayment', () => {
             amount: 45,
         });
         expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['payments', 'group-1'] });
+        expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['balances', 'group-1'] });
     });
 });

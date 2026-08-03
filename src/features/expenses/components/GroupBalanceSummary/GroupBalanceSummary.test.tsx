@@ -1,19 +1,15 @@
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
-import type { Expense, Payment, User } from '@data/entities';
+import type { User } from '@data/entities';
 import { CURRENT_USER_ID } from '@data/seed';
-import { useExpenses } from '@features/expenses/hooks/useExpenses';
-import { usePayments } from '@features/payments';
+import type { GroupBalances, MemberBalance } from '@features/balances/api/balancesApi';
+import { useGroupBalances } from '@features/balances/hooks/useGroupBalances';
 import { GroupBalanceSummary } from './GroupBalanceSummary';
 
-vi.mock('@features/expenses/hooks/useExpenses', () => ({
-    useExpenses: vi.fn(),
-}));
-
-vi.mock('@features/payments', () => ({
-    usePayments: vi.fn(),
+vi.mock('@features/balances/hooks/useGroupBalances', () => ({
+    useGroupBalances: vi.fn(),
 }));
 
 vi.mock('@app/hooks', async (importOriginal) => ({
@@ -23,30 +19,8 @@ vi.mock('@app/hooks', async (importOriginal) => ({
     }),
 }));
 
-function expense(overrides: Partial<Expense>): Expense {
-    return {
-        id: 'expense-1',
-        groupId: 'group-1',
-        description: 'Groceries',
-        amount: 100,
-        paidByUserId: CURRENT_USER_ID,
-        splitType: 'equal',
-        splits: [],
-        createdAt: '2026-07-01T00:00:00.000Z',
-        ...overrides,
-    };
-}
-
-function payment(overrides: Partial<Payment>): Payment {
-    return {
-        id: 'payment-1',
-        groupId: 'group-1',
-        fromUserId: CURRENT_USER_ID,
-        toUserId: 'friend-1',
-        amount: 25,
-        createdAt: '2026-07-02T00:00:00.000Z',
-        ...overrides,
-    };
+function groupBalances(balances: MemberBalance[]): GroupBalances {
+    return { balances, settlements: [] };
 }
 
 const defaultMembers: User[] = [
@@ -63,66 +37,24 @@ function renderSummary(members: User[] = defaultMembers) {
 }
 
 describe('GroupBalanceSummary', () => {
-    beforeEach(() => {
-        vi.mocked(usePayments).mockReturnValue({
-            data: [],
-            isLoading: false,
-            isError: false,
-        } as unknown as ReturnType<typeof usePayments>);
-    });
-
     it('shows a loading skeleton while fetching', () => {
-        vi.mocked(useExpenses).mockReturnValue({
+        vi.mocked(useGroupBalances).mockReturnValue({
             data: undefined,
             isLoading: true,
             isError: false,
-        } as unknown as ReturnType<typeof useExpenses>);
+        } as unknown as ReturnType<typeof useGroupBalances>);
 
         const { container } = renderSummary();
 
         expect(container.querySelector('[aria-hidden="true"]')).toBeInTheDocument();
     });
 
-    it('shows a loading skeleton while payments are still fetching', () => {
-        vi.mocked(useExpenses).mockReturnValue({
-            data: [],
-            isLoading: false,
-            isError: false,
-        } as unknown as ReturnType<typeof useExpenses>);
-        vi.mocked(usePayments).mockReturnValue({
-            data: undefined,
-            isLoading: true,
-            isError: false,
-        } as unknown as ReturnType<typeof usePayments>);
-
-        const { container } = renderSummary();
-
-        expect(container.querySelector('[aria-hidden="true"]')).toBeInTheDocument();
-    });
-
-    it('shows an error message when expenses fail to load', () => {
-        vi.mocked(useExpenses).mockReturnValue({
+    it('shows an error message when balances fail to load', () => {
+        vi.mocked(useGroupBalances).mockReturnValue({
             data: undefined,
             isLoading: false,
             isError: true,
-        } as unknown as ReturnType<typeof useExpenses>);
-
-        renderSummary();
-
-        expect(screen.getByText(/couldn't load balance/i)).toBeInTheDocument();
-    });
-
-    it('shows an error message when payments fail to load', () => {
-        vi.mocked(useExpenses).mockReturnValue({
-            data: [],
-            isLoading: false,
-            isError: false,
-        } as unknown as ReturnType<typeof useExpenses>);
-        vi.mocked(usePayments).mockReturnValue({
-            data: undefined,
-            isLoading: false,
-            isError: true,
-        } as unknown as ReturnType<typeof usePayments>);
+        } as unknown as ReturnType<typeof useGroupBalances>);
 
         renderSummary();
 
@@ -130,19 +62,14 @@ describe('GroupBalanceSummary', () => {
     });
 
     it('shows "you are owed" in the owed color, with a neutral link to the balance page', () => {
-        vi.mocked(useExpenses).mockReturnValue({
-            data: [
-                expense({
-                    paidByUserId: CURRENT_USER_ID,
-                    splits: [
-                        { userId: CURRENT_USER_ID, amount: 50 },
-                        { userId: 'friend-1', amount: 50 },
-                    ],
-                }),
-            ],
+        vi.mocked(useGroupBalances).mockReturnValue({
+            data: groupBalances([
+                { userId: CURRENT_USER_ID, balance: 50 },
+                { userId: 'friend-1', balance: -50 },
+            ]),
             isLoading: false,
             isError: false,
-        } as unknown as ReturnType<typeof useExpenses>);
+        } as unknown as ReturnType<typeof useGroupBalances>);
 
         renderSummary();
 
@@ -154,19 +81,14 @@ describe('GroupBalanceSummary', () => {
     });
 
     it('shows "you owe" in the owe color, with a neutral link to the balance page', () => {
-        vi.mocked(useExpenses).mockReturnValue({
-            data: [
-                expense({
-                    paidByUserId: 'friend-1',
-                    splits: [
-                        { userId: CURRENT_USER_ID, amount: 50 },
-                        { userId: 'friend-1', amount: 50 },
-                    ],
-                }),
-            ],
+        vi.mocked(useGroupBalances).mockReturnValue({
+            data: groupBalances([
+                { userId: CURRENT_USER_ID, balance: -50 },
+                { userId: 'friend-1', balance: 50 },
+            ]),
             isLoading: false,
             isError: false,
-        } as unknown as ReturnType<typeof useExpenses>);
+        } as unknown as ReturnType<typeof useGroupBalances>);
 
         renderSummary();
 
@@ -177,11 +99,14 @@ describe('GroupBalanceSummary', () => {
     });
 
     it('shows a settled message and a celebratory note instead of a link when the whole group is settled', () => {
-        vi.mocked(useExpenses).mockReturnValue({
-            data: [],
+        vi.mocked(useGroupBalances).mockReturnValue({
+            data: groupBalances([
+                { userId: CURRENT_USER_ID, balance: 0 },
+                { userId: 'friend-1', balance: 0 },
+            ]),
             isLoading: false,
             isError: false,
-        } as unknown as ReturnType<typeof useExpenses>);
+        } as unknown as ReturnType<typeof useGroupBalances>);
 
         renderSummary();
 
@@ -193,19 +118,15 @@ describe('GroupBalanceSummary', () => {
     });
 
     it('still links to the balance page when the current user is settled but another member is not', () => {
-        vi.mocked(useExpenses).mockReturnValue({
-            data: [
-                expense({
-                    paidByUserId: 'friend-1',
-                    splits: [
-                        { userId: 'friend-1', amount: 50 },
-                        { userId: 'friend-2', amount: 50 },
-                    ],
-                }),
-            ],
+        vi.mocked(useGroupBalances).mockReturnValue({
+            data: groupBalances([
+                { userId: CURRENT_USER_ID, balance: 0 },
+                { userId: 'friend-1', balance: -50 },
+                { userId: 'friend-2', balance: 50 },
+            ]),
             isLoading: false,
             isError: false,
-        } as unknown as ReturnType<typeof useExpenses>);
+        } as unknown as ReturnType<typeof useGroupBalances>);
 
         renderSummary([
             ...defaultMembers,
@@ -219,40 +140,13 @@ describe('GroupBalanceSummary', () => {
         expect(screen.queryByText(/this group is all settled/i)).not.toBeInTheDocument();
     });
 
-    it('folds a recorded payment into the displayed balance', () => {
-        vi.mocked(useExpenses).mockReturnValue({
-            data: [
-                expense({
-                    paidByUserId: 'friend-1',
-                    splits: [
-                        { userId: CURRENT_USER_ID, amount: 50 },
-                        { userId: 'friend-1', amount: 50 },
-                    ],
-                }),
-            ],
-            isLoading: false,
-            isError: false,
-        } as unknown as ReturnType<typeof useExpenses>);
-        vi.mocked(usePayments).mockReturnValue({
-            data: [payment({ fromUserId: CURRENT_USER_ID, toUserId: 'friend-1', amount: 50 })],
-            isLoading: false,
-            isError: false,
-        } as unknown as ReturnType<typeof usePayments>);
-
-        renderSummary();
-
-        // Only these two members exist and both net to zero, so the whole group is
-        // settled — same single celebratory-note case as above, not the per-user text.
-        expect(screen.getByText(/this group is all settled/i)).toHaveClass('text-settled');
-    });
-
     it('shows a refreshing indicator during a background refetch, not the loading skeleton', () => {
-        vi.mocked(useExpenses).mockReturnValue({
-            data: [],
+        vi.mocked(useGroupBalances).mockReturnValue({
+            data: groupBalances([]),
             isLoading: false,
             isFetching: true,
             isError: false,
-        } as unknown as ReturnType<typeof useExpenses>);
+        } as unknown as ReturnType<typeof useGroupBalances>);
 
         const { container } = renderSummary();
 
@@ -261,12 +155,12 @@ describe('GroupBalanceSummary', () => {
     });
 
     it('does not show a refreshing indicator once the background refetch settles', () => {
-        vi.mocked(useExpenses).mockReturnValue({
-            data: [],
+        vi.mocked(useGroupBalances).mockReturnValue({
+            data: groupBalances([]),
             isLoading: false,
             isFetching: false,
             isError: false,
-        } as unknown as ReturnType<typeof useExpenses>);
+        } as unknown as ReturnType<typeof useGroupBalances>);
 
         renderSummary();
 

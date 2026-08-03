@@ -1,12 +1,12 @@
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
-import type { Expense, Group, User } from '@data/entities';
+import type { Group, User } from '@data/entities';
 import { CURRENT_USER_ID } from '@data/seed';
-import { useExpenses } from '@features/expenses/hooks/useExpenses';
+import type { GroupBalances } from '@features/balances/api/balancesApi';
+import { useGroupBalances } from '@features/balances/hooks/useGroupBalances';
 import { useGroup, useGroupMembers } from '@features/groups';
-import { usePayments } from '@features/payments';
 import { GroupBalancePage } from './GroupBalancePage';
 
 vi.mock('react-router', async () => {
@@ -19,12 +19,8 @@ vi.mock('@features/groups', () => ({
     useGroupMembers: vi.fn(),
 }));
 
-vi.mock('@features/expenses/hooks/useExpenses', () => ({
-    useExpenses: vi.fn(),
-}));
-
-vi.mock('@features/payments', () => ({
-    usePayments: vi.fn(),
+vi.mock('@features/balances/hooks/useGroupBalances', () => ({
+    useGroupBalances: vi.fn(),
 }));
 
 vi.mock('../../components/GroupBalanceAccordionList', () => ({
@@ -47,21 +43,13 @@ const members: User[] = [
     { id: 'friend-1', name: 'Abhinav', email: 'abhinav@example.com' },
 ];
 
-const expenses: Expense[] = [
-    {
-        id: 'expense-1',
-        groupId: 'group-1',
-        description: 'Daaru',
-        amount: 100,
-        paidByUserId: CURRENT_USER_ID,
-        splitType: 'equal',
-        splits: [
-            { userId: CURRENT_USER_ID, amount: 50 },
-            { userId: 'friend-1', amount: 50 },
-        ],
-        createdAt: '2026-07-01T00:00:00.000Z',
-    },
-];
+const groupBalances: GroupBalances = {
+    balances: [
+        { userId: CURRENT_USER_ID, balance: 50 },
+        { userId: 'friend-1', balance: -50 },
+    ],
+    settlements: [{ fromUserId: 'friend-1', toUserId: CURRENT_USER_ID, amount: 50 }],
+};
 
 function renderPage() {
     return render(
@@ -72,14 +60,6 @@ function renderPage() {
 }
 
 describe('GroupBalancePage', () => {
-    beforeEach(() => {
-        vi.mocked(usePayments).mockReturnValue({
-            data: [],
-            isLoading: false,
-            isError: false,
-        } as unknown as ReturnType<typeof usePayments>);
-    });
-
     it('shows a loading message while fetching', () => {
         vi.mocked(useGroup).mockReturnValue({
             data: undefined,
@@ -90,11 +70,11 @@ describe('GroupBalancePage', () => {
             data: [],
             isLoading: true,
         } as unknown as ReturnType<typeof useGroupMembers>);
-        vi.mocked(useExpenses).mockReturnValue({
-            data: [],
+        vi.mocked(useGroupBalances).mockReturnValue({
+            data: undefined,
             isLoading: true,
             isError: false,
-        } as unknown as ReturnType<typeof useExpenses>);
+        } as unknown as ReturnType<typeof useGroupBalances>);
 
         renderPage();
 
@@ -111,18 +91,18 @@ describe('GroupBalancePage', () => {
             data: [],
             isLoading: false,
         } as unknown as ReturnType<typeof useGroupMembers>);
-        vi.mocked(useExpenses).mockReturnValue({
-            data: [],
+        vi.mocked(useGroupBalances).mockReturnValue({
+            data: undefined,
             isLoading: false,
             isError: false,
-        } as unknown as ReturnType<typeof useExpenses>);
+        } as unknown as ReturnType<typeof useGroupBalances>);
 
         renderPage();
 
         expect(screen.getByText(/couldn't load balances/i)).toBeInTheDocument();
     });
 
-    it('shows an error message when expenses fail to load', () => {
+    it('shows an error message when balances fail to load', () => {
         vi.mocked(useGroup).mockReturnValue({
             data: group,
             isLoading: false,
@@ -132,11 +112,11 @@ describe('GroupBalancePage', () => {
             data: members,
             isLoading: false,
         } as unknown as ReturnType<typeof useGroupMembers>);
-        vi.mocked(useExpenses).mockReturnValue({
+        vi.mocked(useGroupBalances).mockReturnValue({
             data: undefined,
             isLoading: false,
             isError: true,
-        } as unknown as ReturnType<typeof useExpenses>);
+        } as unknown as ReturnType<typeof useGroupBalances>);
 
         renderPage();
 
@@ -153,11 +133,11 @@ describe('GroupBalancePage', () => {
             data: members,
             isLoading: false,
         } as unknown as ReturnType<typeof useGroupMembers>);
-        vi.mocked(useExpenses).mockReturnValue({
-            data: [],
+        vi.mocked(useGroupBalances).mockReturnValue({
+            data: { balances: [], settlements: [] },
             isLoading: false,
             isError: false,
-        } as unknown as ReturnType<typeof useExpenses>);
+        } as unknown as ReturnType<typeof useGroupBalances>);
 
         renderPage();
 
@@ -166,32 +146,6 @@ describe('GroupBalancePage', () => {
             '/groups/group-1',
         );
         expect(screen.getByRole('heading', { name: 'Daaru Party' })).toBeInTheDocument();
-    });
-
-    it('shows an error message when payments fail to load', () => {
-        vi.mocked(useGroup).mockReturnValue({
-            data: group,
-            isLoading: false,
-            isError: false,
-        } as unknown as ReturnType<typeof useGroup>);
-        vi.mocked(useGroupMembers).mockReturnValue({
-            data: members,
-            isLoading: false,
-        } as unknown as ReturnType<typeof useGroupMembers>);
-        vi.mocked(useExpenses).mockReturnValue({
-            data: [],
-            isLoading: false,
-            isError: false,
-        } as unknown as ReturnType<typeof useExpenses>);
-        vi.mocked(usePayments).mockReturnValue({
-            data: undefined,
-            isLoading: false,
-            isError: true,
-        } as unknown as ReturnType<typeof usePayments>);
-
-        renderPage();
-
-        expect(screen.getByText(/couldn't load balances/i)).toBeInTheDocument();
     });
 
     it('includes every member, including the current user, in the accordion list', () => {
@@ -204,11 +158,11 @@ describe('GroupBalancePage', () => {
             data: members,
             isLoading: false,
         } as unknown as ReturnType<typeof useGroupMembers>);
-        vi.mocked(useExpenses).mockReturnValue({
-            data: expenses,
+        vi.mocked(useGroupBalances).mockReturnValue({
+            data: groupBalances,
             isLoading: false,
             isError: false,
-        } as unknown as ReturnType<typeof useExpenses>);
+        } as unknown as ReturnType<typeof useGroupBalances>);
 
         renderPage();
 
@@ -227,12 +181,12 @@ describe('GroupBalancePage', () => {
             data: members,
             isLoading: false,
         } as unknown as ReturnType<typeof useGroupMembers>);
-        vi.mocked(useExpenses).mockReturnValue({
-            data: expenses,
+        vi.mocked(useGroupBalances).mockReturnValue({
+            data: groupBalances,
             isLoading: false,
             isFetching: true,
             isError: false,
-        } as unknown as ReturnType<typeof useExpenses>);
+        } as unknown as ReturnType<typeof useGroupBalances>);
 
         renderPage();
 
@@ -250,12 +204,12 @@ describe('GroupBalancePage', () => {
             data: members,
             isLoading: false,
         } as unknown as ReturnType<typeof useGroupMembers>);
-        vi.mocked(useExpenses).mockReturnValue({
-            data: expenses,
+        vi.mocked(useGroupBalances).mockReturnValue({
+            data: groupBalances,
             isLoading: false,
             isFetching: false,
             isError: false,
-        } as unknown as ReturnType<typeof useExpenses>);
+        } as unknown as ReturnType<typeof useGroupBalances>);
 
         renderPage();
 

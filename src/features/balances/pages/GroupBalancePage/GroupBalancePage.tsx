@@ -2,14 +2,11 @@ import { ArrowLeft } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { Link, useParams } from 'react-router';
 
-import { useExpenses } from '@features/expenses/hooks/useExpenses';
-import { calculateNetBalance } from '@features/expenses/utils/calculateNetBalance';
 import { useGroup, useGroupMembers } from '@features/groups';
-import { usePayments } from '@features/payments';
 import { FetchingIndicator, Skeleton } from '@shared/components';
 import { GroupBalanceAccordionList } from '../../components/GroupBalanceAccordionList';
 import { GroupBalanceListSkeleton } from '../../components/GroupBalanceListSkeleton';
-import { simplifyDebts } from '../../utils/simplifyDebts';
+import { useGroupBalances } from '../../hooks/useGroupBalances';
 
 export function GroupBalancePage() {
     const { groupId } = useParams<{ groupId: string }>();
@@ -25,27 +22,19 @@ export function GroupBalancePage() {
         isFetching: isMembersFetching,
     } = useGroupMembers(group?.memberIds ?? []);
     const {
-        data: expenses,
-        isLoading: isExpensesLoading,
-        isFetching: isExpensesFetching,
-        isError: isExpensesError,
-    } = useExpenses(groupId ?? '');
-    const {
-        data: payments,
-        isLoading: isPaymentsLoading,
-        isFetching: isPaymentsFetching,
-        isError: isPaymentsError,
-    } = usePayments(groupId ?? '');
+        data: groupBalances,
+        isLoading: isBalancesLoading,
+        isFetching: isBalancesFetching,
+        isError: isBalancesError,
+    } = useGroupBalances(groupId ?? '');
 
-    const isLoading = isGroupLoading || isMembersLoading || isExpensesLoading || isPaymentsLoading;
-    const isError = isGroupError || isExpensesError || isPaymentsError;
+    const isLoading = isGroupLoading || isMembersLoading || isBalancesLoading;
+    const isError = isGroupError || isBalancesError;
     // isLoading only covers the very first fetch — settling up (or any other
     // mutation invalidating these queries) refetches in the background with
     // isLoading staying false, so without this the page would just silently sit
     // stale for the invalidated refetch's own latency.
-    const isRefreshing =
-        !isLoading &&
-        (isGroupFetching || isMembersFetching || isExpensesFetching || isPaymentsFetching);
+    const isRefreshing = !isLoading && (isGroupFetching || isMembersFetching || isBalancesFetching);
 
     let content: ReactNode;
     if (isLoading) {
@@ -59,17 +48,9 @@ export function GroupBalancePage() {
     } else {
         const allMembers = members ?? [];
         const netBalances = new Map(
-            allMembers.map((member) => [
-                member.id,
-                calculateNetBalance(expenses ?? [], payments ?? [], member.id),
-            ]),
+            (groupBalances?.balances ?? []).map((balance) => [balance.userId, balance.balance]),
         );
-        const transactions = simplifyDebts(
-            allMembers.map((member) => ({
-                userId: member.id,
-                amount: netBalances.get(member.id) ?? 0,
-            })),
-        );
+        const transactions = groupBalances?.settlements ?? [];
 
         content = (
             <GroupBalanceAccordionList

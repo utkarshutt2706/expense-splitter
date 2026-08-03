@@ -6,8 +6,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { User } from '@data/entities';
 import { CURRENT_USER_ID } from '@data/seed';
+import type { SettlementTransaction } from '@features/balances/api/balancesApi';
 import { useCreatePayment } from '@features/payments/hooks/useCreatePayment';
-import type { SettlementTransaction } from '../../utils/simplifyDebts';
 import { MemberBalanceAccordion } from './MemberBalanceAccordion';
 
 vi.mock('@features/payments/hooks/useCreatePayment', () => ({

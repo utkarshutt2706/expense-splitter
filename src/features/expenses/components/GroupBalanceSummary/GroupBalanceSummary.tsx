@@ -2,9 +2,7 @@ import { Link } from 'react-router';
 
 import { useCurrentUser } from '@app/hooks';
 import type { User } from '@data/entities';
-import { useExpenses } from '@features/expenses/hooks/useExpenses';
-import { calculateNetBalance } from '@features/expenses/utils/calculateNetBalance';
-import { usePayments } from '@features/payments';
+import { useGroupBalances } from '@features/balances/hooks/useGroupBalances';
 import { FetchingIndicator, Skeleton } from '@shared/components';
 
 interface GroupBalanceSummaryProps {
@@ -15,23 +13,17 @@ interface GroupBalanceSummaryProps {
 export function GroupBalanceSummary({ groupId, members }: GroupBalanceSummaryProps) {
     const { data: currentUser } = useCurrentUser();
     const {
-        data: expenses,
-        isLoading: isExpensesLoading,
-        isFetching: isExpensesFetching,
-        isError: isExpensesError,
-    } = useExpenses(groupId);
-    const {
-        data: payments,
-        isLoading: isPaymentsLoading,
-        isFetching: isPaymentsFetching,
-        isError: isPaymentsError,
-    } = usePayments(groupId);
+        data: groupBalances,
+        isLoading: isBalancesLoading,
+        isFetching: isBalancesFetching,
+        isError: isBalancesError,
+    } = useGroupBalances(groupId);
 
-    if (isExpensesLoading || isPaymentsLoading) {
+    if (isBalancesLoading) {
         return <Skeleton className="h-7 w-48" />;
     }
 
-    if (isExpensesError || isPaymentsError) {
+    if (isBalancesError) {
         return <p className="text-muted-foreground text-sm">Couldn't load balance.</p>;
     }
 
@@ -39,17 +31,18 @@ export function GroupBalanceSummary({ groupId, members }: GroupBalanceSummaryPro
     // queries (recording a payment, settling up) refetches in the background with
     // isLoading staying false the whole time, so without this the balance would
     // just silently sit stale for the invalidated refetch's own latency.
-    const isRefreshing = isExpensesFetching || isPaymentsFetching;
+    const isRefreshing = isBalancesFetching;
 
-    const balance = calculateNetBalance(expenses ?? [], payments ?? [], currentUser?.id ?? '');
+    const balancesByUserId = new Map(
+        (groupBalances?.balances ?? []).map((balance) => [balance.userId, balance.balance]),
+    );
+    const balance = balancesByUserId.get(currentUser?.id ?? '') ?? 0;
     // members is briefly [] while useGroupMembers is still loading (this component's
-    // own expenses query can resolve first) — members.every() on an empty array is
+    // own balances query can resolve first) — members.every() on an empty array is
     // vacuously true, so guard against treating that transient state as "settled".
     const isGroupFullySettled =
         members.length > 0 &&
-        members.every(
-            (member) => calculateNetBalance(expenses ?? [], payments ?? [], member.id) === 0,
-        );
+        members.every((member) => (balancesByUserId.get(member.id) ?? 0) === 0);
 
     // A fully settled group implies the current user's own balance is zero too, so
     // showing both "You're all settled up" and the celebratory note would just be

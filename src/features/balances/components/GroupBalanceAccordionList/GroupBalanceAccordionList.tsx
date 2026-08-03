@@ -2,7 +2,7 @@ import * as Accordion from '@radix-ui/react-accordion';
 
 import { useCurrentUser } from '@app/hooks';
 import type { User } from '@data/entities';
-import type { SettlementTransaction } from '../../utils/simplifyDebts';
+import type { SettlementTransaction } from '@features/balances/api/balancesApi';
 import { MemberBalanceAccordion } from '../MemberBalanceAccordion';
 
 interface GroupBalanceAccordionListProps {
