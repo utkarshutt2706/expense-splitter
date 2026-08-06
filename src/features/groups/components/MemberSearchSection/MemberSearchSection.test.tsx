@@ -3,7 +3,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { User } from '@data/entities';
 import { useUserLookup } from '@features/users/hooks';
-import { ApiError } from '@lib/api/apiError';
 import { MemberSearchSection } from './MemberSearchSection';
 
 vi.mock('@features/users/hooks', () => ({
@@ -40,10 +39,7 @@ describe('MemberSearchSection', () => {
                 visibleUsers={users}
                 selectedIds={[]}
                 onToggle={noop}
-                pendingInvites={[]}
                 onFound={noop}
-                onInvite={noop}
-                onRemoveInvite={noop}
             />,
         );
 
@@ -61,10 +57,7 @@ describe('MemberSearchSection', () => {
                 visibleUsers={users}
                 selectedIds={[]}
                 onToggle={noop}
-                pendingInvites={[]}
                 onFound={noop}
-                onInvite={noop}
-                onRemoveInvite={noop}
             />,
         );
 
@@ -84,38 +77,13 @@ describe('MemberSearchSection', () => {
                 visibleUsers={users}
                 selectedIds={[]}
                 onToggle={onToggle}
-                pendingInvites={[]}
                 onFound={noop}
-                onInvite={noop}
-                onRemoveInvite={noop}
             />,
         );
 
         fireEvent.click(screen.getByRole('checkbox', { name: /priya sharma/i }));
 
         expect(onToggle).toHaveBeenCalledWith('friend-1');
-    });
-
-    it('renders pending invite chips and reports removal', () => {
-        const onRemoveInvite = vi.fn();
-        render(
-            <MemberSearchSection
-                search=""
-                onSearchChange={noop}
-                visibleUsers={users}
-                selectedIds={[]}
-                onToggle={noop}
-                pendingInvites={['sam@example.com']}
-                onFound={noop}
-                onInvite={noop}
-                onRemoveInvite={onRemoveInvite}
-            />,
-        );
-
-        expect(screen.getByText('sam@example.com')).toBeInTheDocument();
-        fireEvent.click(screen.getByRole('button', { name: /remove invite/i }));
-
-        expect(onRemoveInvite).toHaveBeenCalledWith('sam@example.com');
     });
 
     it('passes currentUserId/lockCurrentUser through to the member checklist', () => {
@@ -126,10 +94,7 @@ describe('MemberSearchSection', () => {
                 visibleUsers={users}
                 selectedIds={['friend-1']}
                 onToggle={noop}
-                pendingInvites={[]}
                 onFound={noop}
-                onInvite={noop}
-                onRemoveInvite={noop}
                 currentUserId="friend-1"
                 lockCurrentUser
             />,
@@ -154,10 +119,7 @@ describe('MemberSearchSection', () => {
                 visibleUsers={[]}
                 selectedIds={[]}
                 onToggle={noop}
-                pendingInvites={[]}
                 onFound={onFound}
-                onInvite={noop}
-                onRemoveInvite={noop}
             />,
         );
         act(() => {
@@ -169,37 +131,5 @@ describe('MemberSearchSection', () => {
 
         vi.useRealTimers();
         expect(onFound).toHaveBeenCalledWith(jamie);
-    });
-
-    it('surfaces an invite prompt for an unregistered email', () => {
-        mockLookup({
-            isError: true,
-            error: new ApiError('NOT_FOUND', 'No registered user matches', 404),
-        });
-        vi.useFakeTimers();
-
-        const onInvite = vi.fn();
-        render(
-            <MemberSearchSection
-                search="sam@example.com"
-                onSearchChange={noop}
-                visibleUsers={[]}
-                selectedIds={[]}
-                onToggle={noop}
-                pendingInvites={[]}
-                onFound={noop}
-                onInvite={onInvite}
-                onRemoveInvite={noop}
-            />,
-        );
-        act(() => {
-            vi.advanceTimersByTime(400);
-        });
-
-        expect(screen.getByText(/isn't registered with us yet/i)).toBeInTheDocument();
-        fireEvent.click(screen.getByRole('button', { name: /invite them/i }));
-
-        vi.useRealTimers();
-        expect(onInvite).toHaveBeenCalledWith('sam@example.com');
     });
 });

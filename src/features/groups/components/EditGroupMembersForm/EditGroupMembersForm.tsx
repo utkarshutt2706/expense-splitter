@@ -8,7 +8,6 @@ import { MemberSearchSection } from '../MemberSearchSection';
 
 export interface EditGroupMembersFormValues {
     memberIds: string[];
-    inviteEmails: string[];
 }
 
 interface EditGroupMembersFormProps {
@@ -25,17 +24,8 @@ export function EditGroupMembersForm({
     onCancel,
 }: EditGroupMembersFormProps) {
     const { data: currentUser } = useCurrentUser();
-    const {
-        search,
-        setSearch,
-        memberIds,
-        toggleMember,
-        inviteEmails,
-        addFoundUser,
-        addInvite,
-        removeInvite,
-        visibleUsers,
-    } = useMemberSearchSelection(users, initialMemberIds);
+    const { search, setSearch, memberIds, toggleMember, addFoundUser, visibleUsers } =
+        useMemberSearchSelection(users, initialMemberIds);
 
     const handleToggle = (id: string) => {
         if (id === currentUser?.id) return;
@@ -44,7 +34,7 @@ export function EditGroupMembersForm({
 
     const submit = (event: SubmitEvent<HTMLFormElement>) => {
         event.preventDefault();
-        onSubmit({ memberIds, inviteEmails });
+        onSubmit({ memberIds });
     };
 
     return (
@@ -55,10 +45,7 @@ export function EditGroupMembersForm({
                 visibleUsers={visibleUsers}
                 selectedIds={memberIds}
                 onToggle={handleToggle}
-                pendingInvites={inviteEmails}
                 onFound={addFoundUser}
-                onInvite={addInvite}
-                onRemoveInvite={removeInvite}
                 emptyMessage="No members to show."
                 currentUserId={currentUser?.id ?? ''}
                 lockCurrentUser

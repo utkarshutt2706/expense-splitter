@@ -45,4 +45,24 @@ describe('authApi', () => {
         });
         expect(session).toEqual({ user, accessToken: 'test-token' });
     });
+
+    it('register forwards an inviteToken when given one', async () => {
+        vi.mocked(httpClient.post).mockResolvedValue({
+            data: { user, accessToken: 'test-token' },
+        });
+
+        await register({
+            name: 'Utkarsh Srivastava',
+            email: 'utkarsh@example.com',
+            password: 'password123',
+            inviteToken: 'raw-token',
+        });
+
+        expect(httpClient.post).toHaveBeenCalledWith('/auth/register', {
+            name: 'Utkarsh Srivastava',
+            email: 'utkarsh@example.com',
+            password: 'password123',
+            inviteToken: 'raw-token',
+        });
+    });
 });

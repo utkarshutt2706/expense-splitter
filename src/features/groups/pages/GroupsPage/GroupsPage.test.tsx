@@ -15,7 +15,6 @@ vi.mock('sonner', () => ({
     toast: {
         loading: vi.fn(() => 'toast-id'),
         success: vi.fn(),
-        warning: vi.fn(),
         error: vi.fn(),
     },
 }));
@@ -28,14 +27,12 @@ vi.mock('@features/groups', () => ({
         onSubmit,
     }: {
         open: boolean;
-        onSubmit: (values: { name: string; memberIds: string[]; inviteEmails: string[] }) => void;
+        onSubmit: (values: { name: string; memberIds: string[] }) => void;
     }) =>
         open ? (
             <button
                 type="button"
-                onClick={() =>
-                    onSubmit({ name: 'Weekend Trip', memberIds: ['friend-1'], inviteEmails: [] })
-                }
+                onClick={() => onSubmit({ name: 'Weekend Trip', memberIds: ['friend-1'] })}
             >
                 Fake create group submit
             </button>
@@ -202,9 +199,9 @@ describe('GroupsPage', () => {
         });
 
         it('shows a loading toast immediately, then updates it to success', () => {
-            let onSuccess: ((result: { failedInviteEmails: string[] }) => void) | undefined;
+            let onSuccess: (() => void) | undefined;
             vi.mocked(useCreateGroup).mockReturnValue({
-                mutate: vi.fn((_values, options: { onSuccess?: typeof onSuccess }) => {
+                mutate: vi.fn((_values, options: { onSuccess?: () => void }) => {
                     onSuccess = options.onSuccess;
                 }),
             } as unknown as ReturnType<typeof useCreateGroup>);
@@ -216,30 +213,9 @@ describe('GroupsPage', () => {
 
             expect(toast.loading).toHaveBeenCalledWith('Group is being created…');
 
-            onSuccess?.({ failedInviteEmails: [] });
+            onSuccess?.();
 
             expect(toast.success).toHaveBeenCalledWith('Group created', { id: 'toast-id' });
-        });
-
-        it('warns when the group was created but an invite failed', () => {
-            let onSuccess: ((result: { failedInviteEmails: string[] }) => void) | undefined;
-            vi.mocked(useCreateGroup).mockReturnValue({
-                mutate: vi.fn((_values, options: { onSuccess?: typeof onSuccess }) => {
-                    onSuccess = options.onSuccess;
-                }),
-            } as unknown as ReturnType<typeof useCreateGroup>);
-
-            renderPage();
-
-            fireEvent.click(screen.getByRole('button', { name: /create group/i }));
-            fireEvent.click(screen.getByText(/fake create group submit/i));
-
-            onSuccess?.({ failedInviteEmails: ['jamie@example.com'] });
-
-            expect(toast.warning).toHaveBeenCalledWith(
-                "Group created, but couldn't invite jamie@example.com",
-                { id: 'toast-id' },
-            );
         });
 
         it('updates the loading toast to an error toast with the error message when it fails', () => {

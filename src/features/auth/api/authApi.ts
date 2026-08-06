@@ -16,6 +16,7 @@ export interface RegisterInput {
     email: string;
     password: string;
     phone?: string;
+    inviteToken?: string;
 }
 
 export async function login(input: LoginInput): Promise<AuthSession> {

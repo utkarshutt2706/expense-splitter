@@ -23,21 +23,12 @@ export function EditGroupMembersAction({ group, members }: EditGroupMembersActio
     );
     const editableUsers = Array.from(editableUsersById.values());
 
-    const handleUpdateMembers = ({ memberIds, inviteEmails }: EditGroupMembersFormValues) => {
+    const handleUpdateMembers = ({ memberIds }: EditGroupMembersFormValues) => {
         const toastId = toast.loading('Group members are being updated…');
         updateMembers.mutate(
-            { id: group.id, memberIds, inviteEmails },
+            { id: group.id, memberIds },
             {
-                onSuccess: ({ failedInviteEmails }) => {
-                    if (failedInviteEmails.length > 0) {
-                        toast.warning(
-                            `Group members updated, but couldn't invite ${failedInviteEmails.join(', ')}`,
-                            { id: toastId },
-                        );
-                    } else {
-                        toast.success('Group members updated', { id: toastId });
-                    }
-                },
+                onSuccess: () => toast.success('Group members updated', { id: toastId }),
                 onError: (error) => toast.error(error.message, { id: toastId }),
             },
         );

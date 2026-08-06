@@ -16,7 +16,6 @@ type CreateGroupInput = z.infer<typeof createGroupSchema>;
 export interface CreateGroupFormValues {
     name: string;
     memberIds: string[];
-    inviteEmails: string[];
 }
 
 interface CreateGroupFormProps {
@@ -31,20 +30,11 @@ export function CreateGroupForm({ friends, onSubmit, onCancel }: CreateGroupForm
         handleSubmit,
         formState: { errors },
     } = useForm<CreateGroupInput>({ resolver: zodResolver(createGroupSchema) });
-    const {
-        search,
-        setSearch,
-        memberIds,
-        toggleMember,
-        inviteEmails,
-        addFoundUser,
-        addInvite,
-        removeInvite,
-        visibleUsers,
-    } = useMemberSearchSelection(friends);
+    const { search, setSearch, memberIds, toggleMember, addFoundUser, visibleUsers } =
+        useMemberSearchSelection(friends);
 
     const submit = handleSubmit((values) => {
-        onSubmit({ name: values.name, memberIds, inviteEmails });
+        onSubmit({ name: values.name, memberIds });
     });
 
     return (
@@ -69,10 +59,7 @@ export function CreateGroupForm({ friends, onSubmit, onCancel }: CreateGroupForm
                 visibleUsers={visibleUsers}
                 selectedIds={memberIds}
                 onToggle={toggleMember}
-                pendingInvites={inviteEmails}
                 onFound={addFoundUser}
-                onInvite={addInvite}
-                onRemoveInvite={removeInvite}
             />
 
             <div className="flex justify-end gap-2">

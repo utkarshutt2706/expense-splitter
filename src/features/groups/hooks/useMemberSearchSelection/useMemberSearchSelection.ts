@@ -12,14 +12,13 @@ function matchesSearch(user: User, query: string): boolean {
 }
 
 // Shared behind CreateGroupForm and EditGroupMembersForm: tracks the search
-// text, which members are selected, and which unregistered emails are queued
-// for invite. baseUsers is friends (create) or friends-plus-current-members
-// (edit) -- foundUsers holds people discovered via search who aren't in that
-// list (yet), merged in so they render, checked, alongside everyone else.
+// text and which members are selected. baseUsers is friends (create) or
+// friends-plus-current-members (edit) -- foundUsers holds people discovered
+// via search who aren't in that list (yet), merged in so they render,
+// checked, alongside everyone else.
 export function useMemberSearchSelection(baseUsers: User[], initialMemberIds: string[] = []) {
     const [memberIds, setMemberIds] = useState<string[]>(initialMemberIds);
     const [foundUsers, setFoundUsers] = useState<User[]>([]);
-    const [inviteEmails, setInviteEmails] = useState<string[]>([]);
     const [search, setSearch] = useState('');
 
     const toggleMember = (id: string) => {
@@ -36,15 +35,6 @@ export function useMemberSearchSelection(baseUsers: User[], initialMemberIds: st
         setSearch('');
     };
 
-    const addInvite = (email: string) => {
-        setInviteEmails((current) => (current.includes(email) ? current : [...current, email]));
-        setSearch('');
-    };
-
-    const removeInvite = (email: string) => {
-        setInviteEmails((current) => current.filter((invited) => invited !== email));
-    };
-
     const allUsers = [
         ...baseUsers,
         ...foundUsers.filter((found) => !baseUsers.some((user) => user.id === found.id)),
@@ -59,10 +49,7 @@ export function useMemberSearchSelection(baseUsers: User[], initialMemberIds: st
         setSearch,
         memberIds,
         toggleMember,
-        inviteEmails,
         addFoundUser,
-        addInvite,
-        removeInvite,
         visibleUsers,
     };
 }

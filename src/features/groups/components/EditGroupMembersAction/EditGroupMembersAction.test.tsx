@@ -1,4 +1,4 @@
-import { act, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { toast } from 'sonner';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -22,14 +22,11 @@ vi.mock('../EditGroupMembersDialog', () => ({
         onSubmit,
     }: {
         open: boolean;
-        onSubmit: (values: { memberIds: string[]; inviteEmails: string[] }) => void;
+        onSubmit: (values: { memberIds: string[] }) => void;
     }) =>
         open ? (
             <div data-testid="edit-group-members-dialog">
-                <button
-                    type="button"
-                    onClick={() => onSubmit({ memberIds: ['friend-2'], inviteEmails: [] })}
-                >
+                <button type="button" onClick={() => onSubmit({ memberIds: ['friend-2'] })}>
                     Fake edit members submit
                 </button>
             </div>
@@ -40,7 +37,6 @@ vi.mock('sonner', () => ({
     toast: {
         loading: vi.fn(() => 'toast-id'),
         success: vi.fn(),
-        warning: vi.fn(),
         error: vi.fn(),
     },
 }));
@@ -82,8 +78,8 @@ describe('EditGroupMembersAction', () => {
     });
 
     it('updates group members and shows a loading toast, then success', async () => {
-        let onSuccess: ((result: { failedInviteEmails: string[] }) => void) | undefined;
-        const mutate = vi.fn((_values, options: { onSuccess?: typeof onSuccess }) => {
+        let onSuccess: (() => void) | undefined;
+        const mutate = vi.fn((_values, options: { onSuccess?: () => void }) => {
             onSuccess = options.onSuccess;
         });
         vi.mocked(useUpdateGroupMembers).mockReturnValue({
@@ -98,36 +94,13 @@ describe('EditGroupMembersAction', () => {
 
         expect(toast.loading).toHaveBeenCalledWith('Group members are being updated…');
         expect(mutate).toHaveBeenCalledWith(
-            { id: 'group-1', memberIds: ['friend-2'], inviteEmails: [] },
+            { id: 'group-1', memberIds: ['friend-2'] },
             expect.anything(),
         );
 
-        act(() => onSuccess?.({ failedInviteEmails: [] }));
+        onSuccess?.();
 
         expect(toast.success).toHaveBeenCalledWith('Group members updated', { id: 'toast-id' });
-    });
-
-    it('warns when members were updated but an invite failed', async () => {
-        let onSuccess: ((result: { failedInviteEmails: string[] }) => void) | undefined;
-        const mutate = vi.fn((_values, options: { onSuccess?: typeof onSuccess }) => {
-            onSuccess = options.onSuccess;
-        });
-        vi.mocked(useUpdateGroupMembers).mockReturnValue({
-            mutate,
-        } as unknown as ReturnType<typeof useUpdateGroupMembers>);
-
-        const user = userEvent.setup();
-        render(<EditGroupMembersAction group={group} members={members} />);
-
-        await user.click(screen.getByRole('button', { name: /add\/remove members/i }));
-        await user.click(screen.getByRole('button', { name: /fake edit members submit/i }));
-
-        act(() => onSuccess?.({ failedInviteEmails: ['jamie@example.com'] }));
-
-        expect(toast.warning).toHaveBeenCalledWith(
-            "Group members updated, but couldn't invite jamie@example.com",
-            { id: 'toast-id' },
-        );
     });
 
     it('shows an error toast when updating members fails', async () => {
