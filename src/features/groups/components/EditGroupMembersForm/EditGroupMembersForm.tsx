@@ -1,13 +1,14 @@
 import { Check } from 'lucide-react';
 import type { SubmitEvent } from 'react';
-import { useState } from 'react';
 
 import { useCurrentUser } from '@app/hooks';
 import type { User } from '@data/entities';
-import { MemberCheckboxList } from '../MemberCheckboxList';
+import { useMemberSearchSelection } from '@features/groups/hooks/useMemberSearchSelection';
+import { MemberSearchSection } from '../MemberSearchSection';
 
 export interface EditGroupMembersFormValues {
     memberIds: string[];
+    inviteEmails: string[];
 }
 
 interface EditGroupMembersFormProps {
@@ -24,34 +25,44 @@ export function EditGroupMembersForm({
     onCancel,
 }: EditGroupMembersFormProps) {
     const { data: currentUser } = useCurrentUser();
-    const [memberIds, setMemberIds] = useState<string[]>(initialMemberIds);
+    const {
+        search,
+        setSearch,
+        memberIds,
+        toggleMember,
+        inviteEmails,
+        addFoundUser,
+        addInvite,
+        removeInvite,
+        visibleUsers,
+    } = useMemberSearchSelection(users, initialMemberIds);
 
-    const toggleMember = (id: string) => {
+    const handleToggle = (id: string) => {
         if (id === currentUser?.id) return;
-
-        setMemberIds((current) =>
-            current.includes(id) ? current.filter((memberId) => memberId !== id) : [...current, id],
-        );
+        toggleMember(id);
     };
 
     const submit = (event: SubmitEvent<HTMLFormElement>) => {
         event.preventDefault();
-        onSubmit({ memberIds });
+        onSubmit({ memberIds, inviteEmails });
     };
 
     return (
         <form onSubmit={submit} noValidate className="flex flex-col gap-4">
-            <div className="flex flex-col gap-1">
-                <span className="text-surface-foreground text-sm font-medium">Members</span>
-                <MemberCheckboxList
-                    users={users}
-                    selectedIds={memberIds}
-                    onToggle={toggleMember}
-                    emptyMessage="No members to show."
-                    currentUserId={currentUser?.id ?? ''}
-                    lockCurrentUser
-                />
-            </div>
+            <MemberSearchSection
+                search={search}
+                onSearchChange={setSearch}
+                visibleUsers={visibleUsers}
+                selectedIds={memberIds}
+                onToggle={handleToggle}
+                pendingInvites={inviteEmails}
+                onFound={addFoundUser}
+                onInvite={addInvite}
+                onRemoveInvite={removeInvite}
+                emptyMessage="No members to show."
+                currentUserId={currentUser?.id ?? ''}
+                lockCurrentUser
+            />
 
             <div className="flex justify-end gap-2">
                 <button

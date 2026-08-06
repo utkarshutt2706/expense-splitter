@@ -8,3 +8,4 @@ export { GroupMembersStack } from './GroupMembersStack';
 export { GroupNameEditor } from './GroupNameEditor';
 export { MemberAvatarsSkeleton } from './MemberAvatarsSkeleton';
 export { MemberCheckboxList } from './MemberCheckboxList';
+export { MemberSearchSection } from './MemberSearchSection';
