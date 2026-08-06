@@ -1,15 +1,26 @@
 import { Search } from 'lucide-react';
 
+import { cn } from '@shared/utils';
+
 interface SearchInputProps {
     readonly value: string;
     readonly onChange: (value: string) => void;
     readonly placeholder: string;
     readonly ariaLabel: string;
+    // Fills the available width by default. Page-level search bars that sit
+    // next to a button in a flex row pass their own cap, e.g. "max-w-xs".
+    readonly className?: string;
 }
 
-export function SearchInput({ value, onChange, placeholder, ariaLabel }: SearchInputProps) {
+export function SearchInput({
+    value,
+    onChange,
+    placeholder,
+    ariaLabel,
+    className = '',
+}: SearchInputProps) {
     return (
-        <div className="relative w-full max-w-xs">
+        <div className={cn('relative w-full', className)}>
             <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
             <input
                 type="search"

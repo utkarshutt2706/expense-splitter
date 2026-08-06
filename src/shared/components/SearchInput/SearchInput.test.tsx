@@ -48,4 +48,31 @@ describe('SearchInput', () => {
 
         expect(screen.getByRole('searchbox', { name: /search friends/i })).toHaveValue('priya');
     });
+
+    it('fills the available width by default', () => {
+        const { container } = render(
+            <SearchInput
+                value=""
+                onChange={vi.fn()}
+                placeholder="Search friends…"
+                ariaLabel="Search friends"
+            />,
+        );
+
+        expect(container.firstChild).not.toHaveClass('max-w-xs');
+    });
+
+    it('lets callers cap the width, e.g. for a page-level search bar', () => {
+        const { container } = render(
+            <SearchInput
+                value=""
+                onChange={vi.fn()}
+                placeholder="Search friends…"
+                ariaLabel="Search friends"
+                className="max-w-xs"
+            />,
+        );
+
+        expect(container.firstChild).toHaveClass('max-w-xs');
+    });
 });

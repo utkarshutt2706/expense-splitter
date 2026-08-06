@@ -90,6 +90,7 @@ export function FriendsPage() {
                             onChange={setSearch}
                             placeholder="Search friends…"
                             ariaLabel="Search friends"
+                            className="max-w-xs"
                         />
                     )
                 )}

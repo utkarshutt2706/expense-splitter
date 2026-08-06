@@ -109,6 +109,7 @@ export function GroupsPage() {
                             onChange={setSearch}
                             placeholder="Search groups…"
                             ariaLabel="Search groups"
+                            className="max-w-xs"
                         />
                     )
                 )}
