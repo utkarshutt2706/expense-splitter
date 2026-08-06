@@ -1,13 +1,15 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2, UserPlus } from 'lucide-react';
 import type { ChangeEvent } from 'react';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { Link, Navigate, useNavigate } from 'react-router';
+import { Link, Navigate, useNavigate, useSearchParams } from 'react-router';
 import { z } from 'zod';
 
 import { useAuthStore } from '@app/stores';
 import logo from '@assets/logo.svg';
 import { useRegister } from '@features/auth';
+import { useValidateInvitation } from '@features/invitations';
 import { ApiError } from '@lib/api/apiError';
 import { LogoBackdrop, PasswordInput } from '@shared/components';
 import { sanitizePhoneInput } from '@shared/utils';
@@ -36,13 +38,27 @@ type RegisterInput = z.infer<typeof registerSchema>;
 export function RegisterPage() {
     const currentUserId = useAuthStore((state) => state.currentUserId);
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const inviteToken = searchParams.get('invite');
+    const {
+        data: invitation,
+        isLoading: isValidatingInvite,
+        isError: isInviteInvalid,
+    } = useValidateInvitation(inviteToken);
     const { mutateAsync: registerUser } = useRegister();
     const {
         register,
         handleSubmit,
+        setValue,
         setError,
         formState: { errors, isSubmitting },
     } = useForm<RegisterInput>({ resolver: zodResolver(registerSchema) });
+
+    useEffect(() => {
+        if (invitation) {
+            setValue('email', invitation.email, { shouldValidate: true });
+        }
+    }, [invitation, setValue]);
 
     if (currentUserId) {
         return <Navigate to="/" replace />;
@@ -55,6 +71,7 @@ export function RegisterPage() {
                 email: values.email,
                 password: values.password,
                 phone: values.phone || undefined,
+                inviteToken: invitation && inviteToken ? inviteToken : undefined,
             });
             navigate('/', { replace: true });
         } catch (error) {
@@ -87,6 +104,19 @@ export function RegisterPage() {
                     <img src={logo} alt="" className="size-16" />
                 </div>
 
+                {invitation && (
+                    <p className="bg-brand-50 text-brand-700 border-brand-200 rounded-md border px-3 py-2 text-sm">
+                        <strong>{invitation.group.name}</strong> invited you to Expense Splitter —
+                        sign up with <strong>{invitation.email}</strong> to join automatically.
+                    </p>
+                )}
+                {inviteToken && !isValidatingInvite && isInviteInvalid && (
+                    <p className="text-muted-foreground text-xs">
+                        This invite link has expired or is no longer valid. You can still create an
+                        account below.
+                    </p>
+                )}
+
                 <div className="flex flex-col gap-1">
                     <label
                         htmlFor="register-name"
@@ -115,8 +145,9 @@ export function RegisterPage() {
                         id="register-email"
                         type="email"
                         autoComplete="email"
+                        readOnly={Boolean(invitation)}
                         {...register('email')}
-                        className="border-border bg-surface text-surface-foreground focus-visible:ring-brand-500 rounded-md border px-3 py-2 text-sm outline-none focus-visible:ring-2"
+                        className={`border-border text-surface-foreground focus-visible:ring-brand-500 rounded-md border px-3 py-2 text-sm outline-none focus-visible:ring-2 ${invitation ? 'bg-muted cursor-not-allowed' : 'bg-surface'}`}
                     />
                     {errors.email && <p className="text-xs text-red-600">{errors.email.message}</p>}
                 </div>
