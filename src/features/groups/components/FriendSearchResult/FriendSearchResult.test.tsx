@@ -40,15 +40,7 @@ describe('FriendSearchResult', () => {
 
     it('renders nothing when there are already local matches', () => {
         mockLookup();
-        render(
-            <FriendSearchResult
-                search="jamie@example.com"
-                hasLocalMatches
-                pendingInvites={[]}
-                onFound={vi.fn()}
-                onInvite={vi.fn()}
-            />,
-        );
+        render(<FriendSearchResult search="jamie@example.com" hasLocalMatches onFound={vi.fn()} />);
         advanceDebounce();
 
         expect(useUserLookup).toHaveBeenLastCalledWith(null);
@@ -57,15 +49,7 @@ describe('FriendSearchResult', () => {
 
     it('renders nothing while the search text is not a complete email or phone', () => {
         mockLookup();
-        render(
-            <FriendSearchResult
-                search="jam"
-                hasLocalMatches={false}
-                pendingInvites={[]}
-                onFound={vi.fn()}
-                onInvite={vi.fn()}
-            />,
-        );
+        render(<FriendSearchResult search="jam" hasLocalMatches={false} onFound={vi.fn()} />);
         advanceDebounce();
 
         expect(useUserLookup).toHaveBeenLastCalledWith(null);
@@ -74,22 +58,14 @@ describe('FriendSearchResult', () => {
     it('looks up by email only once the debounce settles', () => {
         mockLookup();
         const { rerender } = render(
-            <FriendSearchResult
-                search=""
-                hasLocalMatches={false}
-                pendingInvites={[]}
-                onFound={vi.fn()}
-                onInvite={vi.fn()}
-            />,
+            <FriendSearchResult search="" hasLocalMatches={false} onFound={vi.fn()} />,
         );
 
         rerender(
             <FriendSearchResult
                 search="jamie@example.com"
                 hasLocalMatches={false}
-                pendingInvites={[]}
                 onFound={vi.fn()}
-                onInvite={vi.fn()}
             />,
         );
 
@@ -103,33 +79,11 @@ describe('FriendSearchResult', () => {
     it('looks up by phone for a complete 10-digit number', () => {
         mockLookup();
         render(
-            <FriendSearchResult
-                search="9876543210"
-                hasLocalMatches={false}
-                pendingInvites={[]}
-                onFound={vi.fn()}
-                onInvite={vi.fn()}
-            />,
+            <FriendSearchResult search="9876543210" hasLocalMatches={false} onFound={vi.fn()} />,
         );
         advanceDebounce();
 
         expect(useUserLookup).toHaveBeenLastCalledWith({ phone: '9876543210' });
-    });
-
-    it('skips the lookup when the email is already queued as a pending invite', () => {
-        mockLookup();
-        render(
-            <FriendSearchResult
-                search="jamie@example.com"
-                hasLocalMatches={false}
-                pendingInvites={['jamie@example.com']}
-                onFound={vi.fn()}
-                onInvite={vi.fn()}
-            />,
-        );
-        advanceDebounce();
-
-        expect(useUserLookup).toHaveBeenLastCalledWith(null);
     });
 
     it('shows a loading indicator while searching', () => {
@@ -138,9 +92,7 @@ describe('FriendSearchResult', () => {
             <FriendSearchResult
                 search="jamie@example.com"
                 hasLocalMatches={false}
-                pendingInvites={[]}
                 onFound={vi.fn()}
-                onInvite={vi.fn()}
             />,
         );
         advanceDebounce();
@@ -155,9 +107,7 @@ describe('FriendSearchResult', () => {
             <FriendSearchResult
                 search="jamie@example.com"
                 hasLocalMatches={false}
-                pendingInvites={[]}
                 onFound={onFound}
-                onInvite={vi.fn()}
             />,
         );
         advanceDebounce();
@@ -168,27 +118,23 @@ describe('FriendSearchResult', () => {
         expect(onFound).toHaveBeenCalledWith(jamie);
     });
 
-    it('offers to invite an unregistered email', () => {
+    it('tells the searcher to ask an unregistered email to sign up', () => {
         mockLookup({
             isError: true,
             error: new ApiError('NOT_FOUND', 'No registered user matches', 404),
         });
-        const onInvite = vi.fn();
         render(
             <FriendSearchResult
                 search="jamie@example.com"
                 hasLocalMatches={false}
-                pendingInvites={[]}
                 onFound={vi.fn()}
-                onInvite={onInvite}
             />,
         );
         advanceDebounce();
 
         expect(screen.getByText(/isn't registered with us yet/i)).toBeInTheDocument();
-        fireEvent.click(screen.getByRole('button', { name: /invite them/i }));
-
-        expect(onInvite).toHaveBeenCalledWith('jamie@example.com');
+        expect(screen.getByText(/ask them to sign up/i)).toBeInTheDocument();
+        expect(screen.queryByRole('button', { name: /invite/i })).not.toBeInTheDocument();
     });
 
     it('suggests searching by email when a phone number is not found', () => {
@@ -197,13 +143,7 @@ describe('FriendSearchResult', () => {
             error: new ApiError('NOT_FOUND', 'No registered user matches', 404),
         });
         render(
-            <FriendSearchResult
-                search="9876543210"
-                hasLocalMatches={false}
-                pendingInvites={[]}
-                onFound={vi.fn()}
-                onInvite={vi.fn()}
-            />,
+            <FriendSearchResult search="9876543210" hasLocalMatches={false} onFound={vi.fn()} />,
         );
         advanceDebounce();
 
@@ -219,9 +159,7 @@ describe('FriendSearchResult', () => {
             <FriendSearchResult
                 search="jamie@example.com"
                 hasLocalMatches={false}
-                pendingInvites={[]}
                 onFound={vi.fn()}
-                onInvite={vi.fn()}
             />,
         );
         advanceDebounce();

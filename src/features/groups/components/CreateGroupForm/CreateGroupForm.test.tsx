@@ -4,7 +4,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { User } from '@data/entities';
 import { useUserLookup } from '@features/users/hooks';
-import { ApiError } from '@lib/api/apiError';
 import { CreateGroupForm } from './CreateGroupForm';
 
 vi.mock('@features/users/hooks', () => ({
@@ -53,11 +52,7 @@ describe('CreateGroupForm', () => {
         await user.type(screen.getByLabelText(/group name/i), 'Weekend Trip');
         await user.click(screen.getByRole('button', { name: /create group/i }));
 
-        expect(onSubmit).toHaveBeenCalledWith({
-            name: 'Weekend Trip',
-            memberIds: [],
-            inviteEmails: [],
-        });
+        expect(onSubmit).toHaveBeenCalledWith({ name: 'Weekend Trip', memberIds: [] });
     });
 
     it('calls onSubmit with the selected member ids', async () => {
@@ -73,7 +68,6 @@ describe('CreateGroupForm', () => {
         expect(onSubmit).toHaveBeenCalledWith({
             name: 'Weekend Trip',
             memberIds: ['friend-1'],
-            inviteEmails: [],
         });
     });
 
@@ -89,11 +83,7 @@ describe('CreateGroupForm', () => {
         await user.click(checkbox);
         await user.click(screen.getByRole('button', { name: /create group/i }));
 
-        expect(onSubmit).toHaveBeenCalledWith({
-            name: 'Weekend Trip',
-            memberIds: [],
-            inviteEmails: [],
-        });
+        expect(onSubmit).toHaveBeenCalledWith({ name: 'Weekend Trip', memberIds: [] });
     });
 
     it('shows a message instead of the member list when there are no friends', () => {
@@ -141,48 +131,6 @@ describe('CreateGroupForm', () => {
             expect(onSubmit).toHaveBeenCalledWith({
                 name: 'Weekend Trip',
                 memberIds: ['user-9'],
-                inviteEmails: [],
-            }),
-        );
-    });
-
-    it('queues an invite for an unregistered email and can remove it', async () => {
-        mockLookup({
-            isError: true,
-            error: new ApiError('NOT_FOUND', 'No registered user matches', 404),
-        });
-        vi.useFakeTimers();
-
-        const onSubmit = vi.fn();
-        render(<CreateGroupForm friends={friends} onSubmit={onSubmit} onCancel={vi.fn()} />);
-
-        fireEvent.change(screen.getByRole('searchbox', { name: /search members/i }), {
-            target: { value: 'jordan@example.com' },
-        });
-        act(() => {
-            vi.advanceTimersByTime(400);
-        });
-
-        expect(screen.getByText(/isn't registered with us yet/i)).toBeInTheDocument();
-        fireEvent.click(screen.getByRole('button', { name: /invite them/i }));
-
-        expect(screen.getByText('jordan@example.com')).toBeInTheDocument();
-
-        fireEvent.click(screen.getByRole('button', { name: /remove invite/i }));
-
-        expect(screen.queryByText('jordan@example.com')).not.toBeInTheDocument();
-
-        fireEvent.change(screen.getByLabelText(/group name/i), {
-            target: { value: 'Weekend Trip' },
-        });
-        fireEvent.click(screen.getByRole('button', { name: /create group/i }));
-
-        vi.useRealTimers();
-        await vi.waitFor(() =>
-            expect(onSubmit).toHaveBeenCalledWith({
-                name: 'Weekend Trip',
-                memberIds: [],
-                inviteEmails: [],
             }),
         );
     });

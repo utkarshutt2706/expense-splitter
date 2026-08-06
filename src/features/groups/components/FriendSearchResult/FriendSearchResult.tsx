@@ -1,4 +1,4 @@
-import { Loader2, Mail, UserPlus } from 'lucide-react';
+import { Loader2, UserPlus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import type { User } from '@data/entities';
@@ -17,18 +17,10 @@ interface FriendSearchResultProps {
     // already matched something for this search text. When true, no remote
     // lookup is needed -- the match is already visible in the list below.
     readonly hasLocalMatches: boolean;
-    readonly pendingInvites: string[];
     readonly onFound: (user: User) => void;
-    readonly onInvite: (email: string) => void;
 }
 
-export function FriendSearchResult({
-    search,
-    hasLocalMatches,
-    pendingInvites,
-    onFound,
-    onInvite,
-}: FriendSearchResultProps) {
+export function FriendSearchResult({ search, hasLocalMatches, onFound }: FriendSearchResultProps) {
     const [debounced, setDebounced] = useState(search.trim());
 
     useEffect(() => {
@@ -38,9 +30,8 @@ export function FriendSearchResult({
 
     const isEmail = EMAIL_PATTERN.test(debounced);
     const isPhone = PHONE_PATTERN.test(debounced);
-    const alreadyQueued = isEmail && pendingInvites.includes(debounced);
 
-    const shouldLookup = (isEmail || isPhone) && !hasLocalMatches && !alreadyQueued;
+    const shouldLookup = (isEmail || isPhone) && !hasLocalMatches;
     const query = shouldLookup ? (isEmail ? { email: debounced } : { phone: debounced }) : null;
 
     const {
@@ -91,17 +82,9 @@ export function FriendSearchResult({
 
     if (notFound && isEmail) {
         return (
-            <div className="border-border flex flex-col gap-1 rounded-md border px-3 py-2 text-sm">
-                <p className="text-surface-foreground">{debounced} isn't registered with us yet.</p>
-                <button
-                    type="button"
-                    onClick={() => onInvite(debounced)}
-                    className="text-brand-600 hover:text-brand-700 inline-flex w-fit cursor-pointer items-center gap-1 text-xs font-medium"
-                >
-                    <Mail className="size-3.5" />
-                    Invite them to this group
-                </button>
-            </div>
+            <p className="text-muted-foreground px-1 text-sm">
+                {debounced} isn't registered with us yet. Ask them to sign up, then search again.
+            </p>
         );
     }
 

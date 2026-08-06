@@ -46,18 +46,7 @@ export function GroupsPage() {
     const handleCreateGroup = (values: CreateGroupFormValues) => {
         const toastId = toast.loading('Group is being created…');
         createGroup.mutate(values, {
-            onSuccess: ({ failedInviteEmails }) => {
-                if (failedInviteEmails.length > 0) {
-                    toast.warning(
-                        `Group created, but couldn't invite ${failedInviteEmails.join(', ')}`,
-                        {
-                            id: toastId,
-                        },
-                    );
-                } else {
-                    toast.success('Group created', { id: toastId });
-                }
-            },
+            onSuccess: () => toast.success('Group created', { id: toastId }),
             onError: (error) => toast.error(error.message, { id: toastId }),
         });
     };

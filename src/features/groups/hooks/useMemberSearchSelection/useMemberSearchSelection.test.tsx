@@ -58,27 +58,4 @@ describe('useMemberSearchSelection', () => {
 
         expect(result.current.visibleUsers).toEqual(baseUsers);
     });
-
-    it('queues and removes a pending invite, clearing the search on add', () => {
-        const { result } = renderHook(() => useMemberSearchSelection(baseUsers));
-
-        act(() => result.current.setSearch('sam@example.com'));
-        act(() => result.current.addInvite('sam@example.com'));
-
-        expect(result.current.inviteEmails).toEqual(['sam@example.com']);
-        expect(result.current.search).toBe('');
-
-        act(() => result.current.removeInvite('sam@example.com'));
-
-        expect(result.current.inviteEmails).toEqual([]);
-    });
-
-    it('does not queue the same invite email twice', () => {
-        const { result } = renderHook(() => useMemberSearchSelection(baseUsers));
-
-        act(() => result.current.addInvite('sam@example.com'));
-        act(() => result.current.addInvite('sam@example.com'));
-
-        expect(result.current.inviteEmails).toEqual(['sam@example.com']);
-    });
 });
