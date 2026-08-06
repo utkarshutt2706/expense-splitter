@@ -42,3 +42,15 @@ export interface Payment {
     amount: number;
     createdAt: string;
 }
+
+export type InvitationStatus = 'pending' | 'accepted' | 'revoked';
+
+// An unregistered email invited into a group -- becomes a real member (and
+// implicitly a friend) once they register with the invite token.
+export interface Invitation {
+    id: string;
+    groupId: string;
+    email: string;
+    status: InvitationStatus;
+    expiresAt: string;
+}
