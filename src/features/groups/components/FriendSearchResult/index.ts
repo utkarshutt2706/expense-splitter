@@ -1,0 +1,1 @@
+export { FriendSearchResult } from './FriendSearchResult';

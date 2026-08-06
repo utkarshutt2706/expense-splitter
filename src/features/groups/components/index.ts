@@ -2,6 +2,7 @@ export { CreateGroupDialog } from './CreateGroupDialog';
 export { CreateGroupForm, type CreateGroupFormValues } from './CreateGroupForm';
 export { EditGroupMembersDialog } from './EditGroupMembersDialog';
 export { EditGroupMembersForm, type EditGroupMembersFormValues } from './EditGroupMembersForm';
+export { FriendSearchResult } from './FriendSearchResult';
 export { GroupMembersSection } from './GroupMembersSection';
 export { GroupMembersStack } from './GroupMembersStack';
 export { GroupNameEditor } from './GroupNameEditor';
