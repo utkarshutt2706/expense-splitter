@@ -1,0 +1,1 @@
+export { useDeleteGroup } from './useDeleteGroup';

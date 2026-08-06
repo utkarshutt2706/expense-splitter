@@ -1,20 +1,47 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
+import { toast } from 'sonner';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { Group, User } from '@data/entities';
+import { useCurrentUser } from '@app/hooks';
+import { useGroupBalances } from '@features/balances/hooks/useGroupBalances';
 import { useGroup, useGroupMembers } from '@features/groups';
+import { useDeleteGroup } from '@features/groups/hooks/useDeleteGroup';
+import { useUpdateGroupMembers } from '@features/groups/hooks/useUpdateGroupMembers';
 import { ApiError } from '@lib/api/apiError';
 import { GroupSettingsPage } from './GroupSettingsPage';
 
+const navigateMock = vi.fn();
+
 vi.mock('react-router', async () => {
     const actual = await vi.importActual('react-router');
-    return { ...actual, useParams: () => ({ groupId: 'group-1' }) };
+    return {
+        ...actual,
+        useParams: () => ({ groupId: 'group-1' }),
+        useNavigate: () => navigateMock,
+    };
 });
+
+vi.mock('@app/hooks', () => ({
+    useCurrentUser: vi.fn(),
+}));
+
+vi.mock('@features/balances/hooks/useGroupBalances', () => ({
+    useGroupBalances: vi.fn(),
+}));
 
 vi.mock('@features/groups', () => ({
     useGroup: vi.fn(),
     useGroupMembers: vi.fn(),
+}));
+
+vi.mock('@features/groups/hooks/useDeleteGroup', () => ({
+    useDeleteGroup: vi.fn(),
+}));
+
+vi.mock('@features/groups/hooks/useUpdateGroupMembers', () => ({
+    useUpdateGroupMembers: vi.fn(),
 }));
 
 vi.mock('@features/groups/components/GroupNameEditor', () => ({
@@ -35,6 +62,14 @@ vi.mock('@features/groups/components/MemberList', () => ({
     ),
 }));
 
+vi.mock('sonner', () => ({
+    toast: {
+        loading: vi.fn(() => 'toast-id'),
+        success: vi.fn(),
+        error: vi.fn(),
+    },
+}));
+
 const group: Group = {
     id: 'group-1',
     name: 'Weekend Trip',
@@ -47,6 +82,18 @@ const members: User[] = [
     { id: 'friend-1', name: 'Priya Sharma', email: 'priya@example.com' },
 ];
 
+function mockSettledBalances() {
+    vi.mocked(useGroupBalances).mockReturnValue({
+        data: {
+            balances: [
+                { userId: 'current-user', balance: 0 },
+                { userId: 'friend-1', balance: 0 },
+            ],
+            settlements: [],
+        },
+    } as unknown as ReturnType<typeof useGroupBalances>);
+}
+
 function renderPage() {
     return render(
         <MemoryRouter>
@@ -56,6 +103,22 @@ function renderPage() {
 }
 
 describe('GroupSettingsPage', () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+        vi.mocked(useCurrentUser).mockReturnValue({
+            data: { id: 'current-user', name: 'Alex Morgan', email: 'alex@example.com' },
+        } as unknown as ReturnType<typeof useCurrentUser>);
+        mockSettledBalances();
+        vi.mocked(useDeleteGroup).mockReturnValue({
+            mutate: vi.fn(),
+            isPending: false,
+        } as unknown as ReturnType<typeof useDeleteGroup>);
+        vi.mocked(useUpdateGroupMembers).mockReturnValue({
+            mutate: vi.fn(),
+            isPending: false,
+        } as unknown as ReturnType<typeof useUpdateGroupMembers>);
+    });
+
     it('shows a loading message while fetching', () => {
         vi.mocked(useGroup).mockReturnValue({
             data: undefined,
@@ -166,11 +229,151 @@ describe('GroupSettingsPage', () => {
             expect(screen.getByTestId('member-list')).toHaveTextContent('2');
         });
 
-        it('renders disabled leave-group and delete-group buttons', () => {
+        it('enables leave-group and delete-group when everyone is settled up', () => {
+            renderPage();
+
+            expect(screen.getByRole('button', { name: /leave group/i })).not.toBeDisabled();
+            expect(screen.getByRole('button', { name: /delete group/i })).not.toBeDisabled();
+        });
+
+        it('disables leave-group when the caller has an unsettled balance', () => {
+            vi.mocked(useGroupBalances).mockReturnValue({
+                data: {
+                    balances: [
+                        { userId: 'current-user', balance: -25 },
+                        { userId: 'friend-1', balance: 25 },
+                    ],
+                    settlements: [],
+                },
+            } as unknown as ReturnType<typeof useGroupBalances>);
+
             renderPage();
 
             expect(screen.getByRole('button', { name: /leave group/i })).toBeDisabled();
+        });
+
+        it('disables delete-group when any member has an unsettled balance', () => {
+            vi.mocked(useGroupBalances).mockReturnValue({
+                data: {
+                    balances: [
+                        { userId: 'current-user', balance: 0 },
+                        { userId: 'friend-1', balance: 25 },
+                    ],
+                    settlements: [],
+                },
+            } as unknown as ReturnType<typeof useGroupBalances>);
+
+            renderPage();
+
+            expect(screen.getByRole('button', { name: /leave group/i })).not.toBeDisabled();
             expect(screen.getByRole('button', { name: /delete group/i })).toBeDisabled();
+        });
+
+        it('leaves the group after confirming, then navigates to the groups list', () => {
+            let onSuccess: (() => void) | undefined;
+            const mutate = vi.fn((_values, options: { onSuccess?: () => void }) => {
+                onSuccess = options.onSuccess;
+            });
+            vi.mocked(useUpdateGroupMembers).mockReturnValue({
+                mutate,
+                isPending: false,
+            } as unknown as ReturnType<typeof useUpdateGroupMembers>);
+
+            renderPage();
+
+            fireEvent.click(screen.getByRole('button', { name: /leave group/i }));
+            fireEvent.click(screen.getByRole('button', { name: 'Leave' }));
+
+            expect(mutate).toHaveBeenCalledWith(
+                { id: 'group-1', memberIds: ['friend-1'] },
+                expect.anything(),
+            );
+
+            onSuccess?.();
+
+            expect(toast.success).toHaveBeenCalledWith('Left group', { id: 'toast-id' });
+            expect(navigateMock).toHaveBeenCalledWith('/groups');
+        });
+
+        it('shows the backend error when leaving fails', () => {
+            let onError: ((error: Error) => void) | undefined;
+            const mutate = vi.fn((_values, options: { onError?: (error: Error) => void }) => {
+                onError = options.onError;
+            });
+            vi.mocked(useUpdateGroupMembers).mockReturnValue({
+                mutate,
+                isPending: false,
+            } as unknown as ReturnType<typeof useUpdateGroupMembers>);
+
+            renderPage();
+
+            fireEvent.click(screen.getByRole('button', { name: /leave group/i }));
+            fireEvent.click(screen.getByRole('button', { name: 'Leave' }));
+
+            onError?.(
+                new ApiError(
+                    'CONFLICT',
+                    'Cannot remove member(s) with an unsettled balance: current-user',
+                    409,
+                ),
+            );
+
+            expect(toast.error).toHaveBeenCalledWith(
+                'Cannot remove member(s) with an unsettled balance: current-user',
+                { id: 'toast-id' },
+            );
+        });
+
+        it('deletes the group after confirming, then navigates to the groups list', () => {
+            let onSuccess: (() => void) | undefined;
+            const mutate = vi.fn((_id, options: { onSuccess?: () => void }) => {
+                onSuccess = options.onSuccess;
+            });
+            vi.mocked(useDeleteGroup).mockReturnValue({
+                mutate,
+                isPending: false,
+            } as unknown as ReturnType<typeof useDeleteGroup>);
+
+            renderPage();
+
+            fireEvent.click(screen.getByRole('button', { name: /delete group/i }));
+            fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+
+            expect(mutate).toHaveBeenCalledWith('group-1', expect.anything());
+
+            onSuccess?.();
+
+            expect(toast.success).toHaveBeenCalledWith('Group deleted', { id: 'toast-id' });
+            expect(navigateMock).toHaveBeenCalledWith('/groups');
+        });
+
+        it('shows the backend error when deleting fails', () => {
+            let onError: ((error: Error) => void) | undefined;
+            const mutate = vi.fn((_id, options: { onError?: (error: Error) => void }) => {
+                onError = options.onError;
+            });
+            vi.mocked(useDeleteGroup).mockReturnValue({
+                mutate,
+                isPending: false,
+            } as unknown as ReturnType<typeof useDeleteGroup>);
+
+            renderPage();
+
+            fireEvent.click(screen.getByRole('button', { name: /delete group/i }));
+            fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+
+            onError?.(
+                new ApiError(
+                    'CONFLICT',
+                    'Cannot delete a group with unsettled balances -- everyone must be settled up first',
+                    409,
+                ),
+            );
+
+            expect(toast.error).toHaveBeenCalledWith(
+                'Cannot delete a group with unsettled balances -- everyone must be settled up first',
+                { id: 'toast-id' },
+            );
         });
     });
 });

@@ -27,3 +27,7 @@ export async function update(id: string, changes: UpdateGroupInput): Promise<Gro
     const { data } = await httpClient.patch<Group>(`/groups/${id}`, changes);
     return data;
 }
+
+export async function remove(id: string): Promise<void> {
+    await httpClient.delete(`/groups/${id}`);
+}
