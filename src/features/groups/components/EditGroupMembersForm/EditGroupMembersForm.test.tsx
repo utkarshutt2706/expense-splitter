@@ -1,9 +1,11 @@
-import { render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { User } from '@data/entities';
 import { CURRENT_USER_ID } from '@data/seed';
+import { useUserLookup } from '@features/users/hooks';
+import { ApiError } from '@lib/api/apiError';
 import { EditGroupMembersForm } from './EditGroupMembersForm';
 
 vi.mock('@app/hooks', async (importOriginal) => ({
@@ -13,6 +15,20 @@ vi.mock('@app/hooks', async (importOriginal) => ({
     }),
 }));
 
+vi.mock('@features/users/hooks', () => ({
+    useUserLookup: vi.fn(),
+}));
+
+function mockLookup(overrides: Record<string, unknown> = {}) {
+    vi.mocked(useUserLookup).mockReturnValue({
+        data: undefined,
+        isFetching: false,
+        isError: false,
+        error: null,
+        ...overrides,
+    } as unknown as ReturnType<typeof useUserLookup>);
+}
+
 const users: User[] = [
     { id: CURRENT_USER_ID, name: 'Alex Morgan', email: 'alex@example.com' },
     { id: 'user-1', name: 'Priya Sharma', email: 'priya@example.com' },
@@ -20,6 +36,11 @@ const users: User[] = [
 ];
 
 describe('EditGroupMembersForm', () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+        mockLookup();
+    });
+
     it('pre-checks the current members and shows the current user as "You"', () => {
         render(
             <EditGroupMembersForm
@@ -54,7 +75,10 @@ describe('EditGroupMembersForm', () => {
         await user.click(screen.getByRole('checkbox', { name: /priya sharma/i }));
         await user.click(screen.getByRole('button', { name: /save changes/i }));
 
-        expect(onSubmit).toHaveBeenCalledWith({ memberIds: [CURRENT_USER_ID, 'user-2'] });
+        expect(onSubmit).toHaveBeenCalledWith({
+            memberIds: [CURRENT_USER_ID, 'user-2'],
+            inviteEmails: [],
+        });
     });
 
     it('does not let the current user remove themselves', async () => {
@@ -72,7 +96,89 @@ describe('EditGroupMembersForm', () => {
         await user.click(screen.getByRole('checkbox', { name: 'You' }));
         await user.click(screen.getByRole('button', { name: /save changes/i }));
 
-        expect(onSubmit).toHaveBeenCalledWith({ memberIds: [CURRENT_USER_ID] });
+        expect(onSubmit).toHaveBeenCalledWith({
+            memberIds: [CURRENT_USER_ID],
+            inviteEmails: [],
+        });
+    });
+
+    it('adds a non-friend found by search and submits them as a member', async () => {
+        const jamie: User = { id: 'user-9', name: 'Jamie Fox', email: 'jamie@example.com' };
+        mockLookup({ data: jamie });
+        vi.useFakeTimers();
+
+        const onSubmit = vi.fn();
+        render(
+            <EditGroupMembersForm
+                users={users}
+                initialMemberIds={[CURRENT_USER_ID]}
+                onSubmit={onSubmit}
+                onCancel={vi.fn()}
+            />,
+        );
+
+        fireEvent.change(screen.getByRole('searchbox', { name: /search members/i }), {
+            target: { value: 'jamie@example.com' },
+        });
+        act(() => {
+            vi.advanceTimersByTime(400);
+        });
+
+        expect(screen.getByText(/jamie fox/i)).toBeInTheDocument();
+        fireEvent.click(screen.getByRole('button', { name: /add/i }));
+        fireEvent.click(screen.getByRole('button', { name: /save changes/i }));
+
+        vi.useRealTimers();
+        await vi.waitFor(() =>
+            expect(onSubmit).toHaveBeenCalledWith({
+                memberIds: [CURRENT_USER_ID, 'user-9'],
+                inviteEmails: [],
+            }),
+        );
+    });
+
+    it('queues an invite for an unregistered email and can remove it', async () => {
+        mockLookup({
+            isError: true,
+            error: new ApiError('NOT_FOUND', 'No registered user matches', 404),
+        });
+        vi.useFakeTimers();
+
+        const onSubmit = vi.fn();
+        render(
+            <EditGroupMembersForm
+                users={users}
+                initialMemberIds={[CURRENT_USER_ID]}
+                onSubmit={onSubmit}
+                onCancel={vi.fn()}
+            />,
+        );
+
+        fireEvent.change(screen.getByRole('searchbox', { name: /search members/i }), {
+            target: { value: 'sam@example.com' },
+        });
+        act(() => {
+            vi.advanceTimersByTime(400);
+        });
+
+        expect(screen.getByText(/isn't registered with us yet/i)).toBeInTheDocument();
+        fireEvent.click(screen.getByRole('button', { name: /invite them/i }));
+
+        expect(screen.getByText('sam@example.com')).toBeInTheDocument();
+
+        fireEvent.click(screen.getByRole('button', { name: /remove invite/i }));
+
+        expect(screen.queryByText('sam@example.com')).not.toBeInTheDocument();
+
+        fireEvent.click(screen.getByRole('button', { name: /save changes/i }));
+
+        vi.useRealTimers();
+        await vi.waitFor(() =>
+            expect(onSubmit).toHaveBeenCalledWith({
+                memberIds: [CURRENT_USER_ID],
+                inviteEmails: [],
+            }),
+        );
     });
 
     it('calls onCancel when the cancel button is clicked', async () => {
