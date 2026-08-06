@@ -2,11 +2,12 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type { User } from '@data/entities';
 import { httpClient } from '@lib/api/httpClient';
-import { login, register } from './authApi';
+import { changePassword, login, register } from './authApi';
 
 vi.mock('@lib/api/httpClient', () => ({
     httpClient: {
         post: vi.fn(),
+        patch: vi.fn(),
     },
 }));
 
@@ -63,6 +64,17 @@ describe('authApi', () => {
             email: 'utkarsh@example.com',
             password: 'password123',
             inviteToken: 'raw-token',
+        });
+    });
+
+    it('changePassword patches the new credentials to /auth/password', async () => {
+        vi.mocked(httpClient.patch).mockResolvedValue({ data: undefined });
+
+        await changePassword({ currentPassword: 'old-password', newPassword: 'new-password' });
+
+        expect(httpClient.patch).toHaveBeenCalledWith('/auth/password', {
+            currentPassword: 'old-password',
+            newPassword: 'new-password',
         });
     });
 });

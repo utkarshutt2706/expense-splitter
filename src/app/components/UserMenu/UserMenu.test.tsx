@@ -13,6 +13,11 @@ vi.mock('@app/hooks', async (importOriginal) => ({
     }),
 }));
 
+vi.mock('@features/auth', () => ({
+    ChangePasswordDialog: ({ open }: { open: boolean }) =>
+        open ? <div data-testid="change-password-dialog" /> : null,
+}));
+
 function renderMenu(expanded = false) {
     return render(
         <MemoryRouter initialEntries={['/']}>
@@ -50,7 +55,7 @@ describe('UserMenu', () => {
         await user.click(screen.getByRole('button', { name: /open user menu/i }));
 
         const content = screen.getByTestId('user-menu-content').textContent ?? '';
-        const labels = ['My account', 'Settings', 'Theme', 'Logout'];
+        const labels = ['My account', 'Settings', 'Change password', 'Theme', 'Logout'];
         const positions = labels.map((label) => content.indexOf(label));
 
         positions.forEach((position) => expect(position).toBeGreaterThanOrEqual(0));
@@ -87,6 +92,17 @@ describe('UserMenu', () => {
         await user.click(screen.getByRole('button', { name: /open user menu/i }));
 
         expect(screen.getByRole('switch')).toHaveAttribute('aria-checked', 'true');
+    });
+
+    it('opens the change password dialog and closes the menu when Change password is clicked', async () => {
+        const user = userEvent.setup();
+        renderMenu();
+
+        await user.click(screen.getByRole('button', { name: /open user menu/i }));
+        await user.click(screen.getByRole('button', { name: /change password/i }));
+
+        expect(screen.getByTestId('change-password-dialog')).toBeInTheDocument();
+        expect(screen.queryByTestId('user-menu-content')).not.toBeInTheDocument();
     });
 
     it('logs out and navigates to the login page when Logout is clicked', async () => {

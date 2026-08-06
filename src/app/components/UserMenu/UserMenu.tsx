@@ -1,9 +1,11 @@
 import * as Popover from '@radix-ui/react-popover';
-import { LogOut, Moon, Settings, Sun, SunMoon, UserRound } from 'lucide-react';
+import { KeyRound, LogOut, Moon, Settings, Sun, SunMoon, UserRound } from 'lucide-react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router';
 
 import { useCurrentUser, useIsDarkTheme } from '@app/hooks';
 import { useAuthStore, useThemeStore, useThemeTransitionStore } from '@app/stores';
+import { ChangePasswordDialog } from '@features/auth';
 import { Avatar } from '@shared/components';
 
 interface MenuItemProps {
@@ -88,6 +90,8 @@ export function UserMenu({ expanded }: UserMenuProps) {
     const { data: currentUser } = useCurrentUser();
     const logout = useAuthStore((state) => state.logout);
     const navigate = useNavigate();
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [isChangingPassword, setIsChangingPassword] = useState(false);
 
     const handleLogout = () => {
         logout();
@@ -95,7 +99,7 @@ export function UserMenu({ expanded }: UserMenuProps) {
     };
 
     return (
-        <Popover.Root>
+        <Popover.Root open={isMenuOpen} onOpenChange={setIsMenuOpen}>
             <Popover.Trigger asChild>
                 <button
                     type="button"
@@ -135,11 +139,22 @@ export function UserMenu({ expanded }: UserMenuProps) {
                     <div className="bg-border my-1 h-px" />
                     <MenuItem icon={UserRound} label="My account" />
                     <MenuItem icon={Settings} label="Settings" />
+                    <MenuItem
+                        icon={KeyRound}
+                        label="Change password"
+                        onClick={() => {
+                            setIsMenuOpen(false);
+                            setIsChangingPassword(true);
+                        }}
+                    />
                     <ThemeToggleRow />
                     <div className="bg-border my-1 h-px" />
                     <MenuItem icon={LogOut} label="Logout" onClick={handleLogout} />
                 </Popover.Content>
             </Popover.Portal>
+            {isChangingPassword && (
+                <ChangePasswordDialog open onOpenChange={setIsChangingPassword} />
+            )}
         </Popover.Root>
     );
 }

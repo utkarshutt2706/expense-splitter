@@ -19,6 +19,11 @@ export interface RegisterInput {
     inviteToken?: string;
 }
 
+export interface ChangePasswordInput {
+    currentPassword: string;
+    newPassword: string;
+}
+
 export async function login(input: LoginInput): Promise<AuthSession> {
     const { data } = await httpClient.post<AuthSession>('/auth/login', input);
     return data;
@@ -27,4 +32,8 @@ export async function login(input: LoginInput): Promise<AuthSession> {
 export async function register(input: RegisterInput): Promise<AuthSession> {
     const { data } = await httpClient.post<AuthSession>('/auth/register', input);
     return data;
+}
+
+export async function changePassword(input: ChangePasswordInput): Promise<void> {
+    await httpClient.patch('/auth/password', input);
 }
