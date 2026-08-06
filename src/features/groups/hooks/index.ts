@@ -1,4 +1,5 @@
 export { useCreateGroup } from './useCreateGroup';
+export { useDeleteGroup } from './useDeleteGroup';
 export { useGroup } from './useGroup';
 export { useGroupMembers } from './useGroupMembers';
 export { useGroups } from './useGroups';

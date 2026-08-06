@@ -82,7 +82,7 @@ export function FriendSearchResult({ search, hasLocalMatches, onFound }: FriendS
 
     if (notFound && isEmail) {
         return (
-            <p className="text-muted-foreground px-1 text-sm">
+            <p className="text-muted-foreground text-sm">
                 {debounced} isn't registered with us yet. Ask them to sign up, then search again.
             </p>
         );
@@ -90,7 +90,7 @@ export function FriendSearchResult({ search, hasLocalMatches, onFound }: FriendS
 
     if (notFound && isPhone) {
         return (
-            <p className="text-muted-foreground px-1 text-sm">
+            <p className="text-muted-foreground text-sm">
                 We couldn't find anyone with that phone number. Try searching by their email
                 instead.
             </p>

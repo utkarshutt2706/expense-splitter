@@ -1,21 +1,70 @@
 import { ArrowLeft, LogOut, Trash2 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
-import { Link, useParams } from 'react-router';
+import { Link, useNavigate, useParams } from 'react-router';
+import { toast } from 'sonner';
 
+import { useCurrentUser } from '@app/hooks';
+import { useGroupBalances } from '@features/balances/hooks/useGroupBalances';
 import { useGroup, useGroupMembers } from '@features/groups';
 import { EditGroupMembersAction } from '@features/groups/components/EditGroupMembersAction';
 import { GroupNameEditor } from '@features/groups/components/GroupNameEditor';
 import { MemberList } from '@features/groups/components/MemberList';
 import { MemberListSkeleton } from '@features/groups/components/MemberListSkeleton';
+import { useDeleteGroup } from '@features/groups/hooks/useDeleteGroup';
+import { useUpdateGroupMembers } from '@features/groups/hooks/useUpdateGroupMembers';
 import { groupErrorMessage } from '@features/groups/utils/groupErrorMessage';
-import { Skeleton } from '@shared/components';
+import { ConfirmationDialog, Skeleton } from '@shared/components';
 
 export function GroupSettingsPage() {
     const { groupId } = useParams<{ groupId: string }>();
+    const navigate = useNavigate();
+    const { data: currentUser } = useCurrentUser();
     const { data: group, isLoading: isGroupLoading, isError, error } = useGroup(groupId ?? '');
     const { data: members, isLoading: isMembersLoading } = useGroupMembers(group?.memberIds ?? []);
+    const { data: groupBalances } = useGroupBalances(groupId ?? '');
+    const updateGroupMembers = useUpdateGroupMembers();
+    const deleteGroup = useDeleteGroup();
     const [isEditingName, setIsEditingName] = useState(false);
+    const [isConfirmingLeave, setIsConfirmingLeave] = useState(false);
+    const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+
+    const balances = groupBalances?.balances ?? [];
+    const myBalance = balances.find((entry) => entry.userId === currentUser?.id)?.balance ?? 0;
+    const canLeave = myBalance === 0;
+    const canDelete = balances.every((entry) => entry.balance === 0);
+
+    const handleLeave = () => {
+        if (!group || !currentUser) return;
+
+        const toastId = toast.loading('Leaving group…');
+        updateGroupMembers.mutate(
+            {
+                id: group.id,
+                memberIds: group.memberIds.filter((memberId) => memberId !== currentUser.id),
+            },
+            {
+                onSuccess: () => {
+                    toast.success('Left group', { id: toastId });
+                    navigate('/groups');
+                },
+                onError: (mutationError) => toast.error(mutationError.message, { id: toastId }),
+            },
+        );
+    };
+
+    const handleDeleteGroup = () => {
+        if (!group) return;
+
+        const toastId = toast.loading('Group is being deleted…');
+        deleteGroup.mutate(group.id, {
+            onSuccess: () => {
+                toast.success('Group deleted', { id: toastId });
+                navigate('/groups');
+            },
+            onError: (mutationError) => toast.error(mutationError.message, { id: toastId }),
+        });
+    };
 
     let content: ReactNode;
     if (isGroupLoading) {
@@ -59,18 +108,26 @@ export function GroupSettingsPage() {
                 <div className="border-border flex flex-col gap-3 border-t pt-6 sm:flex-row">
                     <button
                         type="button"
-                        disabled
-                        title="Leave group (coming soon)"
-                        className="border-border text-surface-foreground flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-md border p-3 text-sm font-medium opacity-60 sm:flex-1"
+                        disabled={!canLeave || updateGroupMembers.isPending}
+                        title={
+                            canLeave ? undefined : 'Settle your balance before leaving this group'
+                        }
+                        onClick={() => setIsConfirmingLeave(true)}
+                        className="border-border text-surface-foreground hover:bg-muted flex w-full cursor-pointer items-center justify-center gap-2 rounded-md border p-3 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-60"
                     >
                         <LogOut className="size-4" />
                         Leave group
                     </button>
                     <button
                         type="button"
-                        disabled
-                        title="Delete group (coming soon)"
-                        className="border-border flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-md border p-3 text-sm font-medium text-red-600 opacity-60 sm:flex-1"
+                        disabled={!canDelete || deleteGroup.isPending}
+                        title={
+                            canDelete
+                                ? undefined
+                                : 'Everyone must be settled up before deleting this group'
+                        }
+                        onClick={() => setIsConfirmingDelete(true)}
+                        className="border-border flex w-full cursor-pointer items-center justify-center gap-2 rounded-md border p-3 text-sm font-medium text-red-600 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                         <Trash2 className="size-4" />
                         Delete group
@@ -91,6 +148,32 @@ export function GroupSettingsPage() {
             </Link>
 
             {content}
+
+            <ConfirmationDialog
+                open={isConfirmingLeave}
+                onOpenChange={setIsConfirmingLeave}
+                title="Leave this group?"
+                description="You'll need a new invite or to be added back by another member to rejoin."
+                confirmLabel="Leave"
+                destructive
+                onConfirm={() => {
+                    setIsConfirmingLeave(false);
+                    handleLeave();
+                }}
+            />
+
+            <ConfirmationDialog
+                open={isConfirmingDelete}
+                onOpenChange={setIsConfirmingDelete}
+                title={`Delete "${group?.name ?? 'this group'}"?`}
+                description="This permanently removes the group and all of its expenses, splits, and payments."
+                confirmLabel="Delete"
+                destructive
+                onConfirm={() => {
+                    setIsConfirmingDelete(false);
+                    handleDeleteGroup();
+                }}
+            />
         </div>
     );
 }

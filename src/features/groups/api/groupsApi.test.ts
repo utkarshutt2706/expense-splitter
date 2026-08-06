@@ -2,13 +2,14 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type { Group } from '@data/entities';
 import { httpClient } from '@lib/api/httpClient';
-import { create, getAll, getById, update } from './groupsApi';
+import { create, getAll, getById, remove, update } from './groupsApi';
 
 vi.mock('@lib/api/httpClient', () => ({
     httpClient: {
         get: vi.fn(),
         post: vi.fn(),
         patch: vi.fn(),
+        delete: vi.fn(),
     },
 }));
 
@@ -61,5 +62,13 @@ describe('groupsApi', () => {
 
         expect(httpClient.patch).toHaveBeenCalledWith('/groups/group-1', { name: 'Ski Trip' });
         expect(result).toEqual(renamed);
+    });
+
+    it('remove deletes the group at /groups/:id', async () => {
+        vi.mocked(httpClient.delete).mockResolvedValue({ data: undefined });
+
+        await remove('group-1');
+
+        expect(httpClient.delete).toHaveBeenCalledWith('/groups/group-1');
     });
 });
