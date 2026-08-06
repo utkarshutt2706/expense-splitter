@@ -4,6 +4,7 @@ import { httpClient } from '@lib/api/httpClient';
 export interface InvitationValidation {
     email: string;
     group: { id: string; name: string };
+    inviterName: string;
 }
 
 // Only for emails that aren't registered yet -- idempotent, calling again for

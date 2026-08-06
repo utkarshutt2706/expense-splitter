@@ -35,6 +35,7 @@ describe('invitationsApi', () => {
         const validation = {
             email: 'jamie@example.com',
             group: { id: 'group-1', name: 'Goa Trip' },
+            inviterName: 'Alice',
         };
         vi.mocked(httpClient.get).mockResolvedValue({ data: validation });
 

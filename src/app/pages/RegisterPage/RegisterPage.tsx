@@ -106,8 +106,9 @@ export function RegisterPage() {
 
                 {invitation && (
                     <p className="bg-brand-50 text-brand-700 border-brand-200 rounded-md border px-3 py-2 text-sm">
-                        <strong>{invitation.group.name}</strong> invited you to Expense Splitter —
-                        sign up with <strong>{invitation.email}</strong> to join automatically.
+                        <strong>{invitation.inviterName}</strong> invited you to Expense Splitter —
+                        sign up with <strong>{invitation.email}</strong> to join group{' '}
+                        <strong>"{invitation.group.name}"</strong> automatically.
                     </p>
                 )}
                 {inviteToken && !isValidatingInvite && isInviteInvalid && (

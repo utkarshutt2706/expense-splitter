@@ -262,7 +262,11 @@ describe('RegisterPage', () => {
 
     it('prefills and locks the email field from a valid invite, and shows who invited them', () => {
         mockInvitation({
-            data: { email: 'jamie@example.com', group: { id: 'group-1', name: 'Goa Trip' } },
+            data: {
+                email: 'jamie@example.com',
+                group: { id: 'group-1', name: 'Goa Trip' },
+                inviterName: 'Alice',
+            },
         });
         vi.mocked(useRegister).mockReturnValue({
             mutateAsync: vi.fn(),
@@ -271,13 +275,18 @@ describe('RegisterPage', () => {
         renderPage('/register?invite=raw-token');
 
         expect(screen.getByText(/goa trip/i)).toBeInTheDocument();
+        expect(screen.getByText(/alice/i)).toBeInTheDocument();
         expect(screen.getByLabelText(/email/i)).toHaveValue('jamie@example.com');
         expect(screen.getByLabelText(/email/i)).toHaveAttribute('readonly');
     });
 
     it('registers with the inviteToken when the invite is valid', async () => {
         mockInvitation({
-            data: { email: 'jamie@example.com', group: { id: 'group-1', name: 'Goa Trip' } },
+            data: {
+                email: 'jamie@example.com',
+                group: { id: 'group-1', name: 'Goa Trip' },
+                inviterName: 'Alice',
+            },
         });
         const mutateAsync = vi.fn().mockResolvedValue(undefined);
         vi.mocked(useRegister).mockReturnValue({
