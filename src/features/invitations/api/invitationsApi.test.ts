@@ -2,11 +2,12 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type { Invitation } from '@data/entities';
 import { httpClient } from '@lib/api/httpClient';
-import { create } from './invitationsApi';
+import { create, validate } from './invitationsApi';
 
 vi.mock('@lib/api/httpClient', () => ({
     httpClient: {
         post: vi.fn(),
+        get: vi.fn(),
     },
 }));
 
@@ -28,5 +29,18 @@ describe('invitationsApi', () => {
             email: 'jamie@example.com',
         });
         expect(result).toEqual(invitation);
+    });
+
+    it('validate gets /invitations/:token and returns the invited email and group', async () => {
+        const validation = {
+            email: 'jamie@example.com',
+            group: { id: 'group-1', name: 'Goa Trip' },
+        };
+        vi.mocked(httpClient.get).mockResolvedValue({ data: validation });
+
+        const result = await validate('raw-token');
+
+        expect(httpClient.get).toHaveBeenCalledWith('/invitations/raw-token');
+        expect(result).toEqual(validation);
     });
 });
