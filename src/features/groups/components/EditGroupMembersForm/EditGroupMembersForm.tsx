@@ -73,7 +73,9 @@ export function EditGroupMembersForm({
         ...foundUsers.filter((found) => !users.some((user) => user.id === found.id)),
     ];
     const query = search.trim();
-    const visibleUsers = query ? allUsers.filter((candidate) => matchesSearch(candidate, query)) : allUsers;
+    const visibleUsers = query
+        ? allUsers.filter((candidate) => matchesSearch(candidate, query))
+        : allUsers;
 
     const submit = (event: SubmitEvent<HTMLFormElement>) => {
         event.preventDefault();
