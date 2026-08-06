@@ -6,6 +6,7 @@ import type { Group, User } from '@data/entities';
 import { useFriends } from '@features/friends';
 import { useUpdateGroupMembers } from '@features/groups/hooks/useUpdateGroupMembers';
 import { EditGroupMembersDialog } from '../EditGroupMembersDialog';
+import type { EditGroupMembersFormValues } from '../EditGroupMembersForm';
 
 interface EditGroupMembersActionProps {
     readonly group: Group;
@@ -22,12 +23,21 @@ export function EditGroupMembersAction({ group, members }: EditGroupMembersActio
     );
     const editableUsers = Array.from(editableUsersById.values());
 
-    const handleUpdateMembers = ({ memberIds }: { memberIds: string[] }) => {
+    const handleUpdateMembers = ({ memberIds, inviteEmails }: EditGroupMembersFormValues) => {
         const toastId = toast.loading('Group members are being updated…');
         updateMembers.mutate(
-            { id: group.id, memberIds },
+            { id: group.id, memberIds, inviteEmails },
             {
-                onSuccess: () => toast.success('Group members updated', { id: toastId }),
+                onSuccess: ({ failedInviteEmails }) => {
+                    if (failedInviteEmails.length > 0) {
+                        toast.warning(
+                            `Group members updated, but couldn't invite ${failedInviteEmails.join(', ')}`,
+                            { id: toastId },
+                        );
+                    } else {
+                        toast.success('Group members updated', { id: toastId });
+                    }
+                },
                 onError: (error) => toast.error(error.message, { id: toastId }),
             },
         );
