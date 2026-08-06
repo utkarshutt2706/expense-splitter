@@ -106,7 +106,10 @@ describe('useCreateGroup', () => {
 
         await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-        expect(invitationsApi.create).toHaveBeenCalledWith('server-generated-id', 'jamie@example.com');
+        expect(invitationsApi.create).toHaveBeenCalledWith(
+            'server-generated-id',
+            'jamie@example.com',
+        );
         expect(result.current.data).toEqual({ group: created, failedInviteEmails: [] });
     });
 

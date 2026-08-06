@@ -48,9 +48,12 @@ export function GroupsPage() {
         createGroup.mutate(values, {
             onSuccess: ({ failedInviteEmails }) => {
                 if (failedInviteEmails.length > 0) {
-                    toast.warning(`Group created, but couldn't invite ${failedInviteEmails.join(', ')}`, {
-                        id: toastId,
-                    });
+                    toast.warning(
+                        `Group created, but couldn't invite ${failedInviteEmails.join(', ')}`,
+                        {
+                            id: toastId,
+                        },
+                    );
                 } else {
                     toast.success('Group created', { id: toastId });
                 }

@@ -204,11 +204,9 @@ describe('GroupsPage', () => {
         it('shows a loading toast immediately, then updates it to success', () => {
             let onSuccess: ((result: { failedInviteEmails: string[] }) => void) | undefined;
             vi.mocked(useCreateGroup).mockReturnValue({
-                mutate: vi.fn(
-                    (_values, options: { onSuccess?: typeof onSuccess }) => {
-                        onSuccess = options.onSuccess;
-                    },
-                ),
+                mutate: vi.fn((_values, options: { onSuccess?: typeof onSuccess }) => {
+                    onSuccess = options.onSuccess;
+                }),
             } as unknown as ReturnType<typeof useCreateGroup>);
 
             renderPage();
@@ -226,11 +224,9 @@ describe('GroupsPage', () => {
         it('warns when the group was created but an invite failed', () => {
             let onSuccess: ((result: { failedInviteEmails: string[] }) => void) | undefined;
             vi.mocked(useCreateGroup).mockReturnValue({
-                mutate: vi.fn(
-                    (_values, options: { onSuccess?: typeof onSuccess }) => {
-                        onSuccess = options.onSuccess;
-                    },
-                ),
+                mutate: vi.fn((_values, options: { onSuccess?: typeof onSuccess }) => {
+                    onSuccess = options.onSuccess;
+                }),
             } as unknown as ReturnType<typeof useCreateGroup>);
 
             renderPage();

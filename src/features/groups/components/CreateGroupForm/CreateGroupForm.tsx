@@ -77,7 +77,9 @@ export function CreateGroupForm({ friends, onSubmit, onCancel }: CreateGroupForm
         ...foundUsers.filter((found) => !friends.some((friend) => friend.id === found.id)),
     ];
     const query = search.trim();
-    const visibleUsers = query ? allUsers.filter((candidate) => matchesSearch(candidate, query)) : allUsers;
+    const visibleUsers = query
+        ? allUsers.filter((candidate) => matchesSearch(candidate, query))
+        : allUsers;
 
     const submit = handleSubmit((values) => {
         onSubmit({ name: values.name, memberIds, inviteEmails });
