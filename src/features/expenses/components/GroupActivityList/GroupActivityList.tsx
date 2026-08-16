@@ -9,7 +9,9 @@ import { ActivityRowSkeleton } from '@features/expenses/components/ActivityRowSk
 import { useDeleteExpense } from '@features/expenses/hooks/useDeleteExpense';
 import { useExpenses } from '@features/expenses/hooks/useExpenses';
 import { calculateExpenseInvolvement } from '@features/expenses/utils/calculateExpenseInvolvement';
-import { usePayments } from '@features/payments';
+import { usePayments, useUpdatePayment } from '@features/payments';
+import { RecordPaymentDialog } from '@features/payments/components/RecordPaymentDialog';
+import type { RecordPaymentFormValues } from '@features/payments/components/RecordPaymentForm';
 import { Avatar, ConfirmationDialog, FetchingIndicator, SwipeableRow } from '@shared/components';
 
 interface GroupActivityListProps {
@@ -106,16 +108,12 @@ interface PaymentRowProps {
     readonly payment: Payment;
     readonly membersById: Map<string, User>;
     readonly currentUserId: string | undefined;
+    readonly onEdit: () => void;
 }
-
-function noop() {}
 
 // No detail page exists for a payment (it's a single atomic record, nothing to
 // drill into), so this renders as a plain div rather than a Link like ExpenseRow.
-// The drag-to-reveal actions are visible here but not yet functional — the
-// backend has no update/delete for payments (create + list-by-group only,
-// immutable once created); wiring these up is follow-up work.
-function PaymentRow({ payment, membersById, currentUserId }: PaymentRowProps) {
+function PaymentRow({ payment, membersById, currentUserId, onEdit }: PaymentRowProps) {
     const from = membersById.get(payment.fromUserId);
     const to = membersById.get(payment.toUserId);
 
@@ -126,16 +124,14 @@ function PaymentRow({ payment, membersById, currentUserId }: PaymentRowProps) {
                     key: 'edit',
                     label: 'Edit',
                     icon: Pencil,
-                    onClick: noop,
-                    disabled: true,
-                    title: 'Editing payments is coming soon',
+                    onClick: onEdit,
                 },
                 {
                     key: 'delete',
                     label: 'Delete',
                     icon: Trash2,
                     tone: 'destructive',
-                    onClick: noop,
+                    onClick: () => undefined,
                     disabled: true,
                     title: 'Deleting payments is coming soon',
                 },
@@ -183,7 +179,9 @@ export function GroupActivityList({
         isError: isPaymentsError,
     } = usePayments(groupId);
     const deleteExpense = useDeleteExpense();
+    const updatePayment = useUpdatePayment();
     const [deletingExpense, setDeletingExpense] = useState<Expense | null>(null);
+    const [editingPayment, setEditingPayment] = useState<Payment | null>(null);
 
     const handleDeleteExpense = () => {
         if (!deletingExpense) return;
@@ -193,6 +191,19 @@ export function GroupActivityList({
             { id: deletingExpense.id, groupId },
             {
                 onSuccess: () => toast.success('Expense deleted', { id: toastId }),
+                onError: (error) => toast.error(error.message, { id: toastId }),
+            },
+        );
+    };
+
+    const handleUpdatePayment = ({ fromUserId, toUserId, amount }: RecordPaymentFormValues) => {
+        if (!editingPayment) return;
+
+        const toastId = toast.loading('Payment is being updated…');
+        updatePayment.mutate(
+            { groupId, id: editingPayment.id, fromUserId, toUserId, amount },
+            {
+                onSuccess: () => toast.success('Payment updated', { id: toastId }),
                 onError: (error) => toast.error(error.message, { id: toastId }),
             },
         );
@@ -273,6 +284,7 @@ export function GroupActivityList({
                                 payment={item.payment}
                                 membersById={membersById}
                                 currentUserId={currentUser?.id}
+                                onEdit={() => setEditingPayment(item.payment)}
                             />
                         )}
                     </li>
@@ -292,6 +304,25 @@ export function GroupActivityList({
                     setDeletingExpense(null);
                     handleDeleteExpense();
                 }}
+            />
+
+            <RecordPaymentDialog
+                mode="edit"
+                open={editingPayment !== null}
+                onOpenChange={(open) => {
+                    if (!open) setEditingPayment(null);
+                }}
+                members={members}
+                initialValues={
+                    editingPayment
+                        ? {
+                              fromUserId: editingPayment.fromUserId,
+                              toUserId: editingPayment.toUserId,
+                              amount: editingPayment.amount,
+                          }
+                        : undefined
+                }
+                onSubmit={handleUpdatePayment}
             />
         </>
     );

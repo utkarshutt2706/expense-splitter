@@ -13,6 +13,7 @@ interface RecordPaymentDialogProps {
     readonly members: User[];
     readonly initialValues?: RecordPaymentFormInitialValues;
     readonly onSubmit: (values: RecordPaymentFormValues) => void;
+    readonly mode?: 'create' | 'edit';
 }
 
 export function RecordPaymentDialog({
@@ -21,17 +22,25 @@ export function RecordPaymentDialog({
     members,
     initialValues,
     onSubmit,
+    mode = 'create',
 }: RecordPaymentDialogProps) {
+    const isEditing = mode === 'edit';
+
     return (
         <FormDialog
             open={open}
             onOpenChange={onOpenChange}
-            title="Record a payment"
-            description="Record a direct payment between two group members."
+            title={isEditing ? 'Edit payment' : 'Record a payment'}
+            description={
+                isEditing
+                    ? 'Update the payer, recipient, or amount for this payment.'
+                    : 'Record a direct payment between two group members.'
+            }
         >
             <RecordPaymentForm
                 members={members}
                 initialValues={initialValues}
+                submitLabel={isEditing ? 'Save changes' : 'Record payment'}
                 {...closeOnSubmit(onOpenChange, onSubmit)}
             />
         </FormDialog>

@@ -47,6 +47,21 @@ describe('RecordPaymentDialog', () => {
         expect(screen.getByText(/record a payment/i)).toBeInTheDocument();
     });
 
+    it('uses edit copy when editing a payment', () => {
+        render(
+            <RecordPaymentDialog
+                mode="edit"
+                open
+                onOpenChange={vi.fn()}
+                members={[]}
+                onSubmit={vi.fn()}
+            />,
+        );
+
+        expect(screen.getByRole('heading', { name: 'Edit payment' })).toBeInTheDocument();
+        expect(screen.getByText(/update the payer, recipient, or amount/i)).toBeInTheDocument();
+    });
+
     it('reports closed when the close button is clicked', async () => {
         const onOpenChange = vi.fn();
         const user = userEvent.setup();

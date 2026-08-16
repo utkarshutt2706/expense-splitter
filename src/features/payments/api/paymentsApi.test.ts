@@ -2,12 +2,13 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type { Payment } from '@data/entities';
 import { httpClient } from '@lib/api/httpClient';
-import { create, getByGroupId } from './paymentsApi';
+import { create, getByGroupId, update } from './paymentsApi';
 
 vi.mock('@lib/api/httpClient', () => ({
     httpClient: {
         get: vi.fn(),
         post: vi.fn(),
+        patch: vi.fn(),
     },
 }));
 
@@ -45,5 +46,23 @@ describe('paymentsApi', () => {
             amount: 45,
         });
         expect(result).toEqual(payment);
+    });
+
+    it('update patches the payment at /groups/:groupId/payments/:id', async () => {
+        const updated = { ...payment, amount: 60 };
+        vi.mocked(httpClient.patch).mockResolvedValue({ data: updated });
+
+        const result = await update('group-1', 'payment-1', {
+            fromUserId: 'user-1',
+            toUserId: 'user-2',
+            amount: 60,
+        });
+
+        expect(httpClient.patch).toHaveBeenCalledWith('/groups/group-1/payments/payment-1', {
+            fromUserId: 'user-1',
+            toUserId: 'user-2',
+            amount: 60,
+        });
+        expect(result).toEqual(updated);
     });
 });
