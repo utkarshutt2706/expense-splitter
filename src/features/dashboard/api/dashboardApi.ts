@@ -11,6 +11,9 @@ export interface DashboardGroupSpend {
     groupId: string;
     name: string;
     amount: number;
+    actualPaid: number;
+    currentUserShare: number;
+    memberShares: DashboardMemberShare[];
 }
 
 export interface DashboardSummary {

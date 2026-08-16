@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -70,8 +70,48 @@ describe('DashboardPage', () => {
                     { userId: 'friend', name: 'Asha', amount: 1950, isCurrentUser: false },
                 ],
                 groupSpend: [
-                    { groupId: 'trip', name: 'Goa trip', amount: 3000 },
-                    { groupId: 'home', name: 'Home', amount: 200 },
+                    {
+                        groupId: 'trip',
+                        name: 'Goa trip',
+                        amount: 3000,
+                        actualPaid: 2800,
+                        currentUserShare: 1100,
+                        memberShares: [
+                            {
+                                userId: 'friend',
+                                name: 'Asha',
+                                amount: 1900,
+                                isCurrentUser: false,
+                            },
+                            {
+                                userId: 'me',
+                                name: 'Utkarsh',
+                                amount: 1100,
+                                isCurrentUser: true,
+                            },
+                        ],
+                    },
+                    {
+                        groupId: 'home',
+                        name: 'Home',
+                        amount: 200,
+                        actualPaid: 200,
+                        currentUserShare: 150,
+                        memberShares: [
+                            {
+                                userId: 'me',
+                                name: 'Utkarsh',
+                                amount: 150,
+                                isCurrentUser: true,
+                            },
+                            {
+                                userId: 'friend',
+                                name: 'Asha',
+                                amount: 50,
+                                isCurrentUser: false,
+                            },
+                        ],
+                    },
                 ],
             },
         } as unknown as ReturnType<typeof useDashboard>);
@@ -80,7 +120,11 @@ describe('DashboardPage', () => {
 
         expect(screen.getByText('Actually paid by you')).toBeInTheDocument();
         expect(screen.getByText('Your fair share')).toBeInTheDocument();
-        expect(screen.getByRole('img', { name: /per-head share chart/i })).toBeInTheDocument();
+        expect(screen.getByText('Paid by you in Goa trip')).toBeInTheDocument();
+        expect(screen.getByText('Your share in Goa trip')).toBeInTheDocument();
+        expect(
+            screen.getByRole('img', { name: /per-person share chart for goa trip/i }),
+        ).toBeInTheDocument();
         expect(screen.getByText('You')).toBeInTheDocument();
         expect(screen.getByText('Asha')).toBeInTheDocument();
         expect(screen.getByRole('link', { name: 'Goa trip' })).toHaveAttribute(
@@ -88,7 +132,17 @@ describe('DashboardPage', () => {
             '/groups/trip',
         );
         expect(screen.getByRole('link', { name: 'Home' })).toHaveAttribute('href', '/groups/home');
-        expect(screen.getAllByText('₹3,200.00')).toHaveLength(2);
-        expect(screen.getAllByText('₹1,250.00')).toHaveLength(2);
+        expect(screen.getByText('₹3,200.00')).toBeInTheDocument();
+        expect(screen.getByText('₹1,250.00')).toBeInTheDocument();
+
+        fireEvent.change(screen.getByLabelText(/group details/i), {
+            target: { value: 'home' },
+        });
+
+        expect(screen.getByText('Paid by you in Home')).toBeInTheDocument();
+        expect(screen.getByText('Your share in Home')).toBeInTheDocument();
+        expect(
+            screen.getByRole('img', { name: /per-person share chart for home/i }),
+        ).toBeInTheDocument();
     });
 });
