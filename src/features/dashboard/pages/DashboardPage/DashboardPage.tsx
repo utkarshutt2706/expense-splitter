@@ -1,14 +1,5 @@
-import {
-    ArrowRight,
-    HandCoins,
-    PieChart,
-    ReceiptIndianRupee,
-    Sparkles,
-    UsersRound,
-    WalletCards,
-} from 'lucide-react';
+import { ArrowRight, PieChart, ReceiptIndianRupee, Sparkles, WalletCards } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { useState } from 'react';
 import { Link } from 'react-router';
 
 import type { DashboardMemberShare } from '@features/dashboard/api/dashboardApi';
@@ -69,16 +60,13 @@ function SummaryCard({
     );
 }
 
-function ShareDonut({
-    shares,
-    accessibleLabel,
-}: Readonly<{ shares: DashboardMemberShare[]; accessibleLabel: string }>) {
+function ShareDonut({ shares }: Readonly<{ shares: DashboardMemberShare[] }>) {
     const total = shares.reduce((sum, share) => sum + share.amount, 0);
-    const percentages = shares.map((share) => (share.amount / total) * 100);
+    const percentages = shares.map((share) => (total === 0 ? 0 : (share.amount / total) * 100));
 
     return (
         <div className="grid items-center gap-6 sm:grid-cols-[minmax(180px,0.8fr)_1.2fr]">
-            <div className="relative mx-auto size-48" role="img" aria-label={accessibleLabel}>
+            <div className="relative mx-auto size-48" role="img" aria-label="Per-head share chart">
                 <svg viewBox="0 0 42 42" className="size-full -rotate-90" aria-hidden="true">
                     <circle
                         cx="21"
@@ -89,7 +77,7 @@ function ShareDonut({
                         strokeWidth="6"
                     />
                     {shares.map((share, index) => {
-                        const percentage = percentages[index]!;
+                        const percentage = percentages[index] ?? 0;
                         const offset = percentages
                             .slice(0, index)
                             .reduce((sum, value) => sum + value, 0);
@@ -140,8 +128,6 @@ function DashboardSkeleton() {
             <div className="grid gap-4 sm:grid-cols-2">
                 <Skeleton className="h-48 rounded-2xl" />
                 <Skeleton className="h-48 rounded-2xl" />
-                <Skeleton className="h-48 rounded-2xl" />
-                <Skeleton className="h-48 rounded-2xl" />
             </div>
             <Skeleton className="h-80 rounded-2xl" />
         </div>
@@ -150,7 +136,6 @@ function DashboardSkeleton() {
 
 export function DashboardPage() {
     const { data, isLoading, isError } = useDashboard();
-    const [selectedGroupId, setSelectedGroupId] = useState('');
 
     if (isLoading) return <DashboardSkeleton />;
     if (isError || !data) {
@@ -162,9 +147,8 @@ export function DashboardPage() {
         );
     }
 
-    const selectedGroup =
-        data.groupSpend.find((group) => group.groupId === selectedGroupId) ?? data.groupSpend[0];
-    const largestGroupAmount = Math.max(...data.groupSpend.map((group) => group.amount));
+    const hasActivity = data.memberShares.length > 0;
+    const largestGroupAmount = data.groupSpend[0]?.amount ?? 0;
 
     return (
         <div className="mx-auto max-w-6xl space-y-6">
@@ -185,7 +169,7 @@ export function DashboardPage() {
                 </div>
             </section>
 
-            {!selectedGroup ? (
+            {!hasActivity ? (
                 <section className="border-border bg-muted/40 rounded-2xl border p-10 text-center">
                     <ReceiptIndianRupee className="text-brand-500 mx-auto size-10" />
                     <h2 className="font-display mt-4 text-2xl">Your dashboard is ready</h2>
@@ -201,7 +185,7 @@ export function DashboardPage() {
                 </section>
             ) : (
                 <>
-                    <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                    <section className="grid gap-4 sm:grid-cols-2">
                         <SummaryCard
                             icon={<WalletCards className="size-5" />}
                             label="Actually paid by you"
@@ -214,18 +198,6 @@ export function DashboardPage() {
                             value={data.currentUserShare}
                             supportingText="Your portion across every shared expense"
                         />
-                        <SummaryCard
-                            icon={<HandCoins className="size-5" />}
-                            label={`Paid by you in ${selectedGroup.name}`}
-                            value={selectedGroup.actualPaid}
-                            supportingText="Money you directly paid in the selected group"
-                        />
-                        <SummaryCard
-                            icon={<UsersRound className="size-5" />}
-                            label={`Your share in ${selectedGroup.name}`}
-                            value={selectedGroup.currentUserShare}
-                            supportingText="Your portion of the selected group's expenses"
-                        />
                     </section>
 
                     <section className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
@@ -235,45 +207,26 @@ export function DashboardPage() {
                                     People
                                 </p>
                                 <h2 className="font-display mt-1 text-2xl font-semibold">
-                                    {selectedGroup.name} shares
+                                    Everyone's share
                                 </h2>
                                 <p className="text-muted-foreground mt-1 text-sm">
-                                    A per-person view of the selected group's expenses.
+                                    A per-head view across all your active groups.
                                 </p>
                             </div>
-                            <ShareDonut
-                                shares={selectedGroup.memberShares}
-                                accessibleLabel={`Per-person share chart for ${selectedGroup.name}`}
-                            />
+                            <ShareDonut shares={data.memberShares} />
                         </article>
 
                         <article className="border-border rounded-2xl border p-5 md:p-6">
-                            <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-                                <div>
-                                    <p className="text-brand-600 text-xs font-semibold tracking-wider uppercase">
-                                        Groups
-                                    </p>
-                                    <h2 className="font-display mt-1 text-2xl font-semibold">
-                                        Spend by group
-                                    </h2>
-                                    <p className="text-muted-foreground mt-1 text-sm">
-                                        Where your shared expenses are concentrated.
-                                    </p>
-                                </div>
-                                <label className="text-muted-foreground text-xs font-medium">
-                                    Group details
-                                    <select
-                                        value={selectedGroup.groupId}
-                                        onChange={(event) => setSelectedGroupId(event.target.value)}
-                                        className="border-border bg-surface text-surface-foreground mt-1 block max-w-48 rounded-lg border px-3 py-2 text-sm"
-                                    >
-                                        {data.groupSpend.map((group) => (
-                                            <option key={group.groupId} value={group.groupId}>
-                                                {group.name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </label>
+                            <div className="mb-6">
+                                <p className="text-brand-600 text-xs font-semibold tracking-wider uppercase">
+                                    Groups
+                                </p>
+                                <h2 className="font-display mt-1 text-2xl font-semibold">
+                                    Spend by group
+                                </h2>
+                                <p className="text-muted-foreground mt-1 text-sm">
+                                    Where your shared expenses are concentrated.
+                                </p>
                             </div>
                             <ul className="space-y-5">
                                 {data.groupSpend.map((group) => (
@@ -293,7 +246,7 @@ export function DashboardPage() {
                                             <div
                                                 className="from-brand-600 to-brand-300 h-full rounded-full bg-gradient-to-r"
                                                 style={{
-                                                    width: `${Math.max((group.amount / largestGroupAmount) * 100, 3)}%`,
+                                                    width: `${largestGroupAmount === 0 ? 0 : Math.max((group.amount / largestGroupAmount) * 100, 3)}%`,
                                                 }}
                                             />
                                         </div>
