@@ -26,6 +26,7 @@ export interface Expense {
     description: string;
     amount: number;
     paidByUserId: string;
+    createdByUserId?: string;
     splitType: SplitType;
     splits: ExpenseSplit[];
     createdAt: string;

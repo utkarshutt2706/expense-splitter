@@ -74,7 +74,7 @@ export function ExpenseDetailPage() {
         const splitsByUserId = new Map(expense.splits.map((split) => [split.userId, split.amount]));
         const payer = membersById.get(expense.paidByUserId);
         const participants = (members ?? []).filter((member) => splitsByUserId.has(member.id));
-        const addedBy = currentUser ? membersById.get(currentUser.id) : undefined;
+        const addedBy = membersById.get(expense.createdByUserId ?? expense.paidByUserId);
         const createdDate = dateFormatter.format(new Date(expense.createdAt));
         // No dedicated payment-date field yet — createdAt stands in until the
         // add-expense form gains one.
