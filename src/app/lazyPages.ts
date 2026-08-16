@@ -12,6 +12,12 @@ export const RegisterPage = lazy(() =>
     })),
 );
 
+export const DashboardPage = lazy(() =>
+    import('@features/dashboard/pages/DashboardPage').then((module) => ({
+        default: module.DashboardPage,
+    })),
+);
+
 export const FriendsPage = lazy(() =>
     import('@features/friends/pages/FriendsPage').then((module) => ({
         default: module.FriendsPage,
