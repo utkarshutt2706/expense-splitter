@@ -27,3 +27,7 @@ export async function update(
     const { data } = await httpClient.patch<Payment>(`/groups/${groupId}/payments/${id}`, input);
     return data;
 }
+
+export async function remove(groupId: string, id: string): Promise<void> {
+    await httpClient.delete(`/groups/${groupId}/payments/${id}`);
+}
