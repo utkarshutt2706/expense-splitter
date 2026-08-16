@@ -69,6 +69,7 @@ const expense: Expense = {
     description: 'Chicken',
     amount: 90,
     paidByUserId: CURRENT_USER_ID,
+    createdByUserId: 'friend-1',
     splitType: 'equal',
     splits: [
         { userId: CURRENT_USER_ID, amount: 45 },
@@ -220,7 +221,7 @@ describe('ExpenseDetailPage', () => {
         renderPage();
 
         expect(screen.getByText('₹90.00')).toBeInTheDocument();
-        expect(screen.getByText('Added by you on Jul 24, 2026')).toBeInTheDocument();
+        expect(screen.getByText('Added by abhinav on Jul 24, 2026')).toBeInTheDocument();
     });
 
     it('shows who paid, the amount, and the paid date as a heading above the split breakdown', () => {
