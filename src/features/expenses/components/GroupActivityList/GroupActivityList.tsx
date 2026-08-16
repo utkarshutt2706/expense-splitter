@@ -9,7 +9,7 @@ import { ActivityRowSkeleton } from '@features/expenses/components/ActivityRowSk
 import { useDeleteExpense } from '@features/expenses/hooks/useDeleteExpense';
 import { useExpenses } from '@features/expenses/hooks/useExpenses';
 import { calculateExpenseInvolvement } from '@features/expenses/utils/calculateExpenseInvolvement';
-import { usePayments, useUpdatePayment } from '@features/payments';
+import { useDeletePayment, usePayments, useUpdatePayment } from '@features/payments';
 import { RecordPaymentDialog } from '@features/payments/components/RecordPaymentDialog';
 import type { RecordPaymentFormValues } from '@features/payments/components/RecordPaymentForm';
 import { Avatar, ConfirmationDialog, FetchingIndicator, SwipeableRow } from '@shared/components';
@@ -109,11 +109,12 @@ interface PaymentRowProps {
     readonly membersById: Map<string, User>;
     readonly currentUserId: string | undefined;
     readonly onEdit: () => void;
+    readonly onDelete: () => void;
 }
 
 // No detail page exists for a payment (it's a single atomic record, nothing to
 // drill into), so this renders as a plain div rather than a Link like ExpenseRow.
-function PaymentRow({ payment, membersById, currentUserId, onEdit }: PaymentRowProps) {
+function PaymentRow({ payment, membersById, currentUserId, onEdit, onDelete }: PaymentRowProps) {
     const from = membersById.get(payment.fromUserId);
     const to = membersById.get(payment.toUserId);
 
@@ -131,9 +132,7 @@ function PaymentRow({ payment, membersById, currentUserId, onEdit }: PaymentRowP
                     label: 'Delete',
                     icon: Trash2,
                     tone: 'destructive',
-                    onClick: () => undefined,
-                    disabled: true,
-                    title: 'Deleting payments is coming soon',
+                    onClick: onDelete,
                 },
             ]}
         >
@@ -179,9 +178,11 @@ export function GroupActivityList({
         isError: isPaymentsError,
     } = usePayments(groupId);
     const deleteExpense = useDeleteExpense();
+    const deletePayment = useDeletePayment();
     const updatePayment = useUpdatePayment();
     const [deletingExpense, setDeletingExpense] = useState<Expense | null>(null);
     const [editingPayment, setEditingPayment] = useState<Payment | null>(null);
+    const [deletingPayment, setDeletingPayment] = useState<Payment | null>(null);
 
     const handleDeleteExpense = () => {
         if (!deletingExpense) return;
@@ -204,6 +205,19 @@ export function GroupActivityList({
             { groupId, id: editingPayment.id, fromUserId, toUserId, amount },
             {
                 onSuccess: () => toast.success('Payment updated', { id: toastId }),
+                onError: (error) => toast.error(error.message, { id: toastId }),
+            },
+        );
+    };
+
+    const handleDeletePayment = () => {
+        if (!deletingPayment) return;
+
+        const toastId = toast.loading('Payment is being deleted…');
+        deletePayment.mutate(
+            { groupId, id: deletingPayment.id },
+            {
+                onSuccess: () => toast.success('Payment deleted', { id: toastId }),
                 onError: (error) => toast.error(error.message, { id: toastId }),
             },
         );
@@ -285,6 +299,7 @@ export function GroupActivityList({
                                 membersById={membersById}
                                 currentUserId={currentUser?.id}
                                 onEdit={() => setEditingPayment(item.payment)}
+                                onDelete={() => setDeletingPayment(item.payment)}
                             />
                         )}
                     </li>
@@ -323,6 +338,21 @@ export function GroupActivityList({
                         : undefined
                 }
                 onSubmit={handleUpdatePayment}
+            />
+
+            <ConfirmationDialog
+                open={deletingPayment !== null}
+                onOpenChange={(open) => {
+                    if (!open) setDeletingPayment(null);
+                }}
+                title="Delete this payment?"
+                description={`This will permanently remove the ₹${deletingPayment?.amount.toFixed(2) ?? '0.00'} payment and recalculate group balances.`}
+                confirmLabel="Delete"
+                destructive
+                onConfirm={() => {
+                    setDeletingPayment(null);
+                    handleDeletePayment();
+                }}
             />
         </>
     );

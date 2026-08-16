@@ -2,13 +2,14 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type { Payment } from '@data/entities';
 import { httpClient } from '@lib/api/httpClient';
-import { create, getByGroupId, update } from './paymentsApi';
+import { create, getByGroupId, remove, update } from './paymentsApi';
 
 vi.mock('@lib/api/httpClient', () => ({
     httpClient: {
         get: vi.fn(),
         post: vi.fn(),
         patch: vi.fn(),
+        delete: vi.fn(),
     },
 }));
 
@@ -64,5 +65,13 @@ describe('paymentsApi', () => {
             amount: 60,
         });
         expect(result).toEqual(updated);
+    });
+
+    it('remove deletes the payment at /groups/:groupId/payments/:id', async () => {
+        vi.mocked(httpClient.delete).mockResolvedValue({});
+
+        await expect(remove('group-1', 'payment-1')).resolves.toBeUndefined();
+
+        expect(httpClient.delete).toHaveBeenCalledWith('/groups/group-1/payments/payment-1');
     });
 });

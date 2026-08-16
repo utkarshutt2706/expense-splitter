@@ -1,2 +1,2 @@
 export { RecordPaymentAction } from './components';
-export { usePayments, useUpdatePayment } from './hooks';
+export { useDeletePayment, usePayments, useUpdatePayment } from './hooks';

@@ -8,7 +8,7 @@ import type { Expense, Payment, User } from '@data/entities';
 import { CURRENT_USER_ID } from '@data/seed';
 import { useDeleteExpense } from '@features/expenses/hooks/useDeleteExpense';
 import { useExpenses } from '@features/expenses/hooks/useExpenses';
-import { usePayments, useUpdatePayment } from '@features/payments';
+import { useDeletePayment, usePayments, useUpdatePayment } from '@features/payments';
 import { GroupActivityList } from './GroupActivityList';
 
 const navigateMock = vi.fn();
@@ -29,6 +29,7 @@ vi.mock('@features/expenses/hooks/useDeleteExpense', () => ({
 vi.mock('@features/payments', () => ({
     usePayments: vi.fn(),
     useUpdatePayment: vi.fn(),
+    useDeletePayment: vi.fn(),
 }));
 
 vi.mock('sonner', () => ({
@@ -103,6 +104,9 @@ beforeEach(() => {
     vi.mocked(useUpdatePayment).mockReturnValue({
         mutate: vi.fn(),
     } as unknown as ReturnType<typeof useUpdatePayment>);
+    vi.mocked(useDeletePayment).mockReturnValue({
+        mutate: vi.fn(),
+    } as unknown as ReturnType<typeof useDeletePayment>);
 });
 
 describe('GroupActivityList', () => {
@@ -353,18 +357,67 @@ describe('GroupActivityList', () => {
             ]);
         });
 
-        it('opens a prefilled edit dialog while delete remains unavailable', async () => {
+        it('opens a prefilled edit dialog', async () => {
             const user = userEvent.setup();
             renderList();
 
             const edit = screen.getByRole('button', { name: 'Edit', hidden: true });
             expect(edit).toBeEnabled();
-            expect(screen.getByRole('button', { name: 'Delete', hidden: true })).toBeDisabled();
 
             await user.click(edit);
 
             expect(screen.getByRole('heading', { name: 'Edit payment' })).toBeInTheDocument();
             expect(screen.getByLabelText('Amount')).toHaveValue(25);
+        });
+
+        it('asks for confirmation before deleting the payment', async () => {
+            const user = userEvent.setup();
+            renderList();
+
+            await user.click(screen.getByRole('button', { name: 'Delete', hidden: true }));
+
+            expect(
+                screen.getByRole('heading', { name: 'Delete this payment?' }),
+            ).toBeInTheDocument();
+            expect(screen.getByText(/permanently remove the ₹25\.00 payment/i)).toBeInTheDocument();
+        });
+
+        it('does not delete the payment when confirmation is dismissed', async () => {
+            const mutate = vi.fn();
+            vi.mocked(useDeletePayment).mockReturnValue({
+                mutate,
+            } as unknown as ReturnType<typeof useDeletePayment>);
+            const user = userEvent.setup();
+            renderList();
+
+            await user.click(screen.getByRole('button', { name: 'Delete', hidden: true }));
+            await user.click(screen.getByRole('button', { name: 'Cancel' }));
+
+            expect(mutate).not.toHaveBeenCalled();
+        });
+
+        it('deletes the payment and reports success after confirmation', async () => {
+            let onSuccess: (() => void) | undefined;
+            const mutate = vi.fn((_values, options: { onSuccess?: () => void }) => {
+                onSuccess = options.onSuccess;
+            });
+            vi.mocked(useDeletePayment).mockReturnValue({
+                mutate,
+            } as unknown as ReturnType<typeof useDeletePayment>);
+            const user = userEvent.setup();
+            renderList();
+
+            await user.click(screen.getByRole('button', { name: 'Delete', hidden: true }));
+            await user.click(screen.getByRole('button', { name: 'Delete' }));
+
+            expect(toast.loading).toHaveBeenCalledWith('Payment is being deleted…');
+            expect(mutate).toHaveBeenCalledWith(
+                { groupId: 'group-1', id: 'payment-1' },
+                expect.anything(),
+            );
+
+            onSuccess?.();
+            expect(toast.success).toHaveBeenCalledWith('Payment deleted', { id: 'toast-id' });
         });
 
         it('updates the payment and reports success', async () => {
