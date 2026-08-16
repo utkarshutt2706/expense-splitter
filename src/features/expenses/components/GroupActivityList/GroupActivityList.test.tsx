@@ -8,7 +8,7 @@ import type { Expense, Payment, User } from '@data/entities';
 import { CURRENT_USER_ID } from '@data/seed';
 import { useDeleteExpense } from '@features/expenses/hooks/useDeleteExpense';
 import { useExpenses } from '@features/expenses/hooks/useExpenses';
-import { usePayments } from '@features/payments';
+import { usePayments, useUpdatePayment } from '@features/payments';
 import { GroupActivityList } from './GroupActivityList';
 
 const navigateMock = vi.fn();
@@ -28,6 +28,7 @@ vi.mock('@features/expenses/hooks/useDeleteExpense', () => ({
 
 vi.mock('@features/payments', () => ({
     usePayments: vi.fn(),
+    useUpdatePayment: vi.fn(),
 }));
 
 vi.mock('sonner', () => ({
@@ -99,6 +100,9 @@ beforeEach(() => {
     vi.mocked(useDeleteExpense).mockReturnValue({
         mutate: vi.fn(),
     } as unknown as ReturnType<typeof useDeleteExpense>);
+    vi.mocked(useUpdatePayment).mockReturnValue({
+        mutate: vi.fn(),
+    } as unknown as ReturnType<typeof useUpdatePayment>);
 });
 
 describe('GroupActivityList', () => {
@@ -334,22 +338,66 @@ describe('GroupActivityList', () => {
         });
     });
 
-    it('disables the swipe actions on a payment row, since payments cannot be edited yet', () => {
-        mockExpenses([]);
-        mockPayments([
-            {
-                id: 'payment-1',
-                groupId: 'group-1',
-                fromUserId: CURRENT_USER_ID,
-                toUserId: 'friend-1',
-                amount: 25,
-                createdAt: '2026-07-02T00:00:00.000Z',
-            },
-        ]);
+    describe('quick actions on a payment row', () => {
+        beforeEach(() => {
+            mockExpenses([]);
+            mockPayments([
+                {
+                    id: 'payment-1',
+                    groupId: 'group-1',
+                    fromUserId: CURRENT_USER_ID,
+                    toUserId: 'friend-1',
+                    amount: 25,
+                    createdAt: '2026-07-02T00:00:00.000Z',
+                },
+            ]);
+        });
 
-        renderList();
+        it('opens a prefilled edit dialog while delete remains unavailable', async () => {
+            const user = userEvent.setup();
+            renderList();
 
-        expect(screen.getByRole('button', { name: 'Edit', hidden: true })).toBeDisabled();
-        expect(screen.getByRole('button', { name: 'Delete', hidden: true })).toBeDisabled();
+            const edit = screen.getByRole('button', { name: 'Edit', hidden: true });
+            expect(edit).toBeEnabled();
+            expect(screen.getByRole('button', { name: 'Delete', hidden: true })).toBeDisabled();
+
+            await user.click(edit);
+
+            expect(screen.getByRole('heading', { name: 'Edit payment' })).toBeInTheDocument();
+            expect(screen.getByLabelText('Amount')).toHaveValue(25);
+        });
+
+        it('updates the payment and reports success', async () => {
+            let onSuccess: (() => void) | undefined;
+            const mutate = vi.fn((_values, options: { onSuccess?: () => void }) => {
+                onSuccess = options.onSuccess;
+            });
+            vi.mocked(useUpdatePayment).mockReturnValue({
+                mutate,
+            } as unknown as ReturnType<typeof useUpdatePayment>);
+            const user = userEvent.setup();
+            renderList();
+
+            await user.click(screen.getByRole('button', { name: 'Edit', hidden: true }));
+            const amount = screen.getByLabelText('Amount');
+            await user.clear(amount);
+            await user.type(amount, '30');
+            await user.click(screen.getByRole('button', { name: 'Save changes' }));
+
+            expect(toast.loading).toHaveBeenCalledWith('Payment is being updated…');
+            expect(mutate).toHaveBeenCalledWith(
+                {
+                    groupId: 'group-1',
+                    id: 'payment-1',
+                    fromUserId: CURRENT_USER_ID,
+                    toUserId: 'friend-1',
+                    amount: 30,
+                },
+                expect.anything(),
+            );
+
+            onSuccess?.();
+            expect(toast.success).toHaveBeenCalledWith('Payment updated', { id: 'toast-id' });
+        });
     });
 });

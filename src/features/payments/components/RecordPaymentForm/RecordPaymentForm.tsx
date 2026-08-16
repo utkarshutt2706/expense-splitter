@@ -39,6 +39,7 @@ interface RecordPaymentFormProps {
     readonly initialValues?: RecordPaymentFormInitialValues;
     readonly onSubmit: (values: RecordPaymentFormValues) => void;
     readonly onCancel: () => void;
+    readonly submitLabel?: string;
 }
 
 export function RecordPaymentForm({
@@ -46,6 +47,7 @@ export function RecordPaymentForm({
     initialValues,
     onSubmit,
     onCancel,
+    submitLabel = 'Record payment',
 }: RecordPaymentFormProps) {
     const { data: currentUser } = useCurrentUser();
     const {
@@ -138,7 +140,7 @@ export function RecordPaymentForm({
                     className="bg-brand-600 hover:bg-brand-700 inline-flex cursor-pointer items-center gap-1 rounded-md px-4 py-2 text-sm font-medium text-white"
                 >
                     <ArrowRightLeft className="size-4" />
-                    Record payment
+                    {submitLabel}
                 </button>
             </div>
         </form>
