@@ -13,6 +13,14 @@ vi.mock('@features/groups', () => ({
     useGroup: () => ({ data: undefined }),
 }));
 
+vi.mock('@features/dashboard/hooks', () => ({
+    useDashboard: () => ({
+        data: { actualPaid: 0, currentUserShare: 0, memberShares: [], groupSpend: [] },
+        isLoading: false,
+        isError: false,
+    }),
+}));
+
 vi.mock('@features/auth', () => ({
     useLogin: () => ({ mutateAsync: vi.fn() }),
     useRegister: () => ({ mutateAsync: vi.fn() }),
@@ -30,12 +38,12 @@ describe('router', () => {
         expect(await screen.findByLabelText(/email/i)).toBeInTheDocument();
     });
 
-    it('renders the dashboard at the root path when logged in', () => {
+    it('renders the dashboard at the root path when logged in', async () => {
         useAuthStore.setState({ currentUserId: 'current-user' });
 
         render(<RouterProvider router={router} />);
 
-        expect(screen.getByText(/dashboard coming soon/i)).toBeInTheDocument();
+        expect(await screen.findByText(/your dashboard is ready/i)).toBeInTheDocument();
     });
 
     it('renders the not-found page for an unmatched route', async () => {
