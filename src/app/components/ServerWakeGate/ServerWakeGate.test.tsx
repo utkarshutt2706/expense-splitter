@@ -14,11 +14,13 @@ async function flushHealthCheck() {
 describe('ServerWakeGate', () => {
     beforeEach(() => {
         vi.useFakeTimers();
+        vi.stubEnv('VITE_API_BASE_URL', 'https://api.example.test');
     });
 
     afterEach(() => {
         vi.useRealTimers();
         vi.unstubAllGlobals();
+        vi.unstubAllEnvs();
     });
 
     it('opens the app as soon as the server is ready', async () => {
