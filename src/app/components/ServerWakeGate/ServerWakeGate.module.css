@@ -1,0 +1,84 @@
+.sadEyes,
+.quiveringMouth {
+    transform-box: fill-box;
+    transform-origin: center;
+}
+
+.sadEyes {
+    animation: sad-eyes 1.8s ease-in-out infinite;
+}
+
+.quiveringMouth {
+    animation: quivering-mouth 1.4s ease-in-out infinite;
+}
+
+.fallingTear {
+    animation: falling-tear 1.8s cubic-bezier(0.35, 0, 0.65, 1) infinite;
+}
+
+@keyframes sad-eyes {
+    0%,
+    34%,
+    58%,
+    100% {
+        transform: scaleY(1);
+    }
+
+    42%,
+    50% {
+        transform: translateY(1px) scaleY(0.18);
+    }
+}
+
+@keyframes quivering-mouth {
+    0%,
+    20%,
+    100% {
+        transform: translateX(0) scaleX(1);
+    }
+
+    30% {
+        transform: translateX(-0.8px) scaleX(0.9);
+    }
+
+    40% {
+        transform: translateX(0.8px) scaleX(1.04);
+    }
+
+    50% {
+        transform: translateX(-0.5px) scaleX(0.94);
+    }
+
+    60% {
+        transform: translateX(0) scaleX(1);
+    }
+}
+
+@keyframes falling-tear {
+    0% {
+        opacity: 0;
+        transform: translateY(-3px) scale(0.55);
+    }
+
+    18% {
+        opacity: 0.85;
+    }
+
+    78% {
+        opacity: 0.85;
+        transform: translateY(10px) scale(1);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translateY(15px) scale(0.8);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sadEyes,
+    .quiveringMouth,
+    .fallingTear {
+        animation: none;
+    }
+}
