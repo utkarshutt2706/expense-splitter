@@ -233,7 +233,7 @@ function SpendingSummary({
                 <span className="text-muted-foreground text-xs">{periodLabel}</span>
             </div>
             <div
-                className={`mt-5 grid gap-5 ${total === undefined ? 'sm:grid-cols-2' : 'sm:grid-cols-3'}`}
+                className={`mt-5 grid gap-5 ${total === undefined ? 'sm:grid-cols-2' : 'sm:grid-cols-2 xl:grid-cols-3'}`}
             >
                 {total !== undefined && (
                     <Metric
@@ -294,7 +294,7 @@ function GroupBreakdown({ groups }: Readonly<{ groups: DashboardGroupSpend[] }>)
                     <Link
                         key={group.groupId}
                         to={`/groups/${group.groupId}`}
-                        className="border-border bg-surface hover:border-brand-400 focus-visible:ring-brand-500 block cursor-pointer rounded-2xl border p-4 transition-colors focus-visible:ring-2 focus-visible:outline-none md:grid md:grid-cols-[minmax(12rem,1fr)_minmax(16rem,1.3fr)_10rem] md:items-center md:gap-6"
+                        className="border-border bg-surface hover:border-brand-400 focus-visible:ring-brand-500 block cursor-pointer rounded-2xl border p-4 transition-colors focus-visible:ring-2 focus-visible:outline-none xl:grid xl:grid-cols-[minmax(12rem,1fr)_minmax(16rem,1.3fr)_10rem] xl:items-center xl:gap-6"
                     >
                         <div className="min-w-0">
                             <h3 className="truncate font-semibold" title={group.name}>
@@ -308,7 +308,7 @@ function GroupBreakdown({ groups }: Readonly<{ groups: DashboardGroupSpend[] }>)
                             </p>
                         </div>
                         <div
-                            className="mt-4 space-y-2 md:mt-0"
+                            className="mt-4 space-y-2 xl:mt-0"
                             role={compareWithBars ? 'img' : undefined}
                             aria-label={`${group.name}: paid by you ${formatMoney(group.actualPaid)}; your share ${formatMoney(group.currentUserShare)}`}
                         >
@@ -349,7 +349,7 @@ function GroupBreakdown({ groups }: Readonly<{ groups: DashboardGroupSpend[] }>)
                                 </dl>
                             )}
                         </div>
-                        <div className="border-border mt-4 border-t pt-3 text-sm md:mt-0 md:border-0 md:pt-0 md:text-right">
+                        <div className="border-border mt-4 border-t pt-3 text-sm xl:mt-0 xl:border-0 xl:pt-0 xl:text-right">
                             <BalanceText value={group.currentBalance} />
                         </div>
                     </Link>
@@ -486,20 +486,22 @@ export function DashboardPage() {
                 </button>
             </div>
         );
-    const selected = data.groupSpend.find((group) => group.groupId === scopeGroupId);
+    const selected =
+        data.groupSpend.find((group) => group.groupId === scopeGroupId) ??
+        (data.groupSpend.length === 1 ? data.groupSpend[0] : undefined);
     const hasExpenses = data.groupSpend.some((group) => group.amount > 0);
     return (
-        <div className="mx-auto max-w-7xl space-y-6 pb-8">
-            <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div className="mx-auto max-w-7xl space-y-6">
+            <header className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
-                    <h1 className="font-display text-3xl font-semibold">Dashboard</h1>
+                    <h1 className="font-display text-3xl font-semibold">Spending overview</h1>
                     <p className="text-muted-foreground mt-1">
                         Your shared spending and balances across groups
                     </p>
                 </div>
                 <div className="flex w-full flex-col gap-3 sm:flex-row lg:w-auto lg:items-start">
                     <DashboardTimeFilter period={period} onChange={setPeriod} />
-                    {data.groupSpend.length > 0 && (
+                    {data.groupSpend.length > 1 && (
                         <GroupScopeSelector
                             groups={data.groupSpend}
                             value={scopeGroupId}

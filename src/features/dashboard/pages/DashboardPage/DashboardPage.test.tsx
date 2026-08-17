@@ -97,7 +97,7 @@ describe('DashboardPage', () => {
 
     it('renders the all-groups scope with gross balances and paired metrics', () => {
         renderPage();
-        expect(screen.getByRole('heading', { name: 'Dashboard' })).toBeInTheDocument();
+        expect(screen.getByRole('heading', { name: 'Spending overview' })).toBeInTheDocument();
         expect(screen.getByText(/to receive ₹250.00/i)).toBeInTheDocument();
         expect(screen.getByText(/to pay ₹125.00/i)).toBeInTheDocument();
         expect(screen.getAllByText('Paid by you').length).toBeGreaterThan(0);
@@ -106,7 +106,9 @@ describe('DashboardPage', () => {
             screen.getByLabelText(/paid by you ₹2,800.00; your share ₹1,000.00/i),
         ).toBeInTheDocument();
         expect(screen.getByRole('heading', { name: /spending over time/i })).toBeInTheDocument();
-        expect(screen.getByRole('table', { name: /monthly spending values/i })).toBeInTheDocument();
+        const accessibleTable = screen.getByRole('table', { name: /monthly spending values/i });
+        expect(accessibleTable).toBeInTheDocument();
+        expect(accessibleTable.parentElement).toHaveClass('fixed', 'size-px', 'overflow-hidden');
     });
 
     it('switches to a selected group and ranks participant shares', () => {
@@ -217,14 +219,19 @@ describe('DashboardPage', () => {
         );
     });
 
-    it('does not render a comparison chart for one group', () => {
+    it('automatically selects the only group without showing the group selector', () => {
         renderPage({
             actualPaid: 2800,
             currentUserShare: 1000,
             groupSpend: [dashboard.groupSpend[0]!],
         });
-        expect(screen.queryByRole('img')).not.toBeInTheDocument();
-        expect(screen.getAllByText('Paid by you').length).toBeGreaterThan(0);
+        expect(screen.queryByRole('button', { name: /view:/i })).not.toBeInTheDocument();
+        expect(screen.getByRole('link', { name: /view balances/i })).toHaveAttribute(
+            'href',
+            '/groups/trip/balance',
+        );
+        expect(screen.getAllByText('Total group spending').length).toBeGreaterThan(0);
+        expect(screen.getByText(/Utkarsh \(You\)/)).toBeInTheDocument();
     });
 });
 
