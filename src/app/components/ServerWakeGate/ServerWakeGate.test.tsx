@@ -74,6 +74,9 @@ describe('ServerWakeGate', () => {
         await flushHealthCheck();
 
         expect(screen.getByText(/server is taking a break/i)).toBeInTheDocument();
+        expect(
+            screen.getByRole('img', { name: /injured server waiting to recover/i }),
+        ).toBeInTheDocument();
 
         await act(() => vi.advanceTimersByTimeAsync(10_000));
         await flushHealthCheck();
