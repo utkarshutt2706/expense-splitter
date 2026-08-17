@@ -1,7 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 
-import { getDashboard } from '@features/dashboard/api/dashboardApi';
+import { getDashboard, type DashboardDateRange } from '@features/dashboard/api/dashboardApi';
 
-export function useDashboard() {
-    return useQuery({ queryKey: ['dashboard'], queryFn: getDashboard });
+export function useDashboard(range: DashboardDateRange) {
+    return useQuery({
+        queryKey: ['dashboard', range.from, range.to],
+        queryFn: () => getDashboard(range),
+    });
 }
