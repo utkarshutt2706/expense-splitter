@@ -115,27 +115,29 @@ export function SpendingTrendChart({ data }: Readonly<{ data: DashboardMonthlySp
                     </ComposedChart>
                 </ResponsiveContainer>
             </div>
-            <table className="sr-only">
-                <caption>Monthly spending values</caption>
-                <thead>
-                    <tr>
-                        <th>Month</th>
-                        <th>Total group spending</th>
-                        <th>Paid by you</th>
-                        <th>Your share</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {chartData.map((entry) => (
-                        <tr key={entry.month}>
-                            <th>{entry.label}</th>
-                            <td>{formatMoney(entry.amount)}</td>
-                            <td>{formatMoney(entry.actualPaid)}</td>
-                            <td>{formatMoney(entry.currentUserShare)}</td>
+            <div className="fixed top-0 left-0 size-px overflow-hidden whitespace-nowrap [clip-path:inset(50%)]">
+                <table>
+                    <caption>Monthly spending values</caption>
+                    <thead>
+                        <tr>
+                            <th>Month</th>
+                            <th>Total group spending</th>
+                            <th>Paid by you</th>
+                            <th>Your share</th>
                         </tr>
-                    ))}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        {chartData.map((entry) => (
+                            <tr key={entry.month}>
+                                <th>{entry.label}</th>
+                                <td>{formatMoney(entry.amount)}</td>
+                                <td>{formatMoney(entry.actualPaid)}</td>
+                                <td>{formatMoney(entry.currentUserShare)}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
         </section>
     );
 }
