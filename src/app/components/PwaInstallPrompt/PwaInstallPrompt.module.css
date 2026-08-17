@@ -1,0 +1,20 @@
+.installCountdown {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+    width: 100%;
+    background: linear-gradient(90deg, rgb(107 43 16 / 88%), rgb(134 52 15 / 78%));
+    animation: install-countdown 10s linear forwards;
+}
+
+@keyframes install-countdown {
+    to {
+        width: 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .installCountdown {
+        animation: none;
+    }
+}
