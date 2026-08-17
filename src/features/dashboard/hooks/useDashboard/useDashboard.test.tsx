@@ -22,9 +22,14 @@ describe('useDashboard', () => {
             <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
         );
 
-        const { result } = renderHook(useDashboard, { wrapper });
+        const range = {
+            from: '2026-08-01T00:00:00.000Z',
+            to: '2026-09-01T00:00:00.000Z',
+        };
+        const { result } = renderHook(() => useDashboard(range), { wrapper });
 
         await waitFor(() => expect(result.current.isSuccess).toBe(true));
         expect(result.current.data).toEqual(dashboard);
+        expect(dashboardApi.getDashboard).toHaveBeenCalledWith(range);
     });
 });

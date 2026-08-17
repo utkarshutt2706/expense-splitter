@@ -16,7 +16,11 @@ describe('dashboardApi', () => {
         };
         vi.mocked(httpClient.get).mockResolvedValue({ data: dashboard });
 
-        await expect(getDashboard()).resolves.toEqual(dashboard);
-        expect(httpClient.get).toHaveBeenCalledWith('/dashboard');
+        const range = {
+            from: '2026-08-01T00:00:00.000Z',
+            to: '2026-09-01T00:00:00.000Z',
+        };
+        await expect(getDashboard(range)).resolves.toEqual(dashboard);
+        expect(httpClient.get).toHaveBeenCalledWith('/dashboard', { params: range });
     });
 });

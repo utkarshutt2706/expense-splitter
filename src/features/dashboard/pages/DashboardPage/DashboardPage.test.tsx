@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { DashboardSummary } from '@features/dashboard/api/dashboardApi';
 import { useDashboard } from '@features/dashboard/hooks';
 import { DashboardPage } from './DashboardPage';
+import { dateInputValue } from './dashboardDateRange';
 import { comparisonScale, contributionCopy } from './dashboardMetrics';
 
 vi.mock('@features/dashboard/hooks', () => ({ useDashboard: vi.fn() }));
@@ -119,15 +120,85 @@ describe('DashboardPage', () => {
     });
 
     it('filters the group scope options by name', () => {
-        renderPage();
+        const extraGroups = Array.from({ length: 4 }, (_, index) => ({
+            ...dashboard.groupSpend[1]!,
+            groupId: `extra-${index}`,
+            name: `Extra group ${index + 1}`,
+        }));
+        renderPage({ ...dashboard, groupSpend: [...dashboard.groupSpend, ...extraGroups] });
         fireEvent.click(screen.getByRole('button', { name: /view:.*all groups/i }));
         fireEvent.change(screen.getByRole('searchbox', { name: /search groups/i }), {
             target: { value: 'empty' },
         });
-        expect(screen.getByRole('button', { name: 'Empty home' })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Empty home' })).toHaveClass('cursor-pointer');
         expect(
             screen.queryByRole('button', { name: 'A very long Goa trip group name' }),
         ).not.toBeInTheDocument();
+    });
+
+    it('does not show group search for five or fewer groups', () => {
+        renderPage();
+        fireEvent.click(screen.getByRole('button', { name: /view:.*all groups/i }));
+        expect(screen.queryByRole('searchbox', { name: /search groups/i })).not.toBeInTheDocument();
+    });
+
+    it('defaults to this month and supports the preset time filters', () => {
+        renderPage();
+        const filter = screen.getByRole('button', { name: /time period.*this month/i });
+        fireEvent.click(filter);
+        expect(screen.getByRole('dialog', { name: /choose dashboard time period/i })).toHaveClass(
+            'rounded-lg',
+            'p-2',
+            'shadow-lg',
+        );
+        const previousMonth = screen.getByRole('button', { name: 'Previous month' });
+        expect(previousMonth).toHaveClass('cursor-pointer');
+        fireEvent.click(previousMonth);
+        expect(vi.mocked(useDashboard).mock.calls.at(-1)?.[0]).toEqual(
+            expect.objectContaining({ from: expect.any(String), to: expect.any(String) }),
+        );
+    });
+
+    it('validates that custom ranges do not exceed one year', () => {
+        renderPage();
+        fireEvent.click(screen.getByRole('button', { name: /time period.*this month/i }));
+        fireEvent.click(screen.getByRole('button', { name: /custom date range/i }));
+        fireEvent.change(screen.getByLabelText(/custom range start/i), {
+            target: { value: '2026-01-01' },
+        });
+        fireEvent.change(screen.getByLabelText(/custom range end/i), {
+            target: { value: '2027-01-01' },
+        });
+        fireEvent.click(screen.getByRole('button', { name: /apply dates/i }));
+        expect(screen.getByRole('alert')).toHaveTextContent(/cannot exceed one year/i);
+    });
+
+    it('constrains custom calendars using today, the start date, and one year', () => {
+        renderPage();
+        fireEvent.click(screen.getByRole('button', { name: /time period.*this month/i }));
+        fireEvent.click(screen.getByRole('button', { name: /custom date range/i }));
+        const startInput = screen.getByLabelText(/custom range start/i);
+        const endInput = screen.getByLabelText(/custom range end/i);
+        const showStartPicker = vi.fn();
+        const showEndPicker = vi.fn();
+        Object.defineProperty(startInput, 'showPicker', { value: showStartPicker });
+        Object.defineProperty(endInput, 'showPicker', { value: showEndPicker });
+        fireEvent.click(startInput);
+        fireEvent.click(endInput);
+        expect(showStartPicker).toHaveBeenCalledOnce();
+        expect(showEndPicker).toHaveBeenCalledOnce();
+        expect(startInput).toHaveAttribute('max', dateInputValue(new Date()));
+        expect(endInput).toHaveAttribute('min', (startInput as HTMLInputElement).value);
+
+        const oldStart = new Date(new Date().getFullYear() - 2, 0, 1);
+        const expectedMaximum = new Date(oldStart);
+        expectedMaximum.setFullYear(expectedMaximum.getFullYear() + 1);
+        expectedMaximum.setDate(expectedMaximum.getDate() - 1);
+        fireEvent.change(startInput, { target: { value: dateInputValue(oldStart) } });
+        expect(endInput).toHaveAttribute('max', dateInputValue(expectedMaximum));
+
+        fireEvent.change(startInput, { target: { value: '' } });
+        expect(endInput).toBeDisabled();
     });
 
     it('renders groups-without-expenses and no-groups states', () => {
@@ -136,7 +207,7 @@ describe('DashboardPage', () => {
             currentUserShare: 0,
             groupSpend: [dashboard.groupSpend[1]!],
         });
-        expect(screen.getByText('Your groups are ready')).toBeInTheDocument();
+        expect(screen.getByText('No spending in this period')).toBeInTheDocument();
         unmount();
         renderPage({ actualPaid: 0, currentUserShare: 0, groupSpend: [] });
         expect(screen.getByText('No shared spending yet')).toBeInTheDocument();

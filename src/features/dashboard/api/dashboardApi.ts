@@ -31,7 +31,12 @@ export interface DashboardSummary {
     groupSpend: DashboardGroupSpend[];
 }
 
-export async function getDashboard(): Promise<DashboardSummary> {
-    const { data } = await httpClient.get<DashboardSummary>('/dashboard');
+export interface DashboardDateRange {
+    from: string;
+    to: string;
+}
+
+export async function getDashboard(range: DashboardDateRange): Promise<DashboardSummary> {
+    const { data } = await httpClient.get<DashboardSummary>('/dashboard', { params: range });
     return data;
 }

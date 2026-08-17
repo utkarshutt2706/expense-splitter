@@ -13,6 +13,8 @@ import {
     formatMoney,
 } from './dashboardMetrics';
 import { SpendingTrendChart } from './SpendingTrendChart';
+import { presetPeriod } from './dashboardDateRange';
+import { DashboardTimeFilter } from './DashboardTimeFilter';
 
 function BalanceText({ value, short = false }: Readonly<{ value: number; short?: boolean }>) {
     if (value > 0)
@@ -91,35 +93,41 @@ function GroupScopeSelector({
                 <Popover.Portal>
                     <Popover.Content
                         ref={contentRef}
-                        align="end"
-                        sideOffset={6}
+                        align="start"
+                        sideOffset={8}
                         aria-label="Choose dashboard group"
                         onOpenAutoFocus={(event) => {
-                            event.preventDefault();
-                            contentRef.current?.querySelector<HTMLInputElement>('input')?.focus();
+                            const searchInput =
+                                contentRef.current?.querySelector<HTMLInputElement>('input');
+                            if (searchInput) {
+                                event.preventDefault();
+                                searchInput.focus();
+                            }
                         }}
-                        className="border-border bg-surface z-50 w-[var(--radix-popover-trigger-width)] min-w-72 rounded-xl border p-2 shadow-lg"
+                        className="border-border bg-surface z-50 w-[var(--radix-popover-trigger-width)] min-w-72 rounded-lg border p-2 shadow-lg"
                     >
-                        <label className="relative block">
-                            <span className="sr-only">Search groups</span>
-                            <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
-                            <input
-                                type="search"
-                                value={query}
-                                onChange={(event) => setQuery(event.target.value)}
-                                placeholder="Search groups"
-                                className="border-border bg-surface focus:border-brand-500 focus:ring-brand-500 min-h-11 w-full rounded-lg border pr-3 pl-9 outline-none focus:ring-1"
-                            />
-                        </label>
+                        {groups.length > 5 && (
+                            <label className="relative block">
+                                <span className="sr-only">Search groups</span>
+                                <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+                                <input
+                                    type="search"
+                                    value={query}
+                                    onChange={(event) => setQuery(event.target.value)}
+                                    placeholder="Search groups"
+                                    className="border-border bg-surface focus:border-brand-500 focus:ring-brand-500 min-h-11 w-full rounded-lg border pr-3 pl-9 outline-none focus:ring-1"
+                                />
+                            </label>
+                        )}
                         <div
-                            className="mt-2 max-h-72 overflow-y-auto"
+                            className={`${groups.length > 5 ? 'mt-2' : ''} max-h-72 overflow-y-auto`}
                             aria-label="Dashboard scopes"
                         >
                             {!query && (
                                 <button
                                     type="button"
                                     onClick={() => select(null)}
-                                    className="hover:bg-muted focus-visible:bg-muted flex min-h-11 w-full items-center justify-between gap-3 rounded-lg px-3 text-left outline-none"
+                                    className="hover:bg-muted focus-visible:bg-muted flex min-h-11 w-full cursor-pointer items-center justify-between gap-3 rounded-md px-2 text-left outline-none"
                                 >
                                     <span>All groups</span>
                                     {value === null && <Check className="text-brand-600 size-4" />}
@@ -131,7 +139,7 @@ function GroupScopeSelector({
                                     type="button"
                                     onClick={() => select(group.groupId)}
                                     title={group.name}
-                                    className="hover:bg-muted focus-visible:bg-muted flex min-h-11 w-full items-center justify-between gap-3 rounded-lg px-3 text-left outline-none"
+                                    className="hover:bg-muted focus-visible:bg-muted flex min-h-11 w-full cursor-pointer items-center justify-between gap-3 rounded-md px-2 text-left outline-none"
                                 >
                                     <span className="truncate">{group.name}</span>
                                     {value === group.groupId && (
@@ -155,7 +163,12 @@ function GroupScopeSelector({
 function CurrentPosition({
     groups,
     selected,
-}: Readonly<{ groups: DashboardGroupSpend[]; selected?: DashboardGroupSpend }>) {
+    periodLabel,
+}: Readonly<{
+    groups: DashboardGroupSpend[];
+    selected?: DashboardGroupSpend;
+    periodLabel: string;
+}>) {
     const relevant = selected ? [selected] : groups;
     const receive = relevant.reduce((sum, group) => sum + Math.max(group.currentBalance, 0), 0);
     const pay = relevant.reduce((sum, group) => sum + Math.max(-group.currentBalance, 0), 0);
@@ -166,7 +179,7 @@ function CurrentPosition({
         >
             <div>
                 <p id="position-heading" className="text-muted-foreground text-sm font-medium">
-                    Current position
+                    Position for {periodLabel.toLocaleLowerCase()}
                 </p>
                 <div className="font-display mt-1 flex flex-wrap gap-x-6 gap-y-1 text-2xl">
                     {receive > 0 && pay > 0 ? (
@@ -187,12 +200,12 @@ function CurrentPosition({
                     )}
                 </div>
                 <p className="text-muted-foreground mt-1 text-sm">
-                    Includes recorded settlement payments.
+                    Includes settlement payments recorded in this period.
                 </p>
             </div>
             {selected && (
                 <Link
-                    className="focus-visible:ring-brand-500 mt-4 inline-flex min-h-11 items-center gap-2 rounded-lg px-3 text-sm font-semibold focus-visible:ring-2 focus-visible:outline-none md:mt-0"
+                    className="focus-visible:ring-brand-500 mt-4 inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-lg px-3 text-sm font-semibold focus-visible:ring-2 focus-visible:outline-none md:mt-0"
                     to={`/groups/${selected.groupId}/balance`}
                 >
                     View balances <ArrowRight className="size-4" />
@@ -206,7 +219,8 @@ function SpendingSummary({
     paid,
     share,
     total,
-}: Readonly<{ paid: number; share: number; total?: number }>) {
+    periodLabel,
+}: Readonly<{ paid: number; share: number; total?: number; periodLabel: string }>) {
     return (
         <section
             aria-labelledby="spending-heading"
@@ -216,7 +230,7 @@ function SpendingSummary({
                 <h2 id="spending-heading" className="font-display text-xl font-semibold">
                     Shared-spending summary
                 </h2>
-                <span className="text-muted-foreground text-xs">All recorded expenses</span>
+                <span className="text-muted-foreground text-xs">{periodLabel}</span>
             </div>
             <div
                 className={`mt-5 grid gap-5 ${total === undefined ? 'sm:grid-cols-2' : 'sm:grid-cols-3'}`}
@@ -280,7 +294,7 @@ function GroupBreakdown({ groups }: Readonly<{ groups: DashboardGroupSpend[] }>)
                     <Link
                         key={group.groupId}
                         to={`/groups/${group.groupId}`}
-                        className="border-border bg-surface hover:border-brand-400 focus-visible:ring-brand-500 block rounded-2xl border p-4 transition-colors focus-visible:ring-2 focus-visible:outline-none md:grid md:grid-cols-[minmax(12rem,1fr)_minmax(16rem,1.3fr)_10rem] md:items-center md:gap-6"
+                        className="border-border bg-surface hover:border-brand-400 focus-visible:ring-brand-500 block cursor-pointer rounded-2xl border p-4 transition-colors focus-visible:ring-2 focus-visible:outline-none md:grid md:grid-cols-[minmax(12rem,1fr)_minmax(16rem,1.3fr)_10rem] md:items-center md:gap-6"
                     >
                         <div className="min-w-0">
                             <h3 className="truncate font-semibold" title={group.name}>
@@ -345,7 +359,7 @@ function GroupBreakdown({ groups }: Readonly<{ groups: DashboardGroupSpend[] }>)
                 <button
                     type="button"
                     onClick={() => setShowAll((value) => !value)}
-                    className="focus-visible:ring-brand-500 min-h-11 rounded-lg px-3 text-sm font-semibold focus-visible:ring-2 focus-visible:outline-none"
+                    className="focus-visible:ring-brand-500 min-h-11 cursor-pointer rounded-lg px-3 text-sm font-semibold focus-visible:ring-2 focus-visible:outline-none"
                 >
                     {showAll ? 'Show fewer groups' : `View all ${groups.length} groups`}
                 </button>
@@ -442,7 +456,7 @@ function Participants({ group }: Readonly<{ group: DashboardGroupSpend }>) {
                 <button
                     type="button"
                     onClick={() => setShowAll(true)}
-                    className="focus-visible:ring-brand-500 mt-3 min-h-11 rounded-lg px-3 text-sm font-semibold focus-visible:ring-2 focus-visible:outline-none"
+                    className="focus-visible:ring-brand-500 mt-3 min-h-11 cursor-pointer rounded-lg px-3 text-sm font-semibold focus-visible:ring-2 focus-visible:outline-none"
                 >
                     Show all {group.memberShares.length} participants
                 </button>
@@ -452,7 +466,8 @@ function Participants({ group }: Readonly<{ group: DashboardGroupSpend }>) {
 }
 
 export function DashboardPage() {
-    const { data, isLoading, isError, refetch } = useDashboard();
+    const [period, setPeriod] = useState(() => presetPeriod('this-month'));
+    const { data, isLoading, isError, refetch } = useDashboard(period.range);
     const [scopeGroupId, setScopeGroupId] = useState<string | null>(null);
     if (isLoading) return <DashboardSkeleton />;
     if (isError || !data)
@@ -465,7 +480,7 @@ export function DashboardPage() {
                 <button
                     type="button"
                     onClick={() => void refetch()}
-                    className="bg-brand-600 hover:bg-brand-700 focus-visible:ring-brand-500 mt-5 inline-flex min-h-11 items-center gap-2 rounded-lg px-4 text-sm font-semibold text-white focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+                    className="bg-brand-600 hover:bg-brand-700 focus-visible:ring-brand-500 mt-5 inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-lg px-4 text-sm font-semibold text-white focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
                 >
                     <RefreshCw className="size-4" /> Retry
                 </button>
@@ -475,20 +490,23 @@ export function DashboardPage() {
     const hasExpenses = data.groupSpend.some((group) => group.amount > 0);
     return (
         <div className="mx-auto max-w-7xl space-y-6 pb-8">
-            <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                 <div>
                     <h1 className="font-display text-3xl font-semibold">Dashboard</h1>
                     <p className="text-muted-foreground mt-1">
                         Your shared spending and balances across groups
                     </p>
                 </div>
-                {data.groupSpend.length > 0 && (
-                    <GroupScopeSelector
-                        groups={data.groupSpend}
-                        value={scopeGroupId}
-                        onChange={setScopeGroupId}
-                    />
-                )}
+                <div className="flex w-full flex-col gap-3 sm:flex-row lg:w-auto lg:items-start">
+                    <DashboardTimeFilter period={period} onChange={setPeriod} />
+                    {data.groupSpend.length > 0 && (
+                        <GroupScopeSelector
+                            groups={data.groupSpend}
+                            value={scopeGroupId}
+                            onChange={setScopeGroupId}
+                        />
+                    )}
+                </div>
             </header>
             {data.groupSpend.length === 0 ? (
                 <section className="border-border bg-muted/40 rounded-2xl border p-8 text-center">
@@ -499,32 +517,37 @@ export function DashboardPage() {
                     </p>
                     <Link
                         to="/groups"
-                        className="bg-brand-600 hover:bg-brand-700 mt-5 inline-flex min-h-11 items-center gap-2 rounded-lg px-4 text-sm font-semibold text-white"
+                        className="bg-brand-600 hover:bg-brand-700 mt-5 inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-lg px-4 text-sm font-semibold text-white"
                     >
                         <Plus className="size-4" /> Create a group
                     </Link>
                 </section>
             ) : selected ? (
                 <>
-                    <CurrentPosition groups={data.groupSpend} selected={selected} />
+                    <CurrentPosition
+                        groups={data.groupSpend}
+                        selected={selected}
+                        periodLabel={period.label}
+                    />
                     {selected.amount > 0 ? (
                         <>
                             <SpendingSummary
                                 paid={selected.actualPaid}
                                 share={selected.currentUserShare}
                                 total={selected.amount}
+                                periodLabel={period.label}
                             />
                             <SpendingTrendChart data={selected.spendingByMonth} />
                         </>
                     ) : (
                         <section className="border-border bg-muted/40 rounded-2xl border p-6">
-                            <h2 className="font-display text-xl">Your groups are ready</h2>
+                            <h2 className="font-display text-xl">No spending in this period</h2>
                             <p className="text-muted-foreground mt-1 text-sm">
-                                Add an expense to start tracking spending and balances.
+                                Try another time period or add an expense to this group.
                             </p>
                             <Link
                                 to={`/groups/${selected.groupId}/expenses/new`}
-                                className="text-brand-600 mt-3 inline-flex min-h-11 items-center font-semibold"
+                                className="text-brand-600 mt-3 inline-flex min-h-11 cursor-pointer items-center font-semibold"
                             >
                                 Add expense <ArrowRight className="ml-2 size-4" />
                             </Link>
@@ -534,20 +557,24 @@ export function DashboardPage() {
                 </>
             ) : (
                 <>
-                    <CurrentPosition groups={data.groupSpend} />
-                    <SpendingSummary paid={data.actualPaid} share={data.currentUserShare} />
+                    <CurrentPosition groups={data.groupSpend} periodLabel={period.label} />
+                    <SpendingSummary
+                        paid={data.actualPaid}
+                        share={data.currentUserShare}
+                        periodLabel={period.label}
+                    />
                     <SpendingTrendChart data={combineMonthlySpending(data.groupSpend)} />
                     {hasExpenses ? (
                         <GroupBreakdown groups={data.groupSpend} />
                     ) : (
                         <section className="border-border bg-muted/40 rounded-2xl border p-6">
-                            <h2 className="font-display text-xl">Your groups are ready</h2>
+                            <h2 className="font-display text-xl">No spending in this period</h2>
                             <p className="text-muted-foreground mt-1 text-sm">
-                                Add an expense to start tracking spending and balances.
+                                Try another time period or add an expense to a group.
                             </p>
                             <Link
                                 to={`/groups/${data.groupSpend[0]?.groupId}`}
-                                className="text-brand-600 mt-3 inline-flex min-h-11 items-center font-semibold"
+                                className="text-brand-600 mt-3 inline-flex min-h-11 cursor-pointer items-center font-semibold"
                             >
                                 Open group <ArrowRight className="ml-2 size-4" />
                             </Link>
