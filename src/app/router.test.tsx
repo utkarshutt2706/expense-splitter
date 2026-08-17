@@ -15,7 +15,7 @@ vi.mock('@features/groups', () => ({
 
 vi.mock('@features/dashboard/hooks', () => ({
     useDashboard: () => ({
-        data: { actualPaid: 0, currentUserShare: 0, memberShares: [], groupSpend: [] },
+        data: { actualPaid: 0, currentUserShare: 0, groupSpend: [] },
         isLoading: false,
         isError: false,
     }),
@@ -43,7 +43,7 @@ describe('router', () => {
 
         render(<RouterProvider router={router} />);
 
-        expect(await screen.findByText(/your dashboard is ready/i)).toBeInTheDocument();
+        expect(await screen.findByText(/no shared spending yet/i)).toBeInTheDocument();
     });
 
     it('renders the not-found page for an unmatched route', async () => {
