@@ -138,6 +138,22 @@ describe('SplitParticipantList', () => {
         expect(onValueChange).toHaveBeenCalledWith(CURRENT_USER_ID, '5');
     });
 
+    it('shows a resolved monetary amount beside a percentage or shares input', () => {
+        render(
+            <SplitParticipantList
+                users={users}
+                splitType="percentage"
+                selectedIds={[CURRENT_USER_ID]}
+                onToggle={vi.fn()}
+                values={{ [CURRENT_USER_ID]: '100' }}
+                onValueChange={vi.fn()}
+                resolvedAmounts={{ [CURRENT_USER_ID]: 42.5 }}
+            />,
+        );
+
+        expect(screen.getByLabelText('You receives ₹42.50')).toBeInTheDocument();
+    });
+
     it('calls onToggle when a participant checkbox is clicked', async () => {
         const onToggle = vi.fn();
         const user = userEvent.setup();

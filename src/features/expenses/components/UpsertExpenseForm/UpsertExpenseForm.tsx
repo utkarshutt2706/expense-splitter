@@ -12,7 +12,8 @@ import type {
     PercentageSplitEntry,
     SharesSplitEntry,
 } from '@features/expenses/utils/splitCalculator';
-import { MemberPicker } from '@shared/components';
+import { getSplitAllocationPreview } from '@features/expenses/utils';
+import { CurrencyInput, MemberPicker } from '@shared/components';
 import { SplitParticipantList } from '../SplitParticipantList';
 import { SplitTypeTabs } from '../SplitTypeTabs';
 
@@ -29,23 +30,6 @@ const upsertExpenseSchema = z.object({
 type UpsertExpenseInput = z.infer<typeof upsertExpenseSchema>;
 
 const PERCENTAGE_TOLERANCE = 0.01;
-
-function sumEnteredValues(ids: string[], values: Record<string, string>): number {
-    return ids.reduce((sum, id) => {
-        const raw = values[id];
-        const parsed = raw === undefined || raw === '' ? 0 : Number(raw);
-        return sum + (Number.isFinite(parsed) ? parsed : 0);
-    }, 0);
-}
-
-function formatAmount(value: number): string {
-    return `₹${value.toFixed(2)}`;
-}
-
-// Trims to at most 2 decimals without trailing zeros, e.g. 25 -> "25", 33.333 -> "33.33".
-function formatNumber(value: number): string {
-    return Number(value.toFixed(2)).toString();
-}
 
 export interface UpsertExpenseFormValues {
     description: string;
@@ -108,19 +92,12 @@ export function UpsertExpenseForm({
     );
     const [splitError, setSplitError] = useState<string | undefined>();
 
-    let splitHelperText: string;
-    if (splitType === 'exact') {
-        const remaining = (amount ?? 0) - sumEnteredValues(participantUserIds, splitValues);
-        splitHelperText = `Remaining ${formatAmount(remaining)} of ${formatAmount(amount ?? 0)} expense amount`;
-    } else if (splitType === 'percentage') {
-        const remaining = 100 - sumEnteredValues(participantUserIds, splitValues);
-        splitHelperText = `Remaining ${formatNumber(remaining)} of 100 percent`;
-    } else if (splitType === 'shares') {
-        const totalShares = Math.round(sumEnteredValues(participantUserIds, splitValues));
-        splitHelperText = `Splitting into ${totalShares} share${totalShares === 1 ? '' : 's'} between the selected members`;
-    } else {
-        splitHelperText = 'Splitting equally between selected members';
-    }
+    const allocationPreview = getSplitAllocationPreview({
+        amount,
+        participantUserIds,
+        splitType,
+        splitValues,
+    });
 
     const toggleParticipant = (id: string) => {
         setParticipantUserIds((current) =>
@@ -298,16 +275,27 @@ export function UpsertExpenseForm({
                 >
                     Amount
                 </label>
-                <input
+                <span id="expense-currency-description" className="sr-only">
+                    Enter the amount in rupees.
+                </span>
+                <CurrencyInput
                     id="expense-amount"
-                    type="number"
                     step="0.01"
                     min="0"
-                    placeholder="₹0.00"
+                    placeholder="0.00"
+                    aria-invalid={errors.amount ? 'true' : undefined}
+                    aria-describedby={
+                        errors.amount
+                            ? 'expense-currency-description expense-amount-error'
+                            : 'expense-currency-description'
+                    }
                     {...register('amount', { valueAsNumber: true })}
-                    className="border-border bg-surface text-surface-foreground focus-visible:ring-brand-500 rounded-md border px-3 py-2 text-sm outline-none focus-visible:ring-2"
                 />
-                {errors.amount && <p className="text-xs text-red-600">{errors.amount.message}</p>}
+                {errors.amount && (
+                    <p id="expense-amount-error" className="text-xs text-red-600">
+                        {errors.amount.message}
+                    </p>
+                )}
             </div>
 
             <div className="flex flex-col gap-1">
@@ -330,7 +318,11 @@ export function UpsertExpenseForm({
                 )}
             </div>
 
-            <div className="flex flex-col gap-2">
+            <div
+                className="flex flex-col gap-2"
+                aria-describedby="split-allocation-summary"
+                aria-invalid={participantsError ? 'true' : undefined}
+            >
                 <span className="text-surface-foreground text-sm font-medium">Split type</span>
                 <SplitTypeTabs value={splitType} onChange={changeSplitType} />
                 <SplitParticipantList
@@ -340,13 +332,24 @@ export function UpsertExpenseForm({
                     onToggle={toggleParticipant}
                     values={splitValues}
                     onValueChange={changeSplitValue}
+                    resolvedAmounts={allocationPreview.resolvedAmounts}
                     emptyMessage="This group has no members to split with."
                 />
-                {participantsError && <p className="text-xs text-red-600">{participantsError}</p>}
                 {splitError && <p className="text-xs text-red-600">{splitError}</p>}
+                <p
+                    id="split-allocation-summary"
+                    aria-live="polite"
+                    className={
+                        allocationPreview.status === 'invalid'
+                            ? 'text-sm text-red-600'
+                            : allocationPreview.status === 'valid'
+                              ? 'text-sm text-green-700 dark:text-green-400'
+                              : 'text-muted-foreground text-sm'
+                    }
+                >
+                    {allocationPreview.summary}
+                </p>
             </div>
-
-            <p className="text-muted-foreground text-sm">{splitHelperText}</p>
 
             <div className="flex justify-end gap-2">
                 <button

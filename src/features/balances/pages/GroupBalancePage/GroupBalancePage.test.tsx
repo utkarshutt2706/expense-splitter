@@ -99,7 +99,7 @@ describe('GroupBalancePage', () => {
 
         renderPage();
 
-        expect(screen.getByText(/couldn't load balances/i)).toBeInTheDocument();
+        expect(screen.getByText(/we couldn’t load the group balances/i)).toBeInTheDocument();
     });
 
     it('shows an error message when balances fail to load', () => {
@@ -120,7 +120,7 @@ describe('GroupBalancePage', () => {
 
         renderPage();
 
-        expect(screen.getByText(/couldn't load balances/i)).toBeInTheDocument();
+        expect(screen.getByText(/we couldn’t load the group balances/i)).toBeInTheDocument();
     });
 
     it('renders the back link and group name once loaded', () => {
@@ -145,7 +145,8 @@ describe('GroupBalancePage', () => {
             'href',
             '/groups/group-1',
         );
-        expect(screen.getByRole('heading', { name: 'Daaru Party' })).toBeInTheDocument();
+        expect(screen.getByRole('heading', { name: 'Balances' })).toBeInTheDocument();
+        expect(screen.getByText('Daaru Party')).toBeInTheDocument();
     });
 
     it('includes every member, including the current user, in the accordion list', () => {

@@ -12,9 +12,13 @@ export function useDeleteExpense() {
 
     return useMutation({
         mutationFn: ({ id, groupId }: DeleteExpenseInput) => remove(groupId, id),
-        onSuccess: (_, { groupId }) => {
+        onSuccess: (_, { id, groupId }) => {
             queryClient.invalidateQueries({ queryKey: ['expenses', groupId] });
+            queryClient.invalidateQueries({ queryKey: ['expenses', 'detail', id] });
             queryClient.invalidateQueries({ queryKey: ['balances', groupId] });
+            queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+            queryClient.invalidateQueries({ queryKey: ['groups'] });
+            queryClient.invalidateQueries({ queryKey: ['users', 'friends'] });
         },
     });
 }

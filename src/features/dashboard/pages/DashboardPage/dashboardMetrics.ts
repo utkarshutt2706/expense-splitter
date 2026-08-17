@@ -1,20 +1,11 @@
-const money = new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-});
-
-export function formatMoney(value: number): string {
-    return money.format(Math.abs(value));
-}
+import { formatCurrency } from '@shared/utils';
 
 export function contributionCopy(paid: number, share: number): string {
     const difference = Math.round((paid - share) * 100) / 100;
     if (difference > 0)
-        return `You paid ${formatMoney(difference)} more than your share before settlements.`;
+        return `You paid ${formatCurrency(difference)} more than your share before settlements.`;
     if (difference < 0)
-        return `You paid ${formatMoney(difference)} less than your share before settlements.`;
+        return `You paid ${formatCurrency(Math.abs(difference))} less than your share before settlements.`;
     return 'What you paid matches your share before settlements.';
 }
 

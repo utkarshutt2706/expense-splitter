@@ -118,11 +118,14 @@ describe('DashboardPage', () => {
 
     it('exposes chart values through a touch-friendly period selector', () => {
         renderPage();
-        const selector = screen.getByRole('combobox', { name: /view chart values/i });
+        const selector = screen.getByRole('button', { name: /view chart values/i });
         const mobileDetails = selector.parentElement!;
-        expect(selector).toHaveValue('2026-08-10');
+        expect(mobileDetails).toHaveClass('touch-device-only');
+        expect(mobileDetails).not.toHaveClass('sm:hidden');
+        expect(selector).toHaveTextContent('10 Aug 2026');
         expect(within(mobileDetails).getAllByText('₹2,000.00')).toHaveLength(2);
-        fireEvent.change(selector, { target: { value: '2026-07-10' } });
+        fireEvent.click(selector);
+        fireEvent.click(screen.getByRole('option', { name: '10 Jul 2026' }));
         expect(within(mobileDetails).getByText('₹1,000.00')).toBeInTheDocument();
     });
 

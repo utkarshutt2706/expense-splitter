@@ -423,11 +423,35 @@ describe('UpsertExpenseForm', () => {
     });
 
     describe('split helper text', () => {
-        it('shows the equal-split helper text by default', () => {
+        it('shows the resolved equal split and updates it with amount and participants', async () => {
+            const user = userEvent.setup();
             render(<UpsertExpenseForm members={members} onSubmit={vi.fn()} onCancel={vi.fn()} />);
 
             expect(
-                screen.getByText('Splitting equally between selected members'),
+                screen.getByText('Enter a valid expense amount to preview the allocation.'),
+            ).toBeInTheDocument();
+
+            await user.type(screen.getByLabelText(/amount/i), '100');
+            expect(screen.getByText('2 participants · ₹50.00 each')).toBeInTheDocument();
+
+            await user.click(screen.getByRole('checkbox', { name: /priya sharma/i }));
+            expect(screen.getByText('1 participant · ₹100.00 each')).toBeInTheDocument();
+        });
+
+        it('shows the canonical remainder allocation for an indivisible equal split', async () => {
+            const user = userEvent.setup();
+            const threeMembers = [
+                ...members,
+                { id: 'user-3', name: 'Sam Lee', email: 'sam@example.com' },
+            ];
+            render(
+                <UpsertExpenseForm members={threeMembers} onSubmit={vi.fn()} onCancel={vi.fn()} />,
+            );
+
+            await user.type(screen.getByLabelText(/amount/i), '100');
+
+            expect(
+                screen.getByText('2 participants receive ₹33.33 · 1 participant receives ₹33.34'),
             ).toBeInTheDocument();
         });
 
@@ -438,14 +462,12 @@ describe('UpsertExpenseForm', () => {
             await user.type(screen.getByLabelText(/amount/i), '42.50');
             await user.click(screen.getByRole('button', { name: 'Exact' }));
 
-            expect(
-                screen.getByText('Remaining ₹42.50 of ₹42.50 expense amount'),
-            ).toBeInTheDocument();
+            expect(screen.getByText('₹0.00 assigned · ₹42.50 remaining')).toBeInTheDocument();
 
             await user.type(screen.getByRole('spinbutton', { name: 'You amount' }), '50');
 
             expect(
-                screen.getByText('Remaining ₹-7.50 of ₹42.50 expense amount'),
+                screen.getByText('₹50.00 assigned · ₹7.50 over the expense total'),
             ).toBeInTheDocument();
         });
 
@@ -456,11 +478,11 @@ describe('UpsertExpenseForm', () => {
             await user.type(screen.getByLabelText(/amount/i), '42.50');
             await user.click(screen.getByRole('button', { name: 'Percentage' }));
 
-            expect(screen.getByText('Remaining 100 of 100 percent')).toBeInTheDocument();
+            expect(screen.getByText('0% assigned · 100% remaining')).toBeInTheDocument();
 
             await user.type(screen.getByRole('spinbutton', { name: 'You percentage' }), '60');
 
-            expect(screen.getByText('Remaining 40 of 100 percent')).toBeInTheDocument();
+            expect(screen.getByText('60% assigned · 40% remaining')).toBeInTheDocument();
         });
 
         it('shows the running total of entered shares for a shares split', async () => {
@@ -471,20 +493,44 @@ describe('UpsertExpenseForm', () => {
             await user.click(screen.getByRole('button', { name: 'Shares' }));
 
             expect(
-                screen.getByText('Splitting into 0 shares between the selected members'),
+                screen.getByText(
+                    '0 shares in total · Enter a positive share for every participant',
+                ),
             ).toBeInTheDocument();
 
             await user.type(screen.getByRole('spinbutton', { name: 'You shares' }), '1');
 
             expect(
-                screen.getByText('Splitting into 1 share between the selected members'),
+                screen.getByText('1 share in total · Enter a positive share for every participant'),
             ).toBeInTheDocument();
 
             await user.type(screen.getByRole('spinbutton', { name: /priya sharma shares/i }), '2');
 
-            expect(
-                screen.getByText('Splitting into 3 shares between the selected members'),
-            ).toBeInTheDocument();
+            expect(screen.getByText('3 shares in total')).toBeInTheDocument();
+        });
+
+        it('shows resolved monetary values for complete percentage and shares splits', async () => {
+            const user = userEvent.setup();
+            render(<UpsertExpenseForm members={members} onSubmit={vi.fn()} onCancel={vi.fn()} />);
+
+            await user.type(screen.getByLabelText(/amount/i), '100');
+            await user.click(screen.getByRole('button', { name: 'Percentage' }));
+            await user.type(screen.getByRole('spinbutton', { name: 'You percentage' }), '50');
+            await user.type(
+                screen.getByRole('spinbutton', { name: /priya sharma percentage/i }),
+                '50',
+            );
+
+            expect(screen.getByText('100% assigned')).toBeInTheDocument();
+            expect(screen.getAllByText('₹50.00')).toHaveLength(2);
+
+            await user.click(screen.getByRole('button', { name: 'Shares' }));
+            await user.type(screen.getByRole('spinbutton', { name: 'You shares' }), '1');
+            await user.type(screen.getByRole('spinbutton', { name: /priya sharma shares/i }), '2');
+
+            expect(screen.getByText('3 shares in total')).toBeInTheDocument();
+            expect(screen.getByText('₹33.33')).toBeInTheDocument();
+            expect(screen.getByText('₹66.67')).toBeInTheDocument();
         });
     });
 

@@ -28,5 +28,6 @@ describe('useDeleteGroup', () => {
 
         expect(groupsApi.remove).toHaveBeenCalledWith('group-1');
         expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['groups'] });
+        expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['users', 'friends'] });
     });
 });

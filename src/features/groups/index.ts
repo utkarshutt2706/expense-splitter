@@ -5,4 +5,5 @@ export {
     MemberCheckboxList,
     type CreateGroupFormValues,
 } from './components';
-export { useCreateGroup, useGroup, useGroupMembers, useGroups } from './hooks';
+export { useCreateGroup, useGroup, useGroupMembers, useGroups, useGroupSummaries } from './hooks';
+export type { GroupSummary } from './api/groupsApi';

@@ -14,6 +14,7 @@ export function useUpdateGroupMembers() {
         mutationFn: ({ id, memberIds }: UpdateGroupMembersInput) => update(id, { memberIds }),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['groups'] });
+            queryClient.invalidateQueries({ queryKey: ['users', 'friends'] });
         },
     });
 }

@@ -13,6 +13,7 @@ import { useDeletePayment, usePayments, useUpdatePayment } from '@features/payme
 import { RecordPaymentDialog } from '@features/payments/components/RecordPaymentDialog';
 import type { RecordPaymentFormValues } from '@features/payments/components/RecordPaymentForm';
 import { Avatar, ConfirmationDialog, FetchingIndicator, SwipeableRow } from '@shared/components';
+import { formatCurrency } from '@shared/utils';
 
 interface GroupActivityListProps {
     readonly groupId: string;
@@ -38,11 +39,11 @@ function involvementLabel(
     const involvement = calculateExpenseInvolvement(expense, currentUserId ?? '');
 
     if (involvement.type === 'lent') {
-        return { text: `You lent ₹${involvement.amount.toFixed(2)}`, className: 'text-owed' };
+        return { text: `You lent ${formatCurrency(involvement.amount)}`, className: 'text-owed' };
     }
 
     if (involvement.type === 'owed') {
-        return { text: `You owe ₹${involvement.amount.toFixed(2)}`, className: 'text-owe' };
+        return { text: `You owe ${formatCurrency(involvement.amount)}`, className: 'text-owe' };
     }
 
     return { text: 'You were not involved', className: 'text-muted-foreground' };
@@ -95,7 +96,7 @@ function ExpenseRow({
                 </div>
                 <div className="flex flex-col items-end gap-0.5">
                     <p className="text-surface-foreground font-medium">
-                        ₹{expense.amount.toFixed(2)}
+                        {formatCurrency(expense.amount)}
                     </p>
                     <p className={`text-xs ${involvement.className}`}>{involvement.text}</p>
                 </div>
@@ -148,7 +149,7 @@ function PaymentRow({ payment, membersById, currentUserId, onEdit, onDelete }: P
                         {dateFormatter.format(new Date(payment.createdAt))}
                     </p>
                 </div>
-                <p className="text-owed font-medium">₹{payment.amount.toFixed(2)}</p>
+                <p className="text-owed font-medium">{formatCurrency(payment.amount)}</p>
             </div>
         </SwipeableRow>
     );
@@ -346,7 +347,7 @@ export function GroupActivityList({
                     if (!open) setDeletingPayment(null);
                 }}
                 title="Delete this payment?"
-                description={`This will permanently remove the ₹${deletingPayment?.amount.toFixed(2) ?? '0.00'} payment and recalculate group balances.`}
+                description={`This will permanently remove the ${formatCurrency(deletingPayment?.amount)} payment and recalculate group balances.`}
                 confirmLabel="Delete"
                 destructive
                 onConfirm={() => {

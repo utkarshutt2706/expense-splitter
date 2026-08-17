@@ -1,12 +1,13 @@
 import * as Accordion from '@radix-ui/react-accordion';
 import { ChevronDown, Handshake } from 'lucide-react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import type { User } from '@data/entities';
 import type { SettlementTransaction } from '@features/balances/api/balancesApi';
 import { RecordPaymentDialog } from '@features/payments/components/RecordPaymentDialog';
 import { useCreatePayment } from '@features/payments/hooks/useCreatePayment';
+import { formatCurrency } from '@shared/utils';
 
 interface MemberBalanceAccordionProps {
     readonly member: User;
@@ -44,14 +45,14 @@ function titleFor(
 
     if (netAmount > 0) {
         return {
-            text: `${subject} get${isCurrentUser ? '' : 's'} back ₹${netAmount.toFixed(2)} in total`,
+            text: `${subject} get${isCurrentUser ? '' : 's'} back ${formatCurrency(netAmount)} in total`,
             className: 'text-owed',
         };
     }
 
     if (netAmount < 0) {
         return {
-            text: `${subject} owe${isCurrentUser ? '' : 's'} ₹${Math.abs(netAmount).toFixed(2)} in total`,
+            text: `${subject} owe${isCurrentUser ? '' : 's'} ${formatCurrency(Math.abs(netAmount))} in total`,
             className: 'text-owe',
         };
     }
@@ -76,6 +77,8 @@ export function MemberBalanceAccordion({
         null,
     );
     const createPayment = useCreatePayment();
+    const [paymentError, setPaymentError] = useState<string>();
+    const settleTriggerRef = useRef<HTMLButtonElement | null>(null);
 
     const handleSettleUp = ({
         fromUserId,
@@ -86,12 +89,22 @@ export function MemberBalanceAccordion({
         toUserId: string;
         amount: number;
     }) => {
+        if (createPayment.isPending) return;
+        setPaymentError(undefined);
         const toastId = toast.loading('Payment is being recorded…');
         createPayment.mutate(
             { groupId, fromUserId, toUserId, amount },
             {
-                onSuccess: () => toast.success('Payment recorded', { id: toastId }),
-                onError: (error) => toast.error(error.message, { id: toastId }),
+                onSuccess: () => {
+                    setSettlingTransaction(null);
+                    toast.success('Payment recorded', { id: toastId });
+                },
+                onError: () => {
+                    const message =
+                        'We couldn’t record this payment. Nothing was changed. Try again.';
+                    setPaymentError(message);
+                    toast.error(message, { id: toastId });
+                },
             },
         );
     };
@@ -122,15 +135,19 @@ export function MemberBalanceAccordion({
                                         membersById,
                                         currentUserId,
                                     )}{' '}
-                                    owe{transaction.fromUserId === currentUserId ? '' : 's'} ₹
-                                    {transaction.amount.toFixed(2)} to{' '}
+                                    owe{transaction.fromUserId === currentUserId ? '' : 's'}{' '}
+                                    {formatCurrency(transaction.amount)} to{' '}
                                     {objectName(transaction.toUserId, membersById, currentUserId)}
                                 </span>
                                 <button
                                     type="button"
                                     aria-label="Settle up"
                                     title="Settle up"
-                                    onClick={() => setSettlingTransaction(transaction)}
+                                    onClick={(event) => {
+                                        settleTriggerRef.current = event.currentTarget;
+                                        setPaymentError(undefined);
+                                        setSettlingTransaction(transaction);
+                                    }}
                                     className="border-border text-surface-foreground hover:bg-muted inline-flex shrink-0 cursor-pointer items-center gap-1 rounded-full border px-2 py-1 text-xs font-medium"
                                 >
                                     <Handshake className="size-3.5" />
@@ -145,10 +162,17 @@ export function MemberBalanceAccordion({
             <RecordPaymentDialog
                 open={settlingTransaction !== null}
                 onOpenChange={(open) => {
-                    if (!open) setSettlingTransaction(null);
+                    if (!open) {
+                        setSettlingTransaction(null);
+                        setPaymentError(undefined);
+                        queueMicrotask(() => settleTriggerRef.current?.focus());
+                    }
                 }}
                 members={members}
                 initialValues={settlingTransaction ?? undefined}
+                settlementMode
+                isPending={createPayment.isPending}
+                errorMessage={paymentError}
                 onSubmit={handleSettleUp}
             />
         </Accordion.Item>

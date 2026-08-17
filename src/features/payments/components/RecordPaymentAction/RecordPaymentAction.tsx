@@ -23,14 +23,25 @@ export function RecordPaymentAction({
 }: RecordPaymentActionProps) {
     const createPayment = useCreatePayment();
     const [isRecordingPayment, setIsRecordingPayment] = useState(false);
+    const [paymentError, setPaymentError] = useState<string>();
 
     const handleRecordPayment = ({ fromUserId, toUserId, amount }: RecordPaymentFormValues) => {
+        if (createPayment.isPending) return;
+        setPaymentError(undefined);
         const toastId = toast.loading('Payment is being recorded…');
         createPayment.mutate(
             { groupId, fromUserId, toUserId, amount },
             {
-                onSuccess: () => toast.success('Payment recorded', { id: toastId }),
-                onError: (error) => toast.error(error.message, { id: toastId }),
+                onSuccess: () => {
+                    setIsRecordingPayment(false);
+                    toast.success('Payment recorded', { id: toastId });
+                },
+                onError: () => {
+                    const message =
+                        'We couldn’t record this payment. Nothing was changed. Try again.';
+                    setPaymentError(message);
+                    toast.error(message, { id: toastId });
+                },
             },
         );
     };
@@ -44,6 +55,7 @@ export function RecordPaymentAction({
                     title="Record a payment"
                     onClick={() => {
                         onTriggerClick?.();
+                        setPaymentError(undefined);
                         setIsRecordingPayment(true);
                     }}
                     className="bg-owed inline-flex size-12 cursor-pointer items-center justify-center rounded-full text-white shadow-lg"
@@ -54,8 +66,13 @@ export function RecordPaymentAction({
 
             <RecordPaymentDialog
                 open={isRecordingPayment}
-                onOpenChange={setIsRecordingPayment}
+                onOpenChange={(open) => {
+                    setIsRecordingPayment(open);
+                    if (!open) setPaymentError(undefined);
+                }}
                 members={members}
+                isPending={createPayment.isPending}
+                errorMessage={paymentError}
                 onSubmit={handleRecordPayment}
             />
         </>

@@ -1,3 +1,5 @@
+import * as Popover from '@radix-ui/react-popover';
+import { Check, ChevronDown } from 'lucide-react';
 import {
     Area,
     CartesianGrid,
@@ -15,7 +17,8 @@ import type {
     DashboardDailySpend,
     DashboardMonthlySpend,
 } from '@features/dashboard/api/dashboardApi';
-import { formatMoney } from './dashboardMetrics';
+import { formatCurrency } from '@shared/utils';
+import { addSingletonEndpoints } from './spendingTrendChartData';
 
 function monthLabel(month: string): string {
     return new Intl.DateTimeFormat('en-IN', {
@@ -34,15 +37,6 @@ function dayLabel(date: string): string {
     }).format(new Date(`${date}T00:00:00Z`));
 }
 
-function compactMoney(value: number): string {
-    return new Intl.NumberFormat('en-IN', {
-        style: 'currency',
-        currency: 'INR',
-        notation: 'compact',
-        maximumFractionDigits: 1,
-    }).format(value);
-}
-
 type SpendingTrendChartProps = Readonly<
     | { data?: DashboardDailySpend[]; granularity: 'day' }
     | { data: DashboardMonthlySpend[]; granularity: 'month' }
@@ -50,6 +44,7 @@ type SpendingTrendChartProps = Readonly<
 
 export function SpendingTrendChart({ data, granularity }: SpendingTrendChartProps) {
     const [selectedPeriod, setSelectedPeriod] = useState('');
+    const [periodPopoverOpen, setPeriodPopoverOpen] = useState(false);
     if (data === undefined)
         return (
             <section className="border-border bg-muted/40 rounded-2xl border p-5 md:p-6">
@@ -68,6 +63,11 @@ export function SpendingTrendChart({ data, granularity }: SpendingTrendChartProp
             label: granularity === 'day' ? dayLabel(period) : monthLabel(period),
         };
     });
+    const plottedData = addSingletonEndpoints(
+        chartData,
+        granularity,
+        granularity === 'day' ? dayLabel : monthLabel,
+    );
     const selected =
         chartData.find((entry) => entry.period === selectedPeriod) ?? chartData.at(-1)!;
     const periodName = granularity === 'day' ? 'Daily' : 'Monthly';
@@ -85,32 +85,72 @@ export function SpendingTrendChart({ data, granularity }: SpendingTrendChartProp
                     {periodName} recorded expenses. Settlement payments are excluded.
                 </p>
             </div>
-            <div className="border-border bg-muted/40 mt-4 rounded-lg border p-3 sm:hidden">
-                <label className="text-sm font-medium" htmlFor="dashboard-chart-period">
+            <div className="touch-device-only border-border bg-muted/40 mt-4 rounded-lg border p-3">
+                <span id="dashboard-chart-period-label" className="text-sm font-medium">
                     View chart values
-                </label>
-                <select
-                    id="dashboard-chart-period"
-                    value={selected.period}
-                    onChange={(event) => setSelectedPeriod(event.target.value)}
-                    className="border-border bg-surface mt-1 min-h-11 w-full cursor-pointer rounded-md border px-3"
-                >
-                    {chartData.map((entry) => (
-                        <option key={entry.period} value={entry.period}>
-                            {entry.label}
-                        </option>
-                    ))}
-                </select>
+                </span>
+                <Popover.Root open={periodPopoverOpen} onOpenChange={setPeriodPopoverOpen}>
+                    <Popover.Trigger asChild>
+                        <button
+                            type="button"
+                            aria-labelledby="dashboard-chart-period-label dashboard-chart-period-value"
+                            aria-haspopup="listbox"
+                            aria-expanded={periodPopoverOpen}
+                            className="border-border bg-surface focus-visible:ring-brand-500 mt-1 flex min-h-11 w-full cursor-pointer items-center justify-between gap-3 rounded-md border px-3 text-left outline-none focus-visible:ring-2"
+                        >
+                            <span id="dashboard-chart-period-value" className="truncate">
+                                {selected.label}
+                            </span>
+                            <ChevronDown
+                                aria-hidden="true"
+                                className={`text-muted-foreground size-4 shrink-0 transition-transform ${periodPopoverOpen ? 'rotate-180' : ''}`}
+                            />
+                        </button>
+                    </Popover.Trigger>
+                    <Popover.Portal>
+                        <Popover.Content
+                            align="start"
+                            sideOffset={8}
+                            role="listbox"
+                            aria-label="Choose chart date"
+                            className="border-border bg-surface z-50 w-[var(--radix-popover-trigger-width)] rounded-lg border p-2 shadow-lg"
+                        >
+                            <div className="max-h-64 overflow-y-auto">
+                                {chartData.map((entry) => (
+                                    <button
+                                        key={entry.period}
+                                        type="button"
+                                        role="option"
+                                        aria-selected={entry.period === selected.period}
+                                        onClick={() => {
+                                            setSelectedPeriod(entry.period);
+                                            setPeriodPopoverOpen(false);
+                                        }}
+                                        className="hover:bg-muted focus-visible:bg-muted flex min-h-11 w-full cursor-pointer items-center justify-between gap-3 rounded-md px-2 text-left outline-none"
+                                    >
+                                        <span className="truncate">{entry.label}</span>
+                                        {entry.period === selected.period && (
+                                            <Check
+                                                aria-hidden="true"
+                                                className="text-brand-600 size-4 shrink-0"
+                                            />
+                                        )}
+                                    </button>
+                                ))}
+                            </div>
+                        </Popover.Content>
+                    </Popover.Portal>
+                </Popover.Root>
                 <dl className="mt-3 space-y-2 text-sm" aria-live="polite">
                     {[
                         ['Total group spending', selected.amount],
-                        ['Paid by you', selected.actualPaid],
                         ['Your share', selected.currentUserShare],
+                        ['Paid by you', selected.actualPaid],
                     ].map(([label, value]) => (
                         <div key={String(label)} className="flex justify-between gap-3">
                             <dt className="text-muted-foreground">{label}</dt>
                             <dd className="shrink-0 font-semibold tabular-nums">
-                                {formatMoney(Number(value))}
+                                {formatCurrency(Number(value))}
                             </dd>
                         </div>
                     ))}
@@ -119,7 +159,7 @@ export function SpendingTrendChart({ data, granularity }: SpendingTrendChartProp
             <div className="mt-6 h-72 w-full" aria-label={`${periodName} spending chart`}>
                 <ResponsiveContainer width="100%" height="100%">
                     <ComposedChart
-                        data={chartData}
+                        data={plottedData}
                         margin={{ top: 8, right: 8, bottom: 0, left: 0 }}
                         accessibilityLayer
                     >
@@ -136,13 +176,13 @@ export function SpendingTrendChart({ data, granularity }: SpendingTrendChartProp
                         />
                         <YAxis
                             width={58}
-                            tickFormatter={compactMoney}
+                            tickFormatter={formatCurrency}
                             tick={{ fill: 'var(--muted-foreground)', fontSize: 12 }}
                             tickLine={false}
                             axisLine={false}
                         />
                         <Tooltip
-                            formatter={(value) => formatMoney(Number(value))}
+                            formatter={(value) => formatCurrency(Number(value))}
                             contentStyle={{
                                 background: 'var(--surface)',
                                 border: '1px solid var(--border-color)',
@@ -162,8 +202,8 @@ export function SpendingTrendChart({ data, granularity }: SpendingTrendChartProp
                         />
                         <Line
                             type="monotone"
-                            dataKey="actualPaid"
-                            name="Paid by you"
+                            dataKey="currentUserShare"
+                            name="Your share"
                             stroke="var(--color-brand-600)"
                             strokeWidth={3}
                             dot={{ r: 3 }}
@@ -172,8 +212,8 @@ export function SpendingTrendChart({ data, granularity }: SpendingTrendChartProp
                         />
                         <Line
                             type="monotone"
-                            dataKey="currentUserShare"
-                            name="Your share"
+                            dataKey="actualPaid"
+                            name="Paid by you"
                             stroke="var(--muted-foreground)"
                             strokeWidth={2}
                             strokeDasharray="6 4"
@@ -199,9 +239,9 @@ export function SpendingTrendChart({ data, granularity }: SpendingTrendChartProp
                         {chartData.map((entry) => (
                             <tr key={entry.period}>
                                 <th>{entry.label}</th>
-                                <td>{formatMoney(entry.amount)}</td>
-                                <td>{formatMoney(entry.actualPaid)}</td>
-                                <td>{formatMoney(entry.currentUserShare)}</td>
+                                <td>{formatCurrency(entry.amount)}</td>
+                                <td>{formatCurrency(entry.actualPaid)}</td>
+                                <td>{formatCurrency(entry.currentUserShare)}</td>
                             </tr>
                         ))}
                     </tbody>
