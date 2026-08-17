@@ -1,8 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import type { User } from '@data/entities';
 import { httpClient } from '@lib/api/httpClient';
-import { getFriends } from './friendsApi';
+import { getFriends, type Friend } from './friendsApi';
 
 vi.mock('@lib/api/httpClient', () => ({
     httpClient: {
@@ -10,7 +9,14 @@ vi.mock('@lib/api/httpClient', () => ({
     },
 }));
 
-const friend: User = { id: 'friend-1', name: 'Priya Sharma', email: 'priya@example.com' };
+const friend: Friend = {
+    id: 'friend-1',
+    name: 'Priya Sharma',
+    email: 'priya@example.com',
+    sharedGroupCount: 2,
+    netBalance: 125,
+    groupBalances: [{ groupId: 'group-1', groupName: 'Goa Trip', balance: 125 }],
+};
 
 describe('friendsApi', () => {
     it('getFriends fetches the derived friend list from /users/me/friends', async () => {

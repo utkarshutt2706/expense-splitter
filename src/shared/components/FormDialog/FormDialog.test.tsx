@@ -24,6 +24,10 @@ describe('FormDialog', () => {
 
         expect(screen.getByText('Add a friend')).toBeInTheDocument();
         expect(screen.getByText('Form content')).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /close/i })).toHaveClass(
+            'items-center',
+            'justify-center',
+        );
     });
 
     it('reports closed when the close button is clicked', async () => {

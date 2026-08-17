@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useFriends } from '@features/friends';
-import { useCreateGroup, useGroups } from '@features/groups';
+import { useCreateGroup, useGroupSummaries } from '@features/groups';
 import { GroupsPage } from './GroupsPage';
 
 vi.mock('@features/friends', () => ({
@@ -20,7 +20,7 @@ vi.mock('sonner', () => ({
 }));
 
 vi.mock('@features/groups', () => ({
-    useGroups: vi.fn(),
+    useGroupSummaries: vi.fn(),
     useCreateGroup: vi.fn(),
     CreateGroupDialog: ({
         open,
@@ -44,9 +44,22 @@ const groups = [
         id: 'group-1',
         name: 'Weekend Trip',
         memberIds: ['current-user', 'friend-1', 'friend-2'],
+        memberCount: 3,
+        currentUserBalance: 1250,
+        hasFinancialActivity: true,
+        lastActivityAt: '2026-08-15T00:00:00.000Z',
         createdAt: '',
     },
-    { id: 'group-2', name: 'Roommates', memberIds: ['current-user'], createdAt: '' },
+    {
+        id: 'group-2',
+        name: 'Roommates',
+        memberIds: ['current-user'],
+        memberCount: 1,
+        currentUserBalance: -500,
+        hasFinancialActivity: true,
+        lastActivityAt: '2026-08-12T00:00:00.000Z',
+        createdAt: '',
+    },
 ];
 
 function renderPage() {
@@ -68,11 +81,11 @@ describe('GroupsPage', () => {
     });
 
     it('shows a loading message while fetching', () => {
-        vi.mocked(useGroups).mockReturnValue({
+        vi.mocked(useGroupSummaries).mockReturnValue({
             data: undefined,
             isLoading: true,
             isError: false,
-        } as unknown as ReturnType<typeof useGroups>);
+        } as unknown as ReturnType<typeof useGroupSummaries>);
 
         renderPage();
 
@@ -80,11 +93,11 @@ describe('GroupsPage', () => {
     });
 
     it('does not render the search box or create group trigger while fetching', () => {
-        vi.mocked(useGroups).mockReturnValue({
+        vi.mocked(useGroupSummaries).mockReturnValue({
             data: undefined,
             isLoading: true,
             isError: false,
-        } as unknown as ReturnType<typeof useGroups>);
+        } as unknown as ReturnType<typeof useGroupSummaries>);
 
         renderPage();
 
@@ -93,23 +106,24 @@ describe('GroupsPage', () => {
     });
 
     it('shows an error message when the query fails', () => {
-        vi.mocked(useGroups).mockReturnValue({
+        vi.mocked(useGroupSummaries).mockReturnValue({
             data: undefined,
             isLoading: false,
             isError: true,
-        } as unknown as ReturnType<typeof useGroups>);
+        } as unknown as ReturnType<typeof useGroupSummaries>);
 
         renderPage();
 
-        expect(screen.getByText(/couldn't load groups/i)).toBeInTheDocument();
+        expect(screen.getByText(/we couldn’t load your groups/i)).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /try again/i })).toBeInTheDocument();
     });
 
     it('shows an empty state when there are no groups', () => {
-        vi.mocked(useGroups).mockReturnValue({
+        vi.mocked(useGroupSummaries).mockReturnValue({
             data: [],
             isLoading: false,
             isError: false,
-        } as unknown as ReturnType<typeof useGroups>);
+        } as unknown as ReturnType<typeof useGroupSummaries>);
 
         renderPage();
 
@@ -117,11 +131,11 @@ describe('GroupsPage', () => {
     });
 
     it('hides the search box but still shows the create group trigger when there are no groups', () => {
-        vi.mocked(useGroups).mockReturnValue({
+        vi.mocked(useGroupSummaries).mockReturnValue({
             data: [],
             isLoading: false,
             isError: false,
-        } as unknown as ReturnType<typeof useGroups>);
+        } as unknown as ReturnType<typeof useGroupSummaries>);
 
         renderPage();
 
@@ -130,11 +144,11 @@ describe('GroupsPage', () => {
     });
 
     it('renders each group with its name, pluralized member count, and a link to its detail page', () => {
-        vi.mocked(useGroups).mockReturnValue({
+        vi.mocked(useGroupSummaries).mockReturnValue({
             data: groups,
             isLoading: false,
             isError: false,
-        } as unknown as ReturnType<typeof useGroups>);
+        } as unknown as ReturnType<typeof useGroupSummaries>);
 
         renderPage();
 
@@ -142,6 +156,9 @@ describe('GroupsPage', () => {
         expect(screen.getByText('3 members')).toBeInTheDocument();
         expect(screen.getByText('Roommates')).toBeInTheDocument();
         expect(screen.getByText('1 member')).toBeInTheDocument();
+        expect(screen.getAllByText(/you are owed ₹1,250\.00/i)).not.toHaveLength(0);
+        expect(screen.getAllByText(/you owe ₹500\.00/i)).not.toHaveLength(0);
+        expect(screen.getByText(/last activity 15 aug 2026/i)).toBeInTheDocument();
         expect(screen.getByRole('link', { name: /weekend trip/i })).toHaveAttribute(
             'href',
             '/groups/group-1',
@@ -152,13 +169,42 @@ describe('GroupsPage', () => {
         );
     });
 
+    it('sorts active groups by latest activity and places inactive groups last', () => {
+        vi.mocked(useGroupSummaries).mockReturnValue({
+            data: [
+                {
+                    ...groups[0],
+                    id: 'inactive',
+                    name: 'Alpha inactive',
+                    currentUserBalance: 0,
+                    hasFinancialActivity: false,
+                    lastActivityAt: null,
+                },
+                groups[1],
+                groups[0],
+            ],
+            isLoading: false,
+            isError: false,
+        } as unknown as ReturnType<typeof useGroupSummaries>);
+
+        renderPage();
+
+        expect(screen.getAllByRole('link').map((link) => link.getAttribute('href'))).toEqual([
+            '/groups/group-1',
+            '/groups/group-2',
+            '/groups/inactive',
+        ]);
+        expect(screen.getByText('No expenses yet')).toBeInTheDocument();
+        expect(screen.getAllByText('No balance')).not.toHaveLength(0);
+    });
+
     it('shows a refreshing indicator during a background refetch, not the loading skeleton', () => {
-        vi.mocked(useGroups).mockReturnValue({
+        vi.mocked(useGroupSummaries).mockReturnValue({
             data: groups,
             isLoading: false,
             isFetching: true,
             isError: false,
-        } as unknown as ReturnType<typeof useGroups>);
+        } as unknown as ReturnType<typeof useGroupSummaries>);
 
         renderPage();
 
@@ -167,12 +213,12 @@ describe('GroupsPage', () => {
     });
 
     it('does not show a refreshing indicator once the background refetch settles', () => {
-        vi.mocked(useGroups).mockReturnValue({
+        vi.mocked(useGroupSummaries).mockReturnValue({
             data: groups,
             isLoading: false,
             isFetching: false,
             isError: false,
-        } as unknown as ReturnType<typeof useGroups>);
+        } as unknown as ReturnType<typeof useGroupSummaries>);
 
         renderPage();
 
@@ -181,11 +227,11 @@ describe('GroupsPage', () => {
 
     describe('create group flow', () => {
         beforeEach(() => {
-            vi.mocked(useGroups).mockReturnValue({
+            vi.mocked(useGroupSummaries).mockReturnValue({
                 data: [],
                 isLoading: false,
                 isError: false,
-            } as unknown as ReturnType<typeof useGroups>);
+            } as unknown as ReturnType<typeof useGroupSummaries>);
         });
 
         it('opens the create dialog when the trigger is clicked', () => {
@@ -238,11 +284,11 @@ describe('GroupsPage', () => {
 
     describe('search', () => {
         beforeEach(() => {
-            vi.mocked(useGroups).mockReturnValue({
+            vi.mocked(useGroupSummaries).mockReturnValue({
                 data: groups,
                 isLoading: false,
                 isError: false,
-            } as unknown as ReturnType<typeof useGroups>);
+            } as unknown as ReturnType<typeof useGroupSummaries>);
             vi.mocked(useFriends).mockReturnValue({
                 data: [
                     { id: 'friend-1', name: 'Priya Sharma', email: 'priya@example.com' },
@@ -290,7 +336,8 @@ describe('GroupsPage', () => {
                 target: { value: 'nobody' },
             });
 
-            expect(screen.getByText(/no groups match your search/i)).toBeInTheDocument();
+            expect(screen.getByText(/no groups found/i)).toBeInTheDocument();
+            expect(screen.getByText(/try a different search/i)).toBeInTheDocument();
             expect(screen.queryByText('Weekend Trip')).not.toBeInTheDocument();
             expect(screen.queryByText('Roommates')).not.toBeInTheDocument();
         });

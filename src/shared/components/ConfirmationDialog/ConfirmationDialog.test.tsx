@@ -69,4 +69,42 @@ describe('ConfirmationDialog', () => {
 
         expect(onOpenChange).toHaveBeenCalledWith(false);
     });
+
+    it('focuses Cancel initially', () => {
+        render(
+            <ConfirmationDialog open onOpenChange={vi.fn()} onConfirm={vi.fn()} {...baseProps} />,
+        );
+
+        expect(screen.getByRole('button', { name: 'Cancel' })).toHaveFocus();
+    });
+
+    it('disables both actions while pending', () => {
+        render(
+            <ConfirmationDialog
+                open
+                onOpenChange={vi.fn()}
+                onConfirm={vi.fn()}
+                isPending
+                pendingLabel="Deleting…"
+                {...baseProps}
+            />,
+        );
+
+        expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
+        expect(screen.getByRole('button', { name: 'Deleting…' })).toBeDisabled();
+    });
+
+    it('shows a safe inline error message', () => {
+        render(
+            <ConfirmationDialog
+                open
+                onOpenChange={vi.fn()}
+                onConfirm={vi.fn()}
+                errorMessage="Nothing was changed. Try again."
+                {...baseProps}
+            />,
+        );
+
+        expect(screen.getByRole('alert')).toHaveTextContent('Nothing was changed. Try again.');
+    });
 });

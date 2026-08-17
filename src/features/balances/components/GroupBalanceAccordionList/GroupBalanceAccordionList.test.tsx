@@ -9,153 +9,162 @@ import { GroupBalanceAccordionList } from './GroupBalanceAccordionList';
 
 vi.mock('@app/hooks', async (importOriginal) => ({
     ...(await importOriginal<typeof import('@app/hooks')>()),
-    useCurrentUser: () => ({
-        data: { id: CURRENT_USER_ID, name: 'Utkarsh Srivastava', email: 'utkarsh@example.com' },
-    }),
+    useCurrentUser: () => ({ data: { id: CURRENT_USER_ID, name: 'Utkarsh' } }),
 }));
-
-// Each MemberBalanceAccordion calls useCreatePayment unconditionally (for its
-// settle-up dialog), which needs a QueryClientProvider this test doesn't set up —
-// mocked since none of these tests exercise settle-up itself.
 vi.mock('@features/payments/hooks/useCreatePayment', () => ({
-    useCreatePayment: () => ({ mutate: vi.fn() }),
+    useCreatePayment: () => ({ mutate: vi.fn(), isPending: false }),
+}));
+vi.mock('@features/payments/components/RecordPaymentDialog', () => ({
+    RecordPaymentDialog: ({
+        open,
+        initialValues,
+    }: {
+        open: boolean;
+        initialValues?: SettlementTransaction;
+    }) => (open ? <div data-testid="payment-dialog">{JSON.stringify(initialValues)}</div> : null),
 }));
 
 const members: User[] = [
-    { id: 'friend-1', name: 'Abhinav', email: 'abhinav@example.com' },
-    { id: 'friend-2', name: 'Khem', email: 'khem@example.com' },
+    { id: CURRENT_USER_ID, name: 'Utkarsh', email: 'u@example.com' },
+    { id: 'jayant', name: 'Jayant Sachan', email: 'j@example.com' },
+    { id: 'shivam', name: 'Shivam Rajput', email: 's@example.com' },
+    { id: 'rohan', name: 'Rohan Dwivedi', email: 'r@example.com' },
+    { id: 'settled', name: 'Sibali Singh', email: 'ss@example.com' },
 ];
 
-const netBalances = new Map([
-    ['friend-1', -38],
-    ['friend-2', 0],
-]);
-
-const transactions: SettlementTransaction[] = [
-    { fromUserId: 'friend-1', toUserId: 'friend-2', amount: 38 },
-];
+function renderList(transactions: SettlementTransaction[], balances = new Map<string, number>()) {
+    return render(
+        <GroupBalanceAccordionList
+            groupId="group-1"
+            members={members}
+            netBalances={balances}
+            transactions={transactions}
+        />,
+    );
+}
 
 describe('GroupBalanceAccordionList', () => {
-    it('renders one accordion per member', () => {
-        render(
-            <GroupBalanceAccordionList
-                groupId="group-1"
-                members={members}
-                netBalances={netBalances}
-                transactions={transactions}
-            />,
+    it('shows a receive-only position and personal settlement', () => {
+        renderList(
+            [{ fromUserId: 'jayant', toUserId: CURRENT_USER_ID, amount: 9388.09 }],
+            new Map([[CURRENT_USER_ID, 9388.09]]),
         );
 
-        expect(screen.getByText(/abhinav owes ₹38\.00 in total/i)).toBeInTheDocument();
-        expect(screen.getByText(/khem is settled up/i)).toBeInTheDocument();
+        expect(screen.getByText('You are owed ₹9,388.09')).toBeInTheDocument();
+        expect(screen.getByText('1 payment to receive')).toBeInTheDocument();
+        expect(screen.getByText('Jayant Sachan owes you')).toBeInTheDocument();
     });
 
-    it('expands accordions for non-zero balances and collapses settled ones by default', () => {
-        render(
-            <GroupBalanceAccordionList
-                groupId="group-1"
-                members={members}
-                netBalances={netBalances}
-                transactions={transactions}
-            />,
+    it('shows an owe-only position and correct direction', () => {
+        renderList(
+            [{ fromUserId: CURRENT_USER_ID, toUserId: 'shivam', amount: 2500 }],
+            new Map([[CURRENT_USER_ID, -2500]]),
         );
 
-        expect(screen.getByRole('button', { name: /abhinav owes/i })).toHaveAttribute(
-            'aria-expanded',
-            'true',
+        expect(screen.getByText('You owe ₹2,500.00')).toBeInTheDocument();
+        const direction = screen.getByText(/You owe Shivam Rajput/);
+        expect(direction).toHaveTextContent('You owe Shivam Rajput ₹2,500.00');
+        expect(direction.querySelector('span')).toHaveClass('text-owe');
+        expect(screen.getByText('You need to make this payment.')).toBeInTheDocument();
+        expect(direction.closest('ul')?.parentElement).toHaveClass('rounded-xl', 'border');
+        expect(
+            screen.getByRole('button', { name: /settle up: you owe shivam rajput/i }).parentElement,
+        ).toHaveClass('shrink-0');
+    });
+
+    it('shows gross mixed obligations and a secondary net position', () => {
+        renderList(
+            [
+                { fromUserId: 'jayant', toUserId: CURRENT_USER_ID, amount: 12000 },
+                { fromUserId: CURRENT_USER_ID, toUserId: 'shivam', amount: 2611.91 },
+            ],
+            new Map([[CURRENT_USER_ID, 9388.09]]),
         );
-        expect(screen.getByRole('button', { name: /khem is settled up/i })).toHaveAttribute(
+
+        expect(screen.getByText('To receive').nextSibling).toHaveTextContent('₹12,000.00');
+        expect(screen.getByText('To pay').nextSibling).toHaveTextContent('₹2,611.91');
+        expect(screen.getByText(/₹9,388\.09 to receive/)).toBeInTheDocument();
+        const rows = screen.getAllByRole('listitem');
+        expect(rows[0]).toHaveTextContent('You owe Shivam Rajput');
+        expect(rows[1]).toHaveTextContent('Jayant Sachan owes you');
+    });
+
+    it('shows personal settled state while other balances remain collapsed', () => {
+        renderList(
+            [{ fromUserId: 'jayant', toUserId: 'rohan', amount: 14065.11 }],
+            new Map([
+                [CURRENT_USER_ID, 0],
+                ['jayant', -14065.11],
+                ['rohan', 14065.11],
+            ]),
+        );
+
+        expect(screen.getByText('You are settled up')).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /other group balances \(1\)/i })).toHaveAttribute(
             'aria-expanded',
             'false',
         );
+        expect(screen.queryByText(/jayant sachan owes rohan/i)).not.toBeInTheDocument();
+        expect(
+            screen.queryByRole('button', { name: /settled participants \(0\)/i }),
+        ).not.toBeInTheDocument();
     });
 
-    it('only expands the first unsettled member when several are non-zero', () => {
-        const threeMembers: User[] = [
-            ...members,
-            { id: 'friend-3', name: 'Divanshu', email: 'divanshu@example.com' },
-        ];
-        const multipleUnsettledBalances = new Map([
-            ['friend-1', -38],
-            ['friend-2', 38],
-            ['friend-3', -10],
-        ]);
-
-        render(
-            <GroupBalanceAccordionList
-                groupId="group-1"
-                members={threeMembers}
-                netBalances={multipleUnsettledBalances}
-                transactions={transactions}
-            />,
+    it('omits empty balance disclosures', () => {
+        renderList(
+            [{ fromUserId: CURRENT_USER_ID, toUserId: 'shivam', amount: 2500 }],
+            new Map([
+                [CURRENT_USER_ID, -2500],
+                ['shivam', 2500],
+            ]),
         );
 
-        expect(screen.getByRole('button', { name: /abhinav owes/i })).toHaveAttribute(
-            'aria-expanded',
-            'true',
-        );
-        expect(screen.getByRole('button', { name: /khem gets back/i })).toHaveAttribute(
-            'aria-expanded',
-            'false',
-        );
-        expect(screen.getByRole('button', { name: /divanshu owes/i })).toHaveAttribute(
-            'aria-expanded',
-            'false',
-        );
+        expect(
+            screen.queryByRole('button', { name: /other group balances \(0\)/i }),
+        ).not.toBeInTheDocument();
+        expect(
+            screen.queryByRole('button', { name: /settled participants \(0\)/i }),
+        ).not.toBeInTheDocument();
     });
 
-    it('always places the current user first, regardless of input order or settled status', () => {
-        const membersWithCurrentUserLast: User[] = [
-            { id: 'friend-1', name: 'Abhinav', email: 'abhinav@example.com' },
-            { id: CURRENT_USER_ID, name: 'Utkarsh Srivastava', email: 'utkarsh@example.com' },
-        ];
-        const balances = new Map([
-            ['friend-1', -38],
-            [CURRENT_USER_ID, 0],
-        ]);
-
-        render(
-            <GroupBalanceAccordionList
-                groupId="group-1"
-                members={membersWithCurrentUserLast}
-                netBalances={balances}
-                transactions={transactions}
-            />,
-        );
-
-        const triggers = screen.getAllByRole('button');
-        expect(triggers[0]).toHaveTextContent('You are settled up');
-        expect(triggers[1]).toHaveTextContent('Abhinav owes');
-
-        // Position is independent of the expand rule: the settled current user
-        // leads the list but stays collapsed, while unsettled Abhinav — despite
-        // now being second — is the one that expands by default.
-        expect(triggers[0]).toHaveAttribute('aria-expanded', 'false');
-        expect(triggers[1]).toHaveAttribute('aria-expanded', 'true');
-    });
-
-    it("shows a shared transaction under both members' accordions once both are expanded", async () => {
-        // Unlike the fixture above, Khem is owed the exact amount Abhinav owes.
-        // Only Abhinav (first in the member list) expands by default now, so
-        // Khem's half of the shared transaction has to be opened manually before
-        // it's mounted (Radix unmounts collapsed content).
-        const bothNonZeroBalances = new Map([
-            ['friend-1', -38],
-            ['friend-2', 38],
-        ]);
+    it('displays every canonical recommendation exactly once', async () => {
         const user = userEvent.setup();
-
-        render(
-            <GroupBalanceAccordionList
-                groupId="group-1"
-                members={members}
-                netBalances={bothNonZeroBalances}
-                transactions={transactions}
-            />,
+        renderList(
+            [
+                { fromUserId: 'jayant', toUserId: CURRENT_USER_ID, amount: 9388.09 },
+                { fromUserId: 'jayant', toUserId: 'rohan', amount: 14065.11 },
+            ],
+            new Map([[CURRENT_USER_ID, 9388.09]]),
         );
 
-        await user.click(screen.getByRole('button', { name: /khem gets back/i }));
+        await user.click(screen.getByRole('button', { name: /other group balances \(1\)/i }));
+        expect(screen.getAllByText('Jayant Sachan owes you')).toHaveLength(1);
+        const otherBalance = screen.getByText(/Jayant Sachan owes Rohan Dwivedi/);
+        expect(otherBalance).toHaveTextContent('Jayant Sachan owes Rohan Dwivedi ₹14,065.11');
+        expect(otherBalance.querySelector('span')).toHaveClass('text-owe');
+    });
 
-        expect(screen.getAllByText('Abhinav owes ₹38.00 to Khem')).toHaveLength(2);
+    it('shows compact settled participants through a collapsed disclosure', async () => {
+        const user = userEvent.setup();
+        renderList([], new Map(members.map((member) => [member.id, 0])));
+
+        expect(screen.getByText('Everyone is settled up')).toBeInTheDocument();
+        const disclosure = screen.getByRole('button', { name: /settled participants \(4\)/i });
+        expect(disclosure).toHaveAttribute('aria-expanded', 'false');
+        await user.click(disclosure);
+        expect(screen.getByText('Sibali Singh')).toBeInTheDocument();
+        expect(screen.queryByText('No settlements needed.')).not.toBeInTheDocument();
+    });
+
+    it('passes the selected canonical transaction to Settle up', async () => {
+        const user = userEvent.setup();
+        const transaction = { fromUserId: 'jayant', toUserId: CURRENT_USER_ID, amount: 9388.09 };
+        renderList([transaction], new Map([[CURRENT_USER_ID, 9388.09]]));
+
+        await user.click(
+            screen.getByRole('button', { name: /settle up: jayant sachan owes you/i }),
+        );
+
+        expect(screen.getByTestId('payment-dialog')).toHaveTextContent(JSON.stringify(transaction));
     });
 });

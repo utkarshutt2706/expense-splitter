@@ -102,6 +102,67 @@ describe('RecordPaymentForm', () => {
         expect(screen.getByLabelText(/amount/i)).toHaveValue(40);
     });
 
+    it('locks settlement participants and explains full and partial payment amounts', async () => {
+        const user = userEvent.setup();
+        render(
+            <RecordPaymentForm
+                members={members}
+                initialValues={{ fromUserId: 'user-2', toUserId: CURRENT_USER_ID, amount: 9388.09 }}
+                lockParticipants
+                outstandingAmount={9388.09}
+                onSubmit={vi.fn()}
+                onCancel={vi.fn()}
+            />,
+        );
+
+        expect(screen.getByLabelText('From: Priya Sharma')).toHaveTextContent('Priya Sharma');
+        expect(screen.getByLabelText('To: You')).toHaveTextContent('You');
+        expect(screen.queryByRole('button', { name: 'From' })).not.toBeInTheDocument();
+        expect(screen.getByLabelText(/amount/i)).toHaveFocus();
+        expect(screen.getByText(/settles the suggested balance in full/i)).toBeInTheDocument();
+
+        await user.clear(screen.getByLabelText(/amount/i));
+        await user.type(screen.getByLabelText(/amount/i), '6000');
+        expect(screen.getByText('₹3,388.09 will remain after this payment.')).toBeInTheDocument();
+    });
+
+    it('blocks a settlement amount above the canonical outstanding amount', async () => {
+        const onSubmit = vi.fn();
+        const user = userEvent.setup();
+        render(
+            <RecordPaymentForm
+                members={members}
+                initialValues={{ fromUserId: CURRENT_USER_ID, toUserId: 'user-2', amount: 25 }}
+                lockParticipants
+                outstandingAmount={25}
+                onSubmit={onSubmit}
+                onCancel={vi.fn()}
+            />,
+        );
+
+        await user.clear(screen.getByLabelText(/amount/i));
+        await user.type(screen.getByLabelText(/amount/i), '25.01');
+        await user.click(screen.getByRole('button', { name: /record payment/i }));
+
+        expect(
+            await screen.findByText(/cannot exceed the outstanding balance of ₹25\.00/i),
+        ).toBeInTheDocument();
+        expect(onSubmit).not.toHaveBeenCalled();
+    });
+
+    it('rejects amounts with unsupported currency precision', async () => {
+        const onSubmit = vi.fn();
+        const user = userEvent.setup();
+        render(<RecordPaymentForm members={members} onSubmit={onSubmit} onCancel={vi.fn()} />);
+
+        await pickMember('To', /priya sharma/i);
+        await user.type(screen.getByLabelText(/amount/i), '1.001');
+        await user.click(screen.getByRole('button', { name: /record payment/i }));
+
+        expect(await screen.findByText(/at most two decimal places/i)).toBeInTheDocument();
+        expect(onSubmit).not.toHaveBeenCalled();
+    });
+
     it('calls onCancel when the cancel button is clicked', async () => {
         const onCancel = vi.fn();
         const user = userEvent.setup();

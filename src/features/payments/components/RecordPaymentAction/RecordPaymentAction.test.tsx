@@ -123,6 +123,9 @@ describe('RecordPaymentAction', () => {
         await user.click(screen.getByRole('button', { name: /fake record payment submit/i }));
         onError?.(new Error('Something went wrong'));
 
-        expect(toast.error).toHaveBeenCalledWith('Something went wrong', { id: 'toast-id' });
+        expect(toast.error).toHaveBeenCalledWith(
+            'We couldn’t record this payment. Nothing was changed. Try again.',
+            { id: 'toast-id' },
+        );
     });
 });

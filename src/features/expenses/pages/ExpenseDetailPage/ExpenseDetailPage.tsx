@@ -1,6 +1,6 @@
 import { ArrowLeft, Pencil, Trash2 } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 import { toast } from 'sonner';
 
@@ -11,16 +11,27 @@ import { useDeleteExpense } from '@features/expenses/hooks/useDeleteExpense';
 import { useExpense } from '@features/expenses/hooks/useExpense';
 import { useGroup, useGroupMembers } from '@features/groups';
 import { Avatar, ConfirmationDialog, FetchingIndicator, Skeleton } from '@shared/components';
+import { formatCurrency } from '@shared/utils';
 
 const dateFormatter = new Intl.DateTimeFormat('en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
 });
+const DELETE_ERROR_MESSAGE = 'We couldn’t delete this expense. Nothing was changed. Try again.';
 
 function memberLabel(member: User | undefined, currentUserId: string | undefined): string {
     if (!member) return 'Someone';
     return member.id === currentUserId ? 'You' : member.name;
+}
+
+function shareLabel(member: User, currentUserId: string | undefined): string {
+    if (member.id === currentUserId) return 'Your share';
+    return /s$/i.test(member.name.trim()) ? `Share for ${member.name}` : `${member.name}’s share`;
+}
+
+function toCents(amount: number): number {
+    return Math.round(amount * 100);
 }
 
 export function ExpenseDetailPage() {
@@ -37,6 +48,8 @@ export function ExpenseDetailPage() {
     const { data: members, isLoading: isMembersLoading } = useGroupMembers(group?.memberIds ?? []);
     const deleteExpense = useDeleteExpense();
     const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+    const [deleteError, setDeleteError] = useState<string>();
+    const deleteButtonRef = useRef<HTMLButtonElement>(null);
 
     const isLoading = isExpenseLoading || isMembersLoading;
     // isLoading only covers the very first fetch — editing this expense refetches
@@ -45,17 +58,22 @@ export function ExpenseDetailPage() {
     const isRefreshing = !isLoading && isExpenseFetching;
 
     const handleDelete = () => {
-        if (!expense || !groupId) return;
+        if (!expense || !groupId || deleteExpense.isPending) return;
 
+        setDeleteError(undefined);
         const toastId = toast.loading('Expense is being deleted…');
         deleteExpense.mutate(
             { id: expense.id, groupId },
             {
                 onSuccess: () => {
+                    setIsConfirmingDelete(false);
                     toast.success('Expense deleted', { id: toastId });
                     navigate(`/groups/${groupId}`);
                 },
-                onError: (error) => toast.error(error.message, { id: toastId }),
+                onError: () => {
+                    setDeleteError(DELETE_ERROR_MESSAGE);
+                    toast.error(DELETE_ERROR_MESSAGE, { id: toastId });
+                },
             },
         );
     };
@@ -73,18 +91,29 @@ export function ExpenseDetailPage() {
         const membersById = new Map((members ?? []).map((member) => [member.id, member]));
         const splitsByUserId = new Map(expense.splits.map((split) => [split.userId, split.amount]));
         const payer = membersById.get(expense.paidByUserId);
-        const participants = (members ?? []).filter((member) => splitsByUserId.has(member.id));
+        const participants = (members ?? [])
+            .filter((member) => splitsByUserId.has(member.id))
+            .sort((left, right) => {
+                if (left.id === currentUser?.id) return -1;
+                if (right.id === currentUser?.id) return 1;
+                return 0;
+            });
         const addedBy = membersById.get(expense.createdByUserId ?? expense.paidByUserId);
         const createdDate = dateFormatter.format(new Date(expense.createdAt));
         // No dedicated payment-date field yet — createdAt stands in until the
         // add-expense form gains one.
         const paidDate = createdDate;
+        const payerSplit = expense.splits.find((split) => split.userId === expense.paidByUserId);
+        const coveredForOthersCents =
+            payerSplit && Number.isFinite(payerSplit.amount) && Number.isFinite(expense.amount)
+                ? toCents(expense.amount) - toCents(payerSplit.amount)
+                : 0;
 
         content = (
             <div className="flex flex-col gap-6">
                 <div>
                     <p className="text-surface-foreground text-2xl font-semibold">
-                        ₹{expense.amount.toFixed(2)}
+                        {formatCurrency(expense.amount)}
                     </p>
                     <p className="text-muted-foreground text-sm">
                         {`Added by ${memberLabel(addedBy, currentUser?.id).toLocaleLowerCase()} on ${createdDate}`}
@@ -95,10 +124,15 @@ export function ExpenseDetailPage() {
                     <div className="flex items-center gap-3">
                         <Avatar name={payer?.name ?? '?'} />
                         <p className="text-surface-foreground font-medium">
-                            {`${memberLabel(payer, currentUser?.id)} paid ₹${expense.amount.toFixed(2)} `}
+                            {`${memberLabel(payer, currentUser?.id)} paid ${formatCurrency(expense.amount)} `}
                             <span className="text-muted-foreground">{`on ${paidDate}`}</span>
                         </p>
                     </div>
+                    {coveredForOthersCents > 0 && (
+                        <p className="text-muted-foreground mt-2 ml-11 text-sm">
+                            {`${memberLabel(payer, currentUser?.id)} covered ${formatCurrency(coveredForOthersCents / 100)} for others.`}
+                        </p>
+                    )}
 
                     <ul className="relative mt-3 ml-4.5 flex flex-col gap-4">
                         <span
@@ -107,7 +141,6 @@ export function ExpenseDetailPage() {
                         />
                         {participants.map((member, index) => {
                             const share = splitsByUserId.get(member.id)!;
-                            const isCurrentUser = member.id === currentUser?.id;
                             const isLast = index === participants.length - 1;
 
                             return (
@@ -128,7 +161,7 @@ export function ExpenseDetailPage() {
                                     )}
                                     <Avatar name={member.name} size="sm" />
                                     <span className="text-surface-foreground text-sm">
-                                        {`${memberLabel(member, currentUser?.id)} owe${isCurrentUser ? '' : 's'} ₹${share.toFixed(2)}`}
+                                        {`${shareLabel(member, currentUser?.id)} ${formatCurrency(share)}`}
                                     </span>
                                 </li>
                             );
@@ -184,11 +217,15 @@ export function ExpenseDetailPage() {
                         </Link>
                     )}
                     <button
+                        ref={deleteButtonRef}
                         type="button"
                         aria-label="Delete expense"
                         title="Delete expense"
                         disabled={isLoading}
-                        onClick={() => setIsConfirmingDelete(true)}
+                        onClick={() => {
+                            setDeleteError(undefined);
+                            setIsConfirmingDelete(true);
+                        }}
                         className="border-border hover:bg-muted inline-flex cursor-pointer items-center gap-1 rounded-md border p-2 text-sm font-medium text-red-600 disabled:cursor-not-allowed disabled:opacity-60 md:px-3 md:py-1.5"
                     >
                         <Trash2 className="size-4" />
@@ -201,15 +238,34 @@ export function ExpenseDetailPage() {
 
             <ConfirmationDialog
                 open={isConfirmingDelete}
-                onOpenChange={setIsConfirmingDelete}
-                title={`Delete "${expense?.description ?? 'this expense'}"?`}
-                description="This will permanently remove the expense from this group."
-                confirmLabel="Delete"
-                destructive
-                onConfirm={() => {
-                    setIsConfirmingDelete(false);
-                    handleDelete();
+                onOpenChange={(open) => {
+                    setIsConfirmingDelete(open);
+                    if (!open) {
+                        setDeleteError(undefined);
+                        queueMicrotask(() => deleteButtonRef.current?.focus());
+                    }
                 }}
+                title="Delete expense?"
+                description={
+                    <span className="flex flex-col gap-3">
+                        <span>
+                            You’re about to permanently delete “
+                            {expense?.description ?? 'this expense'}” for{' '}
+                            {expense ? formatCurrency(expense.amount) : 'this amount'}
+                            {group?.name ? ` from ${group.name}` : ''}.
+                        </span>
+                        <span>
+                            This will remove everyone’s shares for this expense and recalculate the
+                            group’s balances. This action cannot be undone.
+                        </span>
+                    </span>
+                }
+                confirmLabel="Delete expense"
+                pendingLabel="Deleting…"
+                destructive
+                isPending={deleteExpense.isPending}
+                errorMessage={deleteError}
+                onConfirm={handleDelete}
             />
         </div>
     );

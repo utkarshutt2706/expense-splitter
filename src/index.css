@@ -226,3 +226,62 @@ body {
 input[type='search']::-webkit-search-cancel-button {
     cursor: pointer;
 }
+
+/* Keep numeric editing and validation while removing browser-specific stepper controls. */
+input[type='number'] {
+    appearance: textfield;
+    -moz-appearance: textfield;
+}
+
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+    margin: 0;
+    -webkit-appearance: none;
+}
+
+/* Chart values supplement hover tooltips, so expose them by input capability rather than width. */
+.touch-device-only {
+    display: none;
+}
+
+@media (any-pointer: coarse) {
+    .touch-device-only {
+        display: block;
+    }
+}
+
+@keyframes settlement-confetti-fall {
+    0% {
+        opacity: 0;
+        transform: translate3d(0, -8vh, 0) rotate(0deg);
+    }
+    12% {
+        opacity: 0.9;
+    }
+    100% {
+        opacity: 0;
+        transform: translate3d(2rem, 72vh, 0) rotate(var(--confetti-rotation));
+    }
+}
+
+.settlement-confetti__particle {
+    position: absolute;
+    top: 10vh;
+    left: var(--confetti-left);
+    width: 0.4rem;
+    height: 0.7rem;
+    border-radius: 0.125rem;
+    background: var(--confetti-color);
+    opacity: 0;
+    animation: settlement-confetti-fall 1.6s ease-out var(--confetti-delay) 1 both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .settlement-confetti {
+        display: none;
+    }
+
+    .settlement-confetti__particle {
+        animation: none;
+    }
+}

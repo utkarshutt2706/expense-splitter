@@ -6,12 +6,12 @@ import { Link } from 'react-router';
 import type { DashboardGroupSpend } from '@features/dashboard/api/dashboardApi';
 import { useDashboard } from '@features/dashboard/hooks';
 import { Avatar, Skeleton } from '@shared/components';
+import { formatCurrency } from '@shared/utils';
 import {
     combineDailySpending,
     combineMonthlySpending,
     comparisonScale,
     contributionCopy,
-    formatMoney,
 } from './dashboardMetrics';
 import { SpendingTrendChart } from './SpendingTrendChart';
 import { presetPeriod, usesDailyTrend } from './dashboardDateRange';
@@ -21,13 +21,13 @@ function BalanceText({ value, short = false }: Readonly<{ value: number; short?:
     if (value > 0)
         return (
             <span className="text-owed font-semibold">
-                {short ? 'Owed' : 'You are owed'} {formatMoney(value)}
+                {short ? 'Owed' : 'You are owed'} {formatCurrency(value)}
             </span>
         );
     if (value < 0)
         return (
             <span className="text-owe font-semibold">
-                {short ? 'Owe' : 'You owe'} {formatMoney(value)}
+                {short ? 'Owe' : 'You owe'} {formatCurrency(Math.abs(value))}
             </span>
         );
     return <span className="text-muted-foreground font-semibold">Settled up</span>;
@@ -36,9 +36,89 @@ function BalanceText({ value, short = false }: Readonly<{ value: number; short?:
 function DashboardSkeleton() {
     return (
         <div role="status" aria-label="Loading dashboard" className="mx-auto max-w-7xl space-y-6">
-            <Skeleton className="h-24 rounded-2xl" />
-            <Skeleton className="h-36 rounded-2xl" />
-            <Skeleton className="h-52 rounded-2xl" />
+            <header className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                    <Skeleton className="h-9 w-64 max-w-full" />
+                    <Skeleton className="mt-2 h-5 w-80 max-w-full" />
+                </div>
+                <div className="flex w-full flex-col gap-3 sm:flex-row lg:w-auto">
+                    {[0, 1].map((item) => (
+                        <div key={item} className="w-full sm:w-72">
+                            <Skeleton className="h-4 w-20" />
+                            <Skeleton className="mt-2 h-11 w-full rounded-lg" />
+                        </div>
+                    ))}
+                </div>
+            </header>
+
+            <section className="border-border rounded-2xl border p-5 md:flex md:items-center md:justify-between md:gap-6">
+                <div className="flex-1">
+                    <Skeleton className="h-4 w-40" />
+                    <Skeleton className="mt-2 h-8 w-64 max-w-full" />
+                    <Skeleton className="mt-2 h-4 w-80 max-w-full" />
+                </div>
+                <Skeleton className="mt-4 h-11 w-36 rounded-lg md:mt-0" />
+            </section>
+
+            <section className="border-border rounded-2xl border p-5 md:p-6">
+                <div className="flex items-baseline justify-between gap-4">
+                    <Skeleton className="h-7 w-60 max-w-full" />
+                    <Skeleton className="h-4 w-20" />
+                </div>
+                <div className="mt-5 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                    {[0, 1, 2].map((item) => (
+                        <div key={item}>
+                            <Skeleton className="h-4 w-32" />
+                            <Skeleton className="mt-2 h-9 w-44 max-w-full" />
+                            <Skeleton className="mt-2 h-4 w-52 max-w-full" />
+                        </div>
+                    ))}
+                </div>
+                <div className="border-border mt-5 border-t pt-4">
+                    <Skeleton className="h-4 w-96 max-w-full" />
+                    <Skeleton className="mt-2 h-4 w-72 max-w-full" />
+                </div>
+            </section>
+
+            <section className="border-border rounded-2xl border p-5 md:p-6">
+                <Skeleton className="h-8 w-56 max-w-full" />
+                <Skeleton className="mt-2 h-4 w-80 max-w-full" />
+                <div className="mt-6 flex h-64 items-end gap-3 sm:h-80">
+                    {['h-2/5', 'h-2/3', 'h-1/3', 'h-4/5', 'h-1/2', 'h-3/5', 'h-1/4'].map(
+                        (height, index) => (
+                            <Skeleton
+                                key={`${height}-${index}`}
+                                className={`${height} flex-1 rounded-t-md rounded-b-none`}
+                            />
+                        ),
+                    )}
+                </div>
+            </section>
+
+            <section className="space-y-4">
+                <div>
+                    <Skeleton className="h-8 w-52" />
+                    <Skeleton className="mt-2 h-4 w-72 max-w-full" />
+                </div>
+                <div className="space-y-3">
+                    {[0, 1].map((item) => (
+                        <div
+                            key={item}
+                            className="border-border rounded-2xl border p-4 xl:grid xl:grid-cols-[minmax(12rem,1fr)_minmax(16rem,1.3fr)_10rem] xl:items-center xl:gap-6"
+                        >
+                            <div>
+                                <Skeleton className="h-5 w-40" />
+                                <Skeleton className="mt-2 h-4 w-48 max-w-full" />
+                            </div>
+                            <div className="mt-4 space-y-3 xl:mt-0">
+                                <Skeleton className="h-3 w-full" />
+                                <Skeleton className="h-3 w-4/5" />
+                            </div>
+                            <Skeleton className="mt-4 h-5 w-28 xl:mt-0 xl:ml-auto" />
+                        </div>
+                    ))}
+                </div>
+            </section>
             <span className="sr-only">Loading financial summary</span>
         </div>
     );
@@ -185,16 +265,16 @@ function CurrentPosition({
                 <div className="font-display mt-1 flex flex-wrap gap-x-6 gap-y-1 text-2xl">
                     {receive > 0 && pay > 0 ? (
                         <>
-                            <span className="text-owed">To receive {formatMoney(receive)}</span>
-                            <span className="text-owe">To pay {formatMoney(pay)}</span>
+                            <span className="text-owed">To receive {formatCurrency(receive)}</span>
+                            <span className="text-owe">To pay {formatCurrency(pay)}</span>
                         </>
                     ) : receive > 0 ? (
                         <span className="text-owed">
-                            You are owed {formatMoney(receive)} {selected ? '' : 'overall'}
+                            You are owed {formatCurrency(receive)} {selected ? '' : 'overall'}
                         </span>
                     ) : pay > 0 ? (
                         <span className="text-owe">
-                            You owe {formatMoney(pay)} {selected ? '' : 'overall'}
+                            You owe {formatCurrency(pay)} {selected ? '' : 'overall'}
                         </span>
                     ) : (
                         <span>You are settled up</span>
@@ -206,10 +286,10 @@ function CurrentPosition({
             </div>
             {selected && (
                 <Link
-                    className="focus-visible:ring-brand-500 mt-4 inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-lg px-3 text-sm font-semibold focus-visible:ring-2 focus-visible:outline-none md:mt-0"
+                    className="border-border bg-surface hover:bg-muted focus-visible:ring-brand-500 mt-4 inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-lg border px-4 text-sm font-semibold transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none md:mt-0"
                     to={`/groups/${selected.groupId}/balance`}
                 >
-                    View balances <ArrowRight className="size-4" />
+                    View balances <ArrowRight aria-hidden="true" className="size-4" />
                 </Link>
             )}
         </section>
@@ -269,7 +349,7 @@ function Metric({ label, value, help }: Readonly<{ label: string; value: number;
         <div>
             <p className="text-muted-foreground text-sm font-medium">{label}</p>
             <p className="font-display mt-1 text-3xl font-semibold tabular-nums">
-                {formatMoney(value)}
+                {formatCurrency(value)}
             </p>
             <p className="text-muted-foreground mt-2 text-xs">{help}</p>
         </div>
@@ -304,14 +384,14 @@ function GroupBreakdown({ groups }: Readonly<{ groups: DashboardGroupSpend[] }>)
                             <p className="text-muted-foreground mt-1 text-sm">
                                 Total group spending{' '}
                                 <span className="text-surface-foreground font-medium tabular-nums">
-                                    {formatMoney(group.amount)}
+                                    {formatCurrency(group.amount)}
                                 </span>
                             </p>
                         </div>
                         <div
                             className="mt-4 space-y-2 xl:mt-0"
                             role={compareWithBars ? 'img' : undefined}
-                            aria-label={`${group.name}: paid by you ${formatMoney(group.actualPaid)}; your share ${formatMoney(group.currentUserShare)}`}
+                            aria-label={`${group.name}: paid by you ${formatCurrency(group.actualPaid)}; your share ${formatCurrency(group.currentUserShare)}`}
                         >
                             {compareWithBars ? (
                                 <>
@@ -338,13 +418,13 @@ function GroupBreakdown({ groups }: Readonly<{ groups: DashboardGroupSpend[] }>)
                                     <div>
                                         <dt className="text-muted-foreground">Paid by you</dt>
                                         <dd className="font-semibold tabular-nums">
-                                            {formatMoney(group.actualPaid)}
+                                            {formatCurrency(group.actualPaid)}
                                         </dd>
                                     </div>
                                     <div>
                                         <dt className="text-muted-foreground">Your share</dt>
                                         <dd className="font-semibold tabular-nums">
-                                            {formatMoney(group.currentUserShare)}
+                                            {formatCurrency(group.currentUserShare)}
                                         </dd>
                                     </div>
                                 </dl>
@@ -387,7 +467,7 @@ function Bar({
                 />
             </span>
             <span className="min-w-20 text-right font-medium tabular-nums">
-                {formatMoney(value)}
+                {formatCurrency(value)}
             </span>
         </div>
     );
@@ -412,10 +492,7 @@ function Participants({ group }: Readonly<{ group: DashboardGroupSpend }>) {
                 {participants.map((member, index) => {
                     const percent = group.amount === 0 ? 0 : (member.amount / group.amount) * 100;
                     return (
-                        <li
-                            key={member.userId}
-                            className={`p-4 ${member.isCurrentUser ? 'bg-brand-50/70 dark:bg-brand-950/20' : ''}`}
-                        >
+                        <li key={member.userId} className="p-4">
                             <div className="flex items-center gap-3">
                                 <span className="text-muted-foreground w-5 text-sm tabular-nums">
                                     {index + 1}
@@ -431,13 +508,13 @@ function Participants({ group }: Readonly<{ group: DashboardGroupSpend }>) {
                                                 : member.name}
                                         </span>
                                         <span className="shrink-0 font-semibold tabular-nums">
-                                            {formatMoney(member.amount)}
+                                            {formatCurrency(member.amount)}
                                         </span>
                                     </div>
                                     <div className="mt-2 flex items-center gap-3">
                                         <span className="bg-muted h-2 flex-1 overflow-hidden rounded-full">
                                             <span
-                                                className={`block h-full rounded-full ${member.isCurrentUser ? 'bg-brand-600' : 'bg-stone-400 dark:bg-stone-500'}`}
+                                                className="bg-brand-600 block h-full rounded-full"
                                                 style={{
                                                     width: `${Math.max((member.amount / max) * 100, member.amount > 0 ? 2 : 0)}%`,
                                                 }}

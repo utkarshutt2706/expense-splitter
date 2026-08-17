@@ -25,13 +25,16 @@ vi.mock('@features/payments/components/RecordPaymentDialog', () => ({
         open,
         initialValues,
         onSubmit,
+        settlementMode,
     }: {
         open: boolean;
         initialValues?: FakeInitialValues;
         onSubmit: (values: FakeInitialValues) => void;
+        settlementMode?: boolean;
     }) =>
         open ? (
             <div data-testid="record-payment-dialog">
+                <span>{settlementMode ? 'Settlement mode' : 'Generic mode'}</span>
                 {initialValues && (
                     <p>{`${initialValues.fromUserId}-${initialValues.toUserId}-${initialValues.amount}`}</p>
                 )}
@@ -171,6 +174,7 @@ describe('MemberBalanceAccordion', () => {
         await user.click(screen.getByRole('button', { name: 'Settle up' }));
 
         expect(screen.getByTestId('record-payment-dialog')).toBeInTheDocument();
+        expect(screen.getByText('Settlement mode')).toBeInTheDocument();
         expect(screen.getByText(`${CURRENT_USER_ID}-${abhinav.id}-38`)).toBeInTheDocument();
     });
 

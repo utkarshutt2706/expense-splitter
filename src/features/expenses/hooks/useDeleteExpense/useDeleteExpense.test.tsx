@@ -28,6 +28,10 @@ describe('useDeleteExpense', () => {
 
         expect(expensesApi.remove).toHaveBeenCalledWith('group-1', 'expense-1');
         expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['expenses', 'group-1'] });
+        expect(invalidateSpy).toHaveBeenCalledWith({
+            queryKey: ['expenses', 'detail', 'expense-1'],
+        });
         expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['balances', 'group-1'] });
+        expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['dashboard'] });
     });
 });

@@ -37,5 +37,6 @@ describe('useUpdateGroupMembers', () => {
             memberIds: ['current-user', 'friend-1'],
         });
         expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['groups'] });
+        expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['users', 'friends'] });
     });
 });

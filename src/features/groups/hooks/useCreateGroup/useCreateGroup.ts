@@ -12,6 +12,7 @@ export function useCreateGroup() {
             create({ name, memberIds: [currentUser?.id ?? '', ...memberIds] }),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['groups'] });
+            queryClient.invalidateQueries({ queryKey: ['users', 'friends'] });
         },
     });
 }

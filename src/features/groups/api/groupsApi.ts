@@ -6,10 +6,22 @@ export interface CreateGroupInput {
     memberIds: string[];
 }
 
+export interface GroupSummary extends Group {
+    memberCount: number;
+    currentUserBalance: number;
+    hasFinancialActivity: boolean;
+    lastActivityAt: string | null;
+}
+
 export type UpdateGroupInput = Partial<Omit<Group, 'id' | 'createdAt'>>;
 
 export async function getAll(): Promise<Group[]> {
     const { data } = await httpClient.get<Group[]>('/groups');
+    return data;
+}
+
+export async function getAllSummaries(): Promise<GroupSummary[]> {
+    const { data } = await httpClient.get<GroupSummary[]>('/groups/summaries');
     return data;
 }
 

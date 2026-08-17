@@ -9,6 +9,7 @@ export function useDeleteGroup() {
         mutationFn: (id: string) => remove(id),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['groups'] });
+            queryClient.invalidateQueries({ queryKey: ['users', 'friends'] });
         },
     });
 }

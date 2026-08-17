@@ -46,6 +46,7 @@ describe('useCreateGroup', () => {
             memberIds: [CURRENT_USER_ID, 'friend-1'],
         });
         expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['groups'] });
+        expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['users', 'friends'] });
     });
 
     it('includes the current user even when no members are selected', async () => {

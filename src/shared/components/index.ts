@@ -1,6 +1,7 @@
 export { ActionButtonSkeleton } from './ActionButtonSkeleton';
 export { Avatar } from './Avatar';
 export { ConfirmationDialog } from './ConfirmationDialog';
+export { CurrencyInput } from './CurrencyInput';
 export { FetchingIndicator } from './FetchingIndicator';
 export { FormDialog } from './FormDialog';
 export { LogoBackdrop } from './LogoBackdrop';

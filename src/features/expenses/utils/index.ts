@@ -16,3 +16,7 @@ export {
     type SharesSplitEntry,
     type SharesSplitInput,
 } from './splitCalculator';
+export {
+    getSplitAllocationPreview,
+    type SplitAllocationPreview,
+} from './getSplitAllocationPreview';

@@ -6,31 +6,58 @@ interface FormDialogProps {
     readonly open: boolean;
     readonly onOpenChange: (open: boolean) => void;
     readonly title: string;
-    readonly description: string;
+    readonly description: ReactNode;
     readonly children: ReactNode;
+    readonly showDescription?: boolean;
+    readonly isPending?: boolean;
 }
 
-export function FormDialog({ open, onOpenChange, title, description, children }: FormDialogProps) {
+export function FormDialog({
+    open,
+    onOpenChange,
+    title,
+    description,
+    children,
+    showDescription = false,
+    isPending = false,
+}: FormDialogProps) {
     return (
-        <Dialog.Root open={open} onOpenChange={onOpenChange}>
+        <Dialog.Root
+            open={open}
+            onOpenChange={(nextOpen) => {
+                if (!isPending) onOpenChange(nextOpen);
+            }}
+        >
             <Dialog.Portal>
                 <Dialog.Overlay className="fixed inset-0 z-40 bg-black/50" />
-                <Dialog.Content className="border-border bg-surface fixed top-1/2 left-1/2 z-50 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-lg border p-6 shadow-lg">
-                    <div className="mb-4 flex items-center justify-between">
-                        <Dialog.Title className="font-display text-surface-foreground text-lg font-medium">
+                <Dialog.Content
+                    onEscapeKeyDown={(event) => {
+                        if (isPending) event.preventDefault();
+                    }}
+                    className="border-border bg-surface fixed top-1/2 left-1/2 z-50 max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg border p-5 shadow-lg sm:p-6"
+                >
+                    <div className="mb-4 flex items-center justify-between gap-3">
+                        <Dialog.Title className="font-display text-surface-foreground min-w-0 text-lg font-medium">
                             {title}
                         </Dialog.Title>
                         <Dialog.Close asChild>
                             <button
                                 type="button"
                                 aria-label="Close"
-                                className="text-muted-foreground hover:bg-muted cursor-pointer rounded-md p-1"
+                                disabled={isPending}
+                                className="text-muted-foreground hover:bg-muted cursor-pointer items-center justify-center rounded-md p-1 disabled:cursor-not-allowed disabled:opacity-60"
                             >
-                                <X className="size-4" />
+                                <X aria-hidden="true" className="size-4" />
                             </button>
                         </Dialog.Close>
                     </div>
-                    <Dialog.Description className="sr-only">{description}</Dialog.Description>
+                    <Dialog.Description
+                        className={
+                            showDescription ? 'text-muted-foreground mb-4 text-sm' : 'sr-only'
+                        }
+                    >
+                        {description}
+                    </Dialog.Description>
                     {children}
                 </Dialog.Content>
             </Dialog.Portal>
