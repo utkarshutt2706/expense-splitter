@@ -7,13 +7,14 @@ import type { DashboardGroupSpend } from '@features/dashboard/api/dashboardApi';
 import { useDashboard } from '@features/dashboard/hooks';
 import { Avatar, Skeleton } from '@shared/components';
 import {
+    combineDailySpending,
     combineMonthlySpending,
     comparisonScale,
     contributionCopy,
     formatMoney,
 } from './dashboardMetrics';
 import { SpendingTrendChart } from './SpendingTrendChart';
-import { presetPeriod } from './dashboardDateRange';
+import { presetPeriod, usesDailyTrend } from './dashboardDateRange';
 import { DashboardTimeFilter } from './DashboardTimeFilter';
 
 function BalanceText({ value, short = false }: Readonly<{ value: number; short?: boolean }>) {
@@ -490,6 +491,7 @@ export function DashboardPage() {
         data.groupSpend.find((group) => group.groupId === scopeGroupId) ??
         (data.groupSpend.length === 1 ? data.groupSpend[0] : undefined);
     const hasExpenses = data.groupSpend.some((group) => group.amount > 0);
+    const dailyTrend = usesDailyTrend(period);
     return (
         <div className="mx-auto max-w-7xl space-y-6">
             <header className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -539,7 +541,17 @@ export function DashboardPage() {
                                 total={selected.amount}
                                 periodLabel={period.label}
                             />
-                            <SpendingTrendChart data={selected.spendingByMonth} />
+                            {dailyTrend ? (
+                                <SpendingTrendChart
+                                    data={selected.spendingByDay}
+                                    granularity="day"
+                                />
+                            ) : (
+                                <SpendingTrendChart
+                                    data={selected.spendingByMonth}
+                                    granularity="month"
+                                />
+                            )}
                         </>
                     ) : (
                         <section className="border-border bg-muted/40 rounded-2xl border p-6">
@@ -565,7 +577,21 @@ export function DashboardPage() {
                         share={data.currentUserShare}
                         periodLabel={period.label}
                     />
-                    <SpendingTrendChart data={combineMonthlySpending(data.groupSpend)} />
+                    {dailyTrend ? (
+                        <SpendingTrendChart
+                            data={
+                                data.groupSpend.every((group) => group.spendingByDay !== undefined)
+                                    ? combineDailySpending(data.groupSpend)
+                                    : undefined
+                            }
+                            granularity="day"
+                        />
+                    ) : (
+                        <SpendingTrendChart
+                            data={combineMonthlySpending(data.groupSpend)}
+                            granularity="month"
+                        />
+                    )}
                     {hasExpenses ? (
                         <GroupBreakdown groups={data.groupSpend} />
                     ) : (

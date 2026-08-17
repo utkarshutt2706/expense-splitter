@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { customPeriod, presetPeriod } from './dashboardDateRange';
+import { customPeriod, presetPeriod, usesDailyTrend } from './dashboardDateRange';
 
 describe('dashboardDateRange', () => {
     const now = new Date(2026, 7, 17, 12);
@@ -38,5 +38,14 @@ describe('dashboardDateRange', () => {
     it('rejects custom dates after today', () => {
         expect(() => customPeriod('2026-08-01', '2026-08-18', now)).toThrow('after today');
         expect(() => customPeriod('2026-08-18', '2026-08-18', now)).toThrow('after today');
+    });
+
+    it('uses daily trends for month presets and custom ranges up to one calendar month', () => {
+        expect(usesDailyTrend(presetPeriod('this-month', now))).toBe(true);
+        expect(usesDailyTrend(presetPeriod('previous-month', now))).toBe(true);
+        expect(usesDailyTrend(presetPeriod('last-three-months', now))).toBe(false);
+        expect(usesDailyTrend(customPeriod('2024-01-31', '2024-02-29', now))).toBe(true);
+        expect(usesDailyTrend(customPeriod('2026-03-31', '2026-04-30', now))).toBe(true);
+        expect(usesDailyTrend(customPeriod('2026-06-01', '2026-07-02', now))).toBe(false);
     });
 });
