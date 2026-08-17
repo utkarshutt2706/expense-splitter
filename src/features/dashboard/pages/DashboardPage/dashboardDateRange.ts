@@ -89,3 +89,23 @@ export function customPeriod(
 export function periodLabel(preset: DashboardPeriodPreset): string {
     return LABELS[preset];
 }
+
+export function usesDailyTrend(period: DashboardPeriod): boolean {
+    if (period.preset === 'this-month' || period.preset === 'previous-month') return true;
+    if (period.preset !== 'custom') return false;
+
+    const start = new Date(period.range.from);
+    const inclusiveEnd = new Date(period.range.to);
+    inclusiveEnd.setDate(inclusiveEnd.getDate() - 1);
+
+    const targetYear = start.getFullYear() + Math.floor((start.getMonth() + 1) / 12);
+    const targetMonth = (start.getMonth() + 1) % 12;
+    const lastDayOfTargetMonth = new Date(targetYear, targetMonth + 1, 0).getDate();
+    const oneCalendarMonthLater = localMidnight(
+        targetYear,
+        targetMonth,
+        Math.min(start.getDate(), lastDayOfTargetMonth),
+    );
+
+    return inclusiveEnd <= oneCalendarMonthLater;
+}

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -34,6 +34,10 @@ const dashboard: DashboardSummary = {
                 { month: '2026-07', amount: 1000, actualPaid: 800, currentUserShare: 400 },
                 { month: '2026-08', amount: 2000, actualPaid: 2000, currentUserShare: 600 },
             ],
+            spendingByDay: [
+                { date: '2026-07-10', amount: 1000, actualPaid: 800, currentUserShare: 400 },
+                { date: '2026-08-10', amount: 2000, actualPaid: 2000, currentUserShare: 600 },
+            ],
         },
         {
             groupId: 'empty',
@@ -44,6 +48,7 @@ const dashboard: DashboardSummary = {
             currentBalance: 250,
             memberShares: [{ userId: 'me', name: 'Utkarsh', amount: 0, isCurrentUser: true }],
             spendingByMonth: [],
+            spendingByDay: [],
         },
     ],
 };
@@ -106,9 +111,32 @@ describe('DashboardPage', () => {
             screen.getByLabelText(/paid by you ₹2,800.00; your share ₹1,000.00/i),
         ).toBeInTheDocument();
         expect(screen.getByRole('heading', { name: /spending over time/i })).toBeInTheDocument();
-        const accessibleTable = screen.getByRole('table', { name: /monthly spending values/i });
+        const accessibleTable = screen.getByRole('table', { name: /daily spending values/i });
         expect(accessibleTable).toBeInTheDocument();
         expect(accessibleTable.parentElement).toHaveClass('fixed', 'size-px', 'overflow-hidden');
+    });
+
+    it('exposes chart values through a touch-friendly period selector', () => {
+        renderPage();
+        const selector = screen.getByRole('combobox', { name: /view chart values/i });
+        const mobileDetails = selector.parentElement!;
+        expect(selector).toHaveValue('2026-08-10');
+        expect(within(mobileDetails).getAllByText('₹2,000.00')).toHaveLength(2);
+        fireEvent.change(selector, { target: { value: '2026-07-10' } });
+        expect(within(mobileDetails).getByText('₹1,000.00')).toBeInTheDocument();
+    });
+
+    it('does not crash when a daily-range response comes from an older backend', () => {
+        const legacyGroups = dashboard.groupSpend.map(
+            ({ spendingByDay: _daily, ...group }) => group,
+        );
+        renderPage({ ...dashboard, groupSpend: legacyGroups });
+        expect(
+            screen.getByRole('heading', { name: /daily trend unavailable/i }),
+        ).toBeInTheDocument();
+        expect(
+            screen.queryByRole('table', { name: /monthly spending values/i }),
+        ).not.toBeInTheDocument();
     });
 
     it('switches to a selected group and ranks participant shares', () => {

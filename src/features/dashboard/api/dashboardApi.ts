@@ -14,6 +14,13 @@ export interface DashboardMonthlySpend {
     currentUserShare: number;
 }
 
+export interface DashboardDailySpend {
+    date: string;
+    amount: number;
+    actualPaid: number;
+    currentUserShare: number;
+}
+
 export interface DashboardGroupSpend {
     groupId: string;
     name: string;
@@ -23,6 +30,7 @@ export interface DashboardGroupSpend {
     currentBalance: number;
     memberShares: DashboardMemberShare[];
     spendingByMonth: DashboardMonthlySpend[];
+    spendingByDay?: DashboardDailySpend[];
 }
 
 export interface DashboardSummary {
