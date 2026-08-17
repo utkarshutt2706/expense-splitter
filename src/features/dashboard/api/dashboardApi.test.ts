@@ -12,7 +12,6 @@ describe('dashboardApi', () => {
         const dashboard: DashboardSummary = {
             actualPaid: 200,
             currentUserShare: 80,
-            memberShares: [],
             groupSpend: [],
         };
         vi.mocked(httpClient.get).mockResolvedValue({ data: dashboard });

@@ -7,16 +7,27 @@ export interface DashboardMemberShare {
     isCurrentUser: boolean;
 }
 
+export interface DashboardMonthlySpend {
+    month: string;
+    amount: number;
+    actualPaid: number;
+    currentUserShare: number;
+}
+
 export interface DashboardGroupSpend {
     groupId: string;
     name: string;
     amount: number;
+    actualPaid: number;
+    currentUserShare: number;
+    currentBalance: number;
+    memberShares: DashboardMemberShare[];
+    spendingByMonth: DashboardMonthlySpend[];
 }
 
 export interface DashboardSummary {
     actualPaid: number;
     currentUserShare: number;
-    memberShares: DashboardMemberShare[];
     groupSpend: DashboardGroupSpend[];
 }
 
