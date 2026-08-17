@@ -4,7 +4,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { RouterProvider } from 'react-router';
 
-import { ServerWakeGate } from '@app/components';
+import { PwaInstallPrompt, ServerWakeGate } from '@app/components';
 import { AppProviders } from '@app/providers';
 import { router } from '@app/router.tsx';
 import './index.css';
@@ -15,6 +15,7 @@ createRoot(document.getElementById('root')!).render(
             <ServerWakeGate>
                 <RouterProvider router={router} />
             </ServerWakeGate>
+            <PwaInstallPrompt />
         </AppProviders>
     </StrictMode>,
 );
