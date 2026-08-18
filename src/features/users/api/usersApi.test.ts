@@ -28,25 +28,14 @@ describe('usersApi', () => {
         expect(result).toEqual(users);
     });
 
-    it('lookup gets /users/lookup with an email query param', async () => {
-        vi.mocked(httpClient.get).mockResolvedValue({ data: users[0] });
+    it('lookup gets /users/lookup with a generic query param', async () => {
+        vi.mocked(httpClient.get).mockResolvedValue({ data: users });
 
-        const result = await lookup({ email: 'priya@example.com' });
-
-        expect(httpClient.get).toHaveBeenCalledWith('/users/lookup', {
-            params: { email: 'priya@example.com' },
-        });
-        expect(result).toEqual(users[0]);
-    });
-
-    it('lookup gets /users/lookup with a phone query param', async () => {
-        vi.mocked(httpClient.get).mockResolvedValue({ data: users[1] });
-
-        const result = await lookup({ phone: '9876543210' });
+        const result = await lookup({ query: 'priya' });
 
         expect(httpClient.get).toHaveBeenCalledWith('/users/lookup', {
-            params: { phone: '9876543210' },
+            params: { query: 'priya' },
         });
-        expect(result).toEqual(users[1]);
+        expect(result).toEqual(users);
     });
 });

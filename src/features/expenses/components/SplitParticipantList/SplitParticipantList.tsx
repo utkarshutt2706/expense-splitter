@@ -47,7 +47,7 @@ export function SplitParticipantList({
     const inputConfig = inputConfigByType[splitType];
 
     return (
-        <ul className="flex max-h-48 flex-col gap-1 overflow-y-auto">
+        <ul className="flex flex-col gap-1">
             {orderedUsers.map((user) => {
                 const isCurrentUser = user.id === currentUser?.id;
                 const name = isCurrentUser ? 'You' : user.name;

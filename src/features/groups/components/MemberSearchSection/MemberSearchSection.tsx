@@ -41,7 +41,6 @@ export function MemberSearchSection({
 
             <FriendSearchResult
                 search={search}
-                hasLocalMatches={visibleUsers.length > 0}
                 onFound={onFound}
             />
 

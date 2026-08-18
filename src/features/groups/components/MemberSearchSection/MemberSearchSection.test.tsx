@@ -108,7 +108,7 @@ describe('MemberSearchSection', () => {
 
     it('surfaces a found non-friend from the search panel', () => {
         const jamie: User = { id: 'user-9', name: 'Jamie Fox', email: 'jamie@example.com' };
-        mockLookup({ data: jamie });
+        mockLookup({ data: [jamie] });
         vi.useFakeTimers();
 
         const onFound = vi.fn();
