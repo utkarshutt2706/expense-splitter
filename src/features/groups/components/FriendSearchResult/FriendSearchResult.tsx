@@ -46,7 +46,9 @@ export function FriendSearchResult({ search, onFound }: FriendSearchResultProps)
                     <Avatar name={found.name} size="sm" />
                     <span className="text-surface-foreground text-sm">
                         {found.name}{' '}
-                        <span className="text-muted-foreground">({found.email ?? found.phone})</span>
+                        <span className="text-muted-foreground">
+                            ({found.email ?? found.phone})
+                        </span>
                     </span>
                 </span>
                 <button

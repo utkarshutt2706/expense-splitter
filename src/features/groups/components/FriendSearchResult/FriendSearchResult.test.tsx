@@ -3,7 +3,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { User } from '@data/entities';
 import { useUserLookup } from '@features/users/hooks';
-import { ApiError } from '@lib/api/apiError';
 import { FriendSearchResult } from './FriendSearchResult';
 
 vi.mock('@features/users/hooks', () => ({
@@ -40,7 +39,7 @@ describe('FriendSearchResult', () => {
 
     it('still triggers lookup when there are already local matches', () => {
         mockLookup();
-        render(<FriendSearchResult search="jamie" hasLocalMatches onFound={vi.fn()} />);
+        render(<FriendSearchResult search="jamie" onFound={vi.fn()} />);
         advanceDebounce();
 
         expect(useUserLookup).toHaveBeenLastCalledWith({ query: 'jamie' });
@@ -48,11 +47,9 @@ describe('FriendSearchResult', () => {
 
     it('looks up using a generic query once the debounce settles', () => {
         mockLookup();
-        const { rerender } = render(
-            <FriendSearchResult search="" hasLocalMatches={false} onFound={vi.fn()} />,
-        );
+        const { rerender } = render(<FriendSearchResult search="" onFound={vi.fn()} />);
 
-        rerender(<FriendSearchResult search="jamie" hasLocalMatches={false} onFound={vi.fn()} />);
+        rerender(<FriendSearchResult search="jamie" onFound={vi.fn()} />);
 
         expect(useUserLookup).toHaveBeenLastCalledWith(null);
 
@@ -63,7 +60,7 @@ describe('FriendSearchResult', () => {
 
     it('shows a loading indicator while searching', () => {
         mockLookup({ isFetching: true });
-        render(<FriendSearchResult search="jamie" hasLocalMatches={false} onFound={vi.fn()} />);
+        render(<FriendSearchResult search="jamie" onFound={vi.fn()} />);
         advanceDebounce();
 
         expect(screen.getByText(/searching/i)).toBeInTheDocument();
@@ -72,7 +69,7 @@ describe('FriendSearchResult', () => {
     it('shows the first found user and adds them on click', () => {
         mockLookup({ data: [jamie] });
         const onFound = vi.fn();
-        render(<FriendSearchResult search="jamie" hasLocalMatches={false} onFound={onFound} />);
+        render(<FriendSearchResult search="jamie" onFound={onFound} />);
         advanceDebounce();
 
         expect(screen.getByText(/jamie fox/i)).toBeInTheDocument();
@@ -86,7 +83,7 @@ describe('FriendSearchResult', () => {
             isError: true,
             error: new Error('Network error'),
         });
-        render(<FriendSearchResult search="jamie" hasLocalMatches={false} onFound={vi.fn()} />);
+        render(<FriendSearchResult search="jamie" onFound={vi.fn()} />);
         advanceDebounce();
 
         expect(screen.getByText(/couldn't search right now/i)).toBeInTheDocument();

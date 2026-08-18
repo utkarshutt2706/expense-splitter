@@ -39,10 +39,7 @@ export function MemberSearchSection({
                 ariaLabel="Search members"
             />
 
-            <FriendSearchResult
-                search={search}
-                onFound={onFound}
-            />
+            <FriendSearchResult search={search} onFound={onFound} />
 
             <MemberCheckboxList
                 users={visibleUsers}
