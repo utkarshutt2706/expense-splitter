@@ -3,7 +3,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { User } from '@data/entities';
 import { useUserLookup } from '@features/users/hooks';
-import { ApiError } from '@lib/api/apiError';
 import { FriendSearchResult } from './FriendSearchResult';
 
 vi.mock('@features/users/hooks', () => ({
@@ -38,78 +37,39 @@ describe('FriendSearchResult', () => {
         vi.useRealTimers();
     });
 
-    it('renders nothing when there are already local matches', () => {
+    it('still triggers lookup when there are already local matches', () => {
         mockLookup();
-        render(<FriendSearchResult search="jamie@example.com" hasLocalMatches onFound={vi.fn()} />);
+        render(<FriendSearchResult search="jamie" onFound={vi.fn()} />);
         advanceDebounce();
 
-        expect(useUserLookup).toHaveBeenLastCalledWith(null);
-        expect(screen.queryByText(/jamie/i)).not.toBeInTheDocument();
+        expect(useUserLookup).toHaveBeenLastCalledWith({ query: 'jamie' });
     });
 
-    it('renders nothing while the search text is not a complete email or phone', () => {
+    it('looks up using a generic query once the debounce settles', () => {
         mockLookup();
-        render(<FriendSearchResult search="jam" hasLocalMatches={false} onFound={vi.fn()} />);
-        advanceDebounce();
+        const { rerender } = render(<FriendSearchResult search="" onFound={vi.fn()} />);
 
-        expect(useUserLookup).toHaveBeenLastCalledWith(null);
-    });
-
-    it('looks up by email only once the debounce settles', () => {
-        mockLookup();
-        const { rerender } = render(
-            <FriendSearchResult search="" hasLocalMatches={false} onFound={vi.fn()} />,
-        );
-
-        rerender(
-            <FriendSearchResult
-                search="jamie@example.com"
-                hasLocalMatches={false}
-                onFound={vi.fn()}
-            />,
-        );
+        rerender(<FriendSearchResult search="jamie" onFound={vi.fn()} />);
 
         expect(useUserLookup).toHaveBeenLastCalledWith(null);
 
         advanceDebounce();
 
-        expect(useUserLookup).toHaveBeenLastCalledWith({ email: 'jamie@example.com' });
-    });
-
-    it('looks up by phone for a complete 10-digit number', () => {
-        mockLookup();
-        render(
-            <FriendSearchResult search="9876543210" hasLocalMatches={false} onFound={vi.fn()} />,
-        );
-        advanceDebounce();
-
-        expect(useUserLookup).toHaveBeenLastCalledWith({ phone: '9876543210' });
+        expect(useUserLookup).toHaveBeenLastCalledWith({ query: 'jamie' });
     });
 
     it('shows a loading indicator while searching', () => {
         mockLookup({ isFetching: true });
-        render(
-            <FriendSearchResult
-                search="jamie@example.com"
-                hasLocalMatches={false}
-                onFound={vi.fn()}
-            />,
-        );
+        render(<FriendSearchResult search="jamie" onFound={vi.fn()} />);
         advanceDebounce();
 
         expect(screen.getByText(/searching/i)).toBeInTheDocument();
     });
 
-    it('shows the found user and adds them on click', () => {
-        mockLookup({ data: jamie });
+    it('shows the first found user and adds them on click', () => {
+        mockLookup({ data: [jamie] });
         const onFound = vi.fn();
-        render(
-            <FriendSearchResult
-                search="jamie@example.com"
-                hasLocalMatches={false}
-                onFound={onFound}
-            />,
-        );
+        render(<FriendSearchResult search="jamie" onFound={onFound} />);
         advanceDebounce();
 
         expect(screen.getByText(/jamie fox/i)).toBeInTheDocument();
@@ -118,50 +78,12 @@ describe('FriendSearchResult', () => {
         expect(onFound).toHaveBeenCalledWith(jamie);
     });
 
-    it('tells the searcher to ask an unregistered email to sign up', () => {
-        mockLookup({
-            isError: true,
-            error: new ApiError('NOT_FOUND', 'No registered user matches', 404),
-        });
-        render(
-            <FriendSearchResult
-                search="jamie@example.com"
-                hasLocalMatches={false}
-                onFound={vi.fn()}
-            />,
-        );
-        advanceDebounce();
-
-        expect(screen.getByText(/isn't registered with us yet/i)).toBeInTheDocument();
-        expect(screen.getByText(/ask them to sign up/i)).toBeInTheDocument();
-        expect(screen.queryByRole('button', { name: /invite/i })).not.toBeInTheDocument();
-    });
-
-    it('suggests searching by email when a phone number is not found', () => {
-        mockLookup({
-            isError: true,
-            error: new ApiError('NOT_FOUND', 'No registered user matches', 404),
-        });
-        render(
-            <FriendSearchResult search="9876543210" hasLocalMatches={false} onFound={vi.fn()} />,
-        );
-        advanceDebounce();
-
-        expect(screen.getByText(/try searching by their email instead/i)).toBeInTheDocument();
-    });
-
     it('shows a generic error for a non-NOT_FOUND failure', () => {
         mockLookup({
             isError: true,
-            error: new ApiError('ERROR', 'Network error', undefined),
+            error: new Error('Network error'),
         });
-        render(
-            <FriendSearchResult
-                search="jamie@example.com"
-                hasLocalMatches={false}
-                onFound={vi.fn()}
-            />,
-        );
+        render(<FriendSearchResult search="jamie" onFound={vi.fn()} />);
         advanceDebounce();
 
         expect(screen.getByText(/couldn't search right now/i)).toBeInTheDocument();

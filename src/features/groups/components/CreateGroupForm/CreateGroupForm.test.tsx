@@ -106,7 +106,7 @@ describe('CreateGroupForm', () => {
 
     it('adds a non-friend found by search and submits them as a member', async () => {
         const jamie: User = { id: 'user-9', name: 'Jamie Fox', email: 'jamie@example.com' };
-        mockLookup({ data: jamie });
+        mockLookup({ data: [jamie] });
         vi.useFakeTimers();
 
         const onSubmit = vi.fn();

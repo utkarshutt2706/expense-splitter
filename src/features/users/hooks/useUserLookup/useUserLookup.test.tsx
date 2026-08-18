@@ -23,18 +23,18 @@ describe('useUserLookup', () => {
         vi.clearAllMocks();
     });
 
-    it('looks up a user by email', async () => {
-        const user: User = { id: 'user-1', name: 'Priya Sharma', email: 'priya@example.com' };
-        vi.mocked(usersApi.lookup).mockResolvedValue(user);
+    it('looks up users by a search query', async () => {
+        const users: User[] = [{ id: 'user-1', name: 'Priya Sharma', email: 'priya@example.com' }];
+        vi.mocked(usersApi.lookup).mockResolvedValue(users);
 
-        const { result } = renderHook(() => useUserLookup({ email: 'priya@example.com' }), {
+        const { result } = renderHook(() => useUserLookup({ query: 'priya' }), {
             wrapper: wrapperFor(new QueryClient()),
         });
 
         await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-        expect(result.current.data).toEqual(user);
-        expect(usersApi.lookup).toHaveBeenCalledWith({ email: 'priya@example.com' });
+        expect(result.current.data).toEqual(users);
+        expect(usersApi.lookup).toHaveBeenCalledWith({ query: 'priya' });
     });
 
     it('does not fetch when the query is null', () => {
@@ -47,10 +47,10 @@ describe('useUserLookup', () => {
 
     it('does not retry a NOT_FOUND error', async () => {
         vi.mocked(usersApi.lookup).mockRejectedValue(
-            new ApiError('NOT_FOUND', 'No registered user matches that email or phone', 404),
+            new ApiError('NOT_FOUND', 'No registered user matches that query', 404),
         );
 
-        const { result } = renderHook(() => useUserLookup({ email: 'nobody@example.com' }), {
+        const { result } = renderHook(() => useUserLookup({ query: 'nobody' }), {
             wrapper: wrapperFor(new QueryClient()),
         });
 

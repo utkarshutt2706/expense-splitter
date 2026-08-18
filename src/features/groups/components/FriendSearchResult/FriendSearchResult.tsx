@@ -3,24 +3,16 @@ import { useEffect, useState } from 'react';
 
 import type { User } from '@data/entities';
 import { useUserLookup } from '@features/users/hooks';
-import { ApiError } from '@lib/api/apiError';
 import { Avatar } from '@shared/components';
 
 const LOOKUP_DEBOUNCE_MS = 400;
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const PHONE_PATTERN = /^[6-9]\d{9}$/;
 
 interface FriendSearchResultProps {
-    // The raw, live search text -- debounced internally before it triggers a lookup.
     readonly search: string;
-    // Whether the parent's own local filter (friends, plus already-found users)
-    // already matched something for this search text. When true, no remote
-    // lookup is needed -- the match is already visible in the list below.
-    readonly hasLocalMatches: boolean;
     readonly onFound: (user: User) => void;
 }
 
-export function FriendSearchResult({ search, hasLocalMatches, onFound }: FriendSearchResultProps) {
+export function FriendSearchResult({ search, onFound }: FriendSearchResultProps) {
     const [debounced, setDebounced] = useState(search.trim());
 
     useEffect(() => {
@@ -28,18 +20,11 @@ export function FriendSearchResult({ search, hasLocalMatches, onFound }: FriendS
         return () => clearTimeout(timer);
     }, [search]);
 
-    const isEmail = EMAIL_PATTERN.test(debounced);
-    const isPhone = PHONE_PATTERN.test(debounced);
+    const shouldLookup = debounced.length > 0;
+    const query = shouldLookup ? { query: debounced } : null;
 
-    const shouldLookup = (isEmail || isPhone) && !hasLocalMatches;
-    const query = shouldLookup ? (isEmail ? { email: debounced } : { phone: debounced }) : null;
-
-    const {
-        data: found,
-        isFetching,
-        isError,
-        error,
-    } = useUserLookup(query as { email: string } | { phone: string } | null);
+    const { data: matches, isFetching, isError } = useUserLookup(query);
+    const found = matches?.[0];
 
     if (!shouldLookup) {
         return null;
@@ -75,25 +60,6 @@ export function FriendSearchResult({ search, hasLocalMatches, onFound }: FriendS
                     Add
                 </button>
             </div>
-        );
-    }
-
-    const notFound = isError && error instanceof ApiError && error.code === 'NOT_FOUND';
-
-    if (notFound && isEmail) {
-        return (
-            <p className="text-muted-foreground text-sm">
-                {debounced} isn't registered with us yet. Ask them to sign up, then search again.
-            </p>
-        );
-    }
-
-    if (notFound && isPhone) {
-        return (
-            <p className="text-muted-foreground text-sm">
-                We couldn't find anyone with that phone number. Try searching by their email
-                instead.
-            </p>
         );
     }
 
