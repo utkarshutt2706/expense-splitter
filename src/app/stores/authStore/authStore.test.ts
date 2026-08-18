@@ -45,4 +45,22 @@ describe('useAuthStore', () => {
         expect(stored.state.cachedUser).toEqual(user);
         expect(stored.state.accessToken).toBe(accessToken);
     });
+
+    it('updates the cached user with partial field patches', () => {
+        useAuthStore.getState().login(user, accessToken);
+        useAuthStore.getState().updateCachedUser({ phone: '9876543210' });
+
+        expect(useAuthStore.getState().cachedUser).toEqual({
+            ...user,
+            phone: '9876543210',
+        });
+    });
+
+    it('ignores cached-user patches when no user is currently stored', () => {
+        expect(useAuthStore.getState().cachedUser).toBeNull();
+
+        useAuthStore.getState().updateCachedUser({ phone: '9876543210' });
+
+        expect(useAuthStore.getState().cachedUser).toBeNull();
+    });
 });

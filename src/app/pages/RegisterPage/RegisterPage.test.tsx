@@ -86,6 +86,9 @@ describe('RegisterPage', () => {
 
         expect(await screen.findByText(/name is required/i)).toBeInTheDocument();
         expect(screen.getByText(/enter a valid email address/i)).toBeInTheDocument();
+        expect(
+            screen.getByText(/enter a valid 10-digit number starting with 6, 7, 8, or 9/i),
+        ).toBeInTheDocument();
         expect(screen.getByText(/password must be at least 8 characters/i)).toBeInTheDocument();
         expect(screen.getByText(/confirm your password/i)).toBeInTheDocument();
     });
@@ -173,7 +176,7 @@ describe('RegisterPage', () => {
         });
     });
 
-    it('registers, omitting an empty optional phone, and navigates to the home page', async () => {
+    it('requires a phone number before registration can continue', async () => {
         const mutateAsync = vi.fn().mockResolvedValue(undefined);
         vi.mocked(useRegister).mockReturnValue({
             mutateAsync,
@@ -187,13 +190,10 @@ describe('RegisterPage', () => {
         await user.type(screen.getByLabelText('Confirm password'), 'correct-horse-battery-staple');
         await user.click(screen.getByRole('button', { name: /create account/i }));
 
-        expect(await screen.findByText(/home page/i)).toBeInTheDocument();
-        expect(mutateAsync).toHaveBeenCalledWith({
-            name: 'New Friend',
-            email: 'new.friend@example.com',
-            phone: undefined,
-            password: 'correct-horse-battery-staple',
-        });
+        expect(
+            await screen.findByText(/enter a valid 10-digit number starting with 6, 7, 8, or 9/i),
+        ).toBeInTheDocument();
+        expect(mutateAsync).not.toHaveBeenCalled();
     });
 
     it('shows the server error message when the email is already in use', async () => {
@@ -210,6 +210,7 @@ describe('RegisterPage', () => {
 
         await user.type(screen.getByLabelText(/name/i), 'New Friend');
         await user.type(screen.getByLabelText(/email/i), 'taken@example.com');
+        await user.type(screen.getByLabelText(/phone/i), '9876543210');
         await user.type(screen.getByLabelText('Password'), 'correct-horse-battery-staple');
         await user.type(screen.getByLabelText('Confirm password'), 'correct-horse-battery-staple');
         await user.click(screen.getByRole('button', { name: /create account/i }));
@@ -230,6 +231,7 @@ describe('RegisterPage', () => {
 
         await user.type(screen.getByLabelText(/name/i), 'New Friend');
         await user.type(screen.getByLabelText(/email/i), 'new.friend@example.com');
+        await user.type(screen.getByLabelText(/phone/i), '9876543210');
         await user.type(screen.getByLabelText('Password'), 'correct-horse-battery-staple');
         await user.type(screen.getByLabelText('Confirm password'), 'correct-horse-battery-staple');
         await user.click(screen.getByRole('button', { name: /create account/i }));
@@ -296,6 +298,7 @@ describe('RegisterPage', () => {
         renderPage('/register?invite=raw-token');
 
         await user.type(screen.getByLabelText(/name/i), 'Jamie Fox');
+        await user.type(screen.getByLabelText(/phone/i), '9876543210');
         await user.type(screen.getByLabelText('Password'), 'correct-horse-battery-staple');
         await user.type(screen.getByLabelText('Confirm password'), 'correct-horse-battery-staple');
         await user.click(screen.getByRole('button', { name: /create account/i }));
@@ -304,7 +307,7 @@ describe('RegisterPage', () => {
         expect(mutateAsync).toHaveBeenCalledWith({
             name: 'Jamie Fox',
             email: 'jamie@example.com',
-            phone: undefined,
+            phone: '9876543210',
             password: 'correct-horse-battery-staple',
             inviteToken: 'raw-token',
         });
@@ -324,6 +327,7 @@ describe('RegisterPage', () => {
 
         await user.type(screen.getByLabelText(/name/i), 'New Friend');
         await user.type(screen.getByLabelText(/email/i), 'new.friend@example.com');
+        await user.type(screen.getByLabelText(/phone/i), '9876543210');
         await user.type(screen.getByLabelText('Password'), 'correct-horse-battery-staple');
         await user.type(screen.getByLabelText('Confirm password'), 'correct-horse-battery-staple');
         await user.click(screen.getByRole('button', { name: /create account/i }));
@@ -332,7 +336,7 @@ describe('RegisterPage', () => {
         expect(mutateAsync).toHaveBeenCalledWith({
             name: 'New Friend',
             email: 'new.friend@example.com',
-            phone: undefined,
+            phone: '9876543210',
             password: 'correct-horse-battery-staple',
             inviteToken: undefined,
         });

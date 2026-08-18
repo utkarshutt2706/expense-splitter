@@ -36,6 +36,7 @@ describe('useRegister', () => {
             name: 'New Friend',
             email: 'new.friend@example.com',
             password: 'password123',
+            phone: '9876543210',
         });
 
         await waitFor(() => expect(result.current.isSuccess).toBe(true));
@@ -54,6 +55,7 @@ describe('useRegister', () => {
             name: 'New Friend',
             email: 'taken@example.com',
             password: 'password123',
+            phone: '9876543211',
         });
 
         await waitFor(() => expect(result.current.isError).toBe(true));
