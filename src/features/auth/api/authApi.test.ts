@@ -36,12 +36,14 @@ describe('authApi', () => {
         const session = await register({
             name: 'Utkarsh Srivastava',
             email: 'utkarsh@example.com',
+            phone: '9876543210',
             password: 'password123',
         });
 
         expect(httpClient.post).toHaveBeenCalledWith('/auth/register', {
             name: 'Utkarsh Srivastava',
             email: 'utkarsh@example.com',
+            phone: '9876543210',
             password: 'password123',
         });
         expect(session).toEqual({ user, accessToken: 'test-token' });
@@ -55,6 +57,7 @@ describe('authApi', () => {
         await register({
             name: 'Utkarsh Srivastava',
             email: 'utkarsh@example.com',
+            phone: '9876543210',
             password: 'password123',
             inviteToken: 'raw-token',
         });
@@ -62,6 +65,7 @@ describe('authApi', () => {
         expect(httpClient.post).toHaveBeenCalledWith('/auth/register', {
             name: 'Utkarsh Srivastava',
             email: 'utkarsh@example.com',
+            phone: '9876543210',
             password: 'password123',
             inviteToken: 'raw-token',
         });

@@ -21,10 +21,9 @@ const registerSchema = z
         phone: z
             .string()
             .trim()
-            .refine((value) => value === '' || /^[6-9]\d{9}$/.test(value), {
+            .regex(/^[6-9]\d{9}$/, {
                 message: 'Enter a valid 10-digit number starting with 6, 7, 8, or 9',
-            })
-            .optional(),
+            }),
         password: z.string().min(8, 'Password must be at least 8 characters'),
         confirmPassword: z.string().min(1, 'Confirm your password'),
     })
@@ -70,7 +69,7 @@ export function RegisterPage() {
                 name: values.name,
                 email: values.email,
                 password: values.password,
-                phone: values.phone || undefined,
+                phone: values.phone,
                 inviteToken: invitation && inviteToken ? inviteToken : undefined,
             });
             navigate('/', { replace: true });
@@ -158,7 +157,7 @@ export function RegisterPage() {
                         htmlFor="register-phone"
                         className="text-surface-foreground text-sm font-medium"
                     >
-                        Phone <span className="text-muted-foreground font-normal">(optional)</span>
+                        Phone
                     </label>
                     <input
                         id="register-phone"
