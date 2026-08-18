@@ -70,9 +70,7 @@ describe('PhoneRequiredGate', () => {
         await waitFor(() =>
             expect(updateUser).toHaveBeenCalledWith('user-1', { phone: '9876543210' }),
         );
-        await waitFor(() =>
-            expect(useAuthStore.getState().cachedUser?.phone).toBe('9876543210'),
-        );
+        await waitFor(() => expect(useAuthStore.getState().cachedUser?.phone).toBe('9876543210'));
     });
 
     it('shows the API error when the phone update fails', async () => {
