@@ -13,9 +13,9 @@ import {
     comparisonScale,
     contributionCopy,
 } from './dashboardMetrics';
-import { SpendingTrendChart } from './SpendingTrendChart';
 import { presetPeriod, usesDailyTrend } from './dashboardDateRange';
 import { DashboardTimeFilter } from './DashboardTimeFilter';
+import { SpendingTrendChart } from './SpendingTrendChart';
 
 function BalanceText({ value, short = false }: Readonly<{ value: number; short?: boolean }>) {
     if (value > 0)
@@ -77,21 +77,6 @@ function DashboardSkeleton() {
                 <div className="border-border mt-5 border-t pt-4">
                     <Skeleton className="h-4 w-96 max-w-full" />
                     <Skeleton className="mt-2 h-4 w-72 max-w-full" />
-                </div>
-            </section>
-
-            <section className="border-border rounded-2xl border p-5 md:p-6">
-                <Skeleton className="h-8 w-56 max-w-full" />
-                <Skeleton className="mt-2 h-4 w-80 max-w-full" />
-                <div className="mt-6 flex h-64 items-end gap-3 sm:h-80">
-                    {['h-2/5', 'h-2/3', 'h-1/3', 'h-4/5', 'h-1/2', 'h-3/5', 'h-1/4'].map(
-                        (height, index) => (
-                            <Skeleton
-                                key={`${height}-${index}`}
-                                className={`${height} flex-1 rounded-t-md rounded-b-none`}
-                            />
-                        ),
-                    )}
                 </div>
             </section>
 
