@@ -1,23 +1,10 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import type { ReactNode } from 'react';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { SpendingTrendChart } from './SpendingTrendChart';
 
-vi.mock('recharts', () => ({
-    Area: () => null,
-    CartesianGrid: () => null,
-    ComposedChart: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-    Legend: () => null,
-    Line: () => null,
-    ResponsiveContainer: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-    Tooltip: () => null,
-    XAxis: () => null,
-    YAxis: () => null,
-}));
-
-describe('SpendingTrendChart mobile value picker', () => {
+describe('SpendingTrendChart period picker', () => {
     it('uses a popover to select a period and updates the visible values', async () => {
         const user = userEvent.setup();
         render(
@@ -41,7 +28,7 @@ describe('SpendingTrendChart mobile value picker', () => {
         );
 
         const trigger = screen.getByRole('button', {
-            name: /view chart values 8 aug 2026/i,
+            name: '8 Aug 2026',
         });
         expect(trigger).toHaveAttribute('aria-haspopup', 'listbox');
 

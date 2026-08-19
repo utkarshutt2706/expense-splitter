@@ -1,16 +1,5 @@
 import * as Popover from '@radix-ui/react-popover';
 import { Check, ChevronDown } from 'lucide-react';
-import {
-    Area,
-    CartesianGrid,
-    ComposedChart,
-    Legend,
-    Line,
-    ResponsiveContainer,
-    Tooltip,
-    XAxis,
-    YAxis,
-} from 'recharts';
 import { useState } from 'react';
 
 import type {
@@ -18,7 +7,6 @@ import type {
     DashboardMonthlySpend,
 } from '@features/dashboard/api/dashboardApi';
 import { formatCurrency } from '@shared/utils';
-import { addSingletonEndpoints } from './spendingTrendChartData';
 
 function monthLabel(month: string): string {
     return new Intl.DateTimeFormat('en-IN', {
@@ -63,11 +51,6 @@ export function SpendingTrendChart({ data, granularity }: SpendingTrendChartProp
             label: granularity === 'day' ? dayLabel(period) : monthLabel(period),
         };
     });
-    const plottedData = addSingletonEndpoints(
-        chartData,
-        granularity,
-        granularity === 'day' ? dayLabel : monthLabel,
-    );
     const selected =
         chartData.find((entry) => entry.period === selectedPeriod) ?? chartData.at(-1)!;
     const periodName = granularity === 'day' ? 'Daily' : 'Monthly';
@@ -75,20 +58,17 @@ export function SpendingTrendChart({ data, granularity }: SpendingTrendChartProp
     return (
         <section
             aria-labelledby="trend-heading"
-            className="border-border bg-surface rounded-2xl border p-5 md:p-6"
+            className="border-border bg-surface flex flex-col gap-3 rounded-2xl border p-5 md:p-6"
         >
-            <div>
-                <h2 id="trend-heading" className="font-display text-2xl font-semibold">
-                    Spending over time
-                </h2>
-                <p className="text-muted-foreground mt-1 text-sm">
-                    {periodName} recorded expenses. Settlement payments are excluded.
-                </p>
-            </div>
-            <div className="touch-device-only border-border bg-muted/40 mt-4 rounded-lg border p-3">
-                <span id="dashboard-chart-period-label" className="text-sm font-medium">
-                    View chart values
-                </span>
+            <div className="flex flex-col items-start justify-between gap-3 md:flex-row">
+                <div className="flex flex-col items-start justify-between">
+                    <h2 id="trend-heading" className="font-display text-2xl font-semibold">
+                        Spending over time
+                    </h2>
+                    <p className="text-muted-foreground mt-1 text-sm">
+                        {periodName} recorded expenses. Settlement payments are excluded.
+                    </p>
+                </div>
                 <Popover.Root open={periodPopoverOpen} onOpenChange={setPeriodPopoverOpen}>
                     <Popover.Trigger asChild>
                         <button
@@ -96,7 +76,7 @@ export function SpendingTrendChart({ data, granularity }: SpendingTrendChartProp
                             aria-labelledby="dashboard-chart-period-label dashboard-chart-period-value"
                             aria-haspopup="listbox"
                             aria-expanded={periodPopoverOpen}
-                            className="border-border bg-surface focus-visible:ring-brand-500 mt-1 flex min-h-11 w-full cursor-pointer items-center justify-between gap-3 rounded-md border px-3 text-left outline-none focus-visible:ring-2"
+                            className="border-border bg-surface focus-visible:ring-brand-500 flex min-h-11 w-full cursor-pointer items-center justify-between gap-3 rounded-md border px-3 text-left outline-none focus-visible:ring-2 md:w-fit"
                         >
                             <span id="dashboard-chart-period-value" className="truncate">
                                 {selected.label}
@@ -141,112 +121,21 @@ export function SpendingTrendChart({ data, granularity }: SpendingTrendChartProp
                         </Popover.Content>
                     </Popover.Portal>
                 </Popover.Root>
-                <dl className="mt-3 space-y-2 text-sm" aria-live="polite">
-                    {[
-                        ['Total group spending', selected.amount],
-                        ['Your share', selected.currentUserShare],
-                        ['Paid by you', selected.actualPaid],
-                    ].map(([label, value]) => (
-                        <div key={String(label)} className="flex justify-between gap-3">
-                            <dt className="text-muted-foreground">{label}</dt>
-                            <dd className="shrink-0 font-semibold tabular-nums">
-                                {formatCurrency(Number(value))}
-                            </dd>
-                        </div>
-                    ))}
-                </dl>
             </div>
-            <div className="mt-6 h-72 w-full" aria-label={`${periodName} spending chart`}>
-                <ResponsiveContainer width="100%" height="100%">
-                    <ComposedChart
-                        data={plottedData}
-                        margin={{ top: 8, right: 8, bottom: 0, left: 0 }}
-                        accessibilityLayer
-                    >
-                        <CartesianGrid
-                            stroke="var(--border-color)"
-                            strokeDasharray="3 3"
-                            vertical={false}
-                        />
-                        <XAxis
-                            dataKey="label"
-                            tick={{ fill: 'var(--muted-foreground)', fontSize: 12 }}
-                            tickLine={false}
-                            axisLine={{ stroke: 'var(--border-color)' }}
-                        />
-                        <YAxis
-                            width={58}
-                            tickFormatter={formatCurrency}
-                            tick={{ fill: 'var(--muted-foreground)', fontSize: 12 }}
-                            tickLine={false}
-                            axisLine={false}
-                        />
-                        <Tooltip
-                            formatter={(value) => formatCurrency(Number(value))}
-                            contentStyle={{
-                                background: 'var(--surface)',
-                                border: '1px solid var(--border-color)',
-                                borderRadius: '0.75rem',
-                                color: 'var(--surface-foreground)',
-                            }}
-                        />
-                        <Legend wrapperStyle={{ fontSize: '0.75rem', paddingTop: '0.75rem' }} />
-                        <Area
-                            type="monotone"
-                            dataKey="amount"
-                            name="Total group spending"
-                            fill="var(--color-brand-100)"
-                            stroke="var(--color-brand-400)"
-                            fillOpacity={0.5}
-                            isAnimationActive={false}
-                        />
-                        <Line
-                            type="monotone"
-                            dataKey="currentUserShare"
-                            name="Your share"
-                            stroke="var(--color-brand-600)"
-                            strokeWidth={3}
-                            dot={{ r: 3 }}
-                            activeDot={{ r: 5 }}
-                            isAnimationActive={false}
-                        />
-                        <Line
-                            type="monotone"
-                            dataKey="actualPaid"
-                            name="Paid by you"
-                            stroke="var(--muted-foreground)"
-                            strokeWidth={2}
-                            strokeDasharray="6 4"
-                            dot={{ r: 3 }}
-                            activeDot={{ r: 5 }}
-                            isAnimationActive={false}
-                        />
-                    </ComposedChart>
-                </ResponsiveContainer>
-            </div>
-            <div className="fixed top-0 left-0 size-px overflow-hidden whitespace-nowrap [clip-path:inset(50%)]">
-                <table>
-                    <caption>{periodName} spending values</caption>
-                    <thead>
-                        <tr>
-                            <th>{granularity === 'day' ? 'Date' : 'Month'}</th>
-                            <th>Total group spending</th>
-                            <th>Paid by you</th>
-                            <th>Your share</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {chartData.map((entry) => (
-                            <tr key={entry.period}>
-                                <th>{entry.label}</th>
-                                <td>{formatCurrency(entry.amount)}</td>
-                                <td>{formatCurrency(entry.actualPaid)}</td>
-                                <td>{formatCurrency(entry.currentUserShare)}</td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
+            <dl className="w-full space-y-2 text-sm" aria-live="polite">
+                {[
+                    ['Total group spending', selected.amount],
+                    ['Your share', selected.currentUserShare],
+                    ['Paid by you', selected.actualPaid],
+                ].map(([label, value]) => (
+                    <div key={String(label)} className="flex justify-between gap-3">
+                        <dt className="text-muted-foreground">{label}</dt>
+                        <dd className="shrink-0 font-semibold tabular-nums">
+                            {formatCurrency(Number(value))}
+                        </dd>
+                    </div>
+                ))}
+            </dl>
         </section>
     );
 }

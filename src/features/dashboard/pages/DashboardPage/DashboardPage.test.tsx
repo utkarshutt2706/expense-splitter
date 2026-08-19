@@ -111,35 +111,19 @@ describe('DashboardPage', () => {
             screen.getByLabelText(/paid by you ₹2,800.00; your share ₹1,000.00/i),
         ).toBeInTheDocument();
         expect(screen.getByRole('heading', { name: /spending over time/i })).toBeInTheDocument();
-        const accessibleTable = screen.getByRole('table', { name: /daily spending values/i });
-        expect(accessibleTable).toBeInTheDocument();
-        expect(accessibleTable.parentElement).toHaveClass('fixed', 'size-px', 'overflow-hidden');
     });
 
-    it('exposes chart values through a touch-friendly period selector', () => {
+    it('renders chart values on every device', () => {
         renderPage();
-        const selector = screen.getByRole('button', { name: /view chart values/i });
-        const mobileDetails = selector.parentElement!;
-        expect(mobileDetails).toHaveClass('touch-device-only');
-        expect(mobileDetails).not.toHaveClass('sm:hidden');
+        const trend = screen.getByRole('region', { name: /spending over time/i });
+        const selector = within(trend).getByRole('button', { name: '10 Aug 2026' });
+        expect(trend).not.toHaveClass('touch-device-only');
         expect(selector).toHaveTextContent('10 Aug 2026');
-        expect(within(mobileDetails).getAllByText('₹2,000.00')).toHaveLength(2);
+        expect(within(trend).getAllByText('₹2,000.00')).toHaveLength(2);
+        expect(screen.queryByLabelText(/daily spending chart/i)).not.toBeInTheDocument();
         fireEvent.click(selector);
         fireEvent.click(screen.getByRole('option', { name: '10 Jul 2026' }));
-        expect(within(mobileDetails).getByText('₹1,000.00')).toBeInTheDocument();
-    });
-
-    it('does not crash when a daily-range response comes from an older backend', () => {
-        const legacyGroups = dashboard.groupSpend.map(
-            ({ spendingByDay: _daily, ...group }) => group,
-        );
-        renderPage({ ...dashboard, groupSpend: legacyGroups });
-        expect(
-            screen.getByRole('heading', { name: /daily trend unavailable/i }),
-        ).toBeInTheDocument();
-        expect(
-            screen.queryByRole('table', { name: /monthly spending values/i }),
-        ).not.toBeInTheDocument();
+        expect(within(trend).getByText('₹1,000.00')).toBeInTheDocument();
     });
 
     it('switches to a selected group and ranks participant shares', () => {
