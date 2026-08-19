@@ -75,6 +75,7 @@ const expense: Expense = {
         { userId: CURRENT_USER_ID, amount: 45 },
         { userId: 'friend-1', amount: 45 },
     ],
+    paidOn: '2026-07-23T00:00:00.000Z',
     createdAt: '2026-07-24T00:00:00.000Z',
 };
 
@@ -258,7 +259,7 @@ describe('ExpenseDetailPage', () => {
         renderPage();
 
         expect(screen.getByText('You paid ₹90.00')).toBeInTheDocument();
-        expect(screen.getByText('on Jul 24, 2026')).toBeInTheDocument();
+        expect(screen.getByText('on Jul 23, 2026')).toBeInTheDocument();
     });
 
     it('lists each participant with their share, omitting uninvolved members', () => {

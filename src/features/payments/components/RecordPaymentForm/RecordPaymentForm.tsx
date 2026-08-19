@@ -39,6 +39,10 @@ function formatDateInputValue(date: Date): string {
     return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
 }
 
+function normalizeDateInputValue(value?: string): string | undefined {
+    return value?.slice(0, 10);
+}
+
 function openDatePicker(event: MouseEvent<HTMLInputElement>) {
     try {
         event.currentTarget.showPicker?.();
@@ -98,7 +102,8 @@ export function RecordPaymentForm({
             fromUserId: initialValues?.fromUserId ?? currentUser?.id ?? '',
             toUserId: initialValues?.toUserId ?? '',
             amount: initialValues?.amount,
-            paidOn: initialValues?.paidOn ?? formatDateInputValue(new Date()),
+            paidOn:
+                normalizeDateInputValue(initialValues?.paidOn) ?? formatDateInputValue(new Date()),
         },
     });
     const enteredAmount = useWatch({ control, name: 'amount' });

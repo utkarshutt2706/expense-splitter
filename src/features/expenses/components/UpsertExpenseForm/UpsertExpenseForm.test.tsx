@@ -611,6 +611,7 @@ describe('UpsertExpenseForm', () => {
                         description: 'Groceries',
                         amount: 42.5,
                         paidByUserId: 'user-2',
+                        paidOn: '2026-07-18T00:00:00.000Z',
                         participantUserIds: ['user-2'],
                         splitType: 'exact',
                         splitValues: { 'user-2': '42.50' },
@@ -622,6 +623,7 @@ describe('UpsertExpenseForm', () => {
 
             expect(screen.getByLabelText(/description/i)).toHaveValue('Groceries');
             expect(screen.getByLabelText(/^amount$/i)).toHaveValue(42.5);
+            expect(screen.getByLabelText(/paid on/i)).toHaveValue('2026-07-18');
             expect(screen.getByRole('button', { name: 'Paid by' })).toHaveTextContent(
                 /priya sharma/i,
             );

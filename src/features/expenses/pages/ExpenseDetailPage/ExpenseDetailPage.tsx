@@ -100,9 +100,7 @@ export function ExpenseDetailPage() {
             });
         const addedBy = membersById.get(expense.createdByUserId ?? expense.paidByUserId);
         const createdDate = dateFormatter.format(new Date(expense.createdAt));
-        // No dedicated payment-date field yet — createdAt stands in until the
-        // add-expense form gains one.
-        const paidDate = createdDate;
+        const paidDate = dateFormatter.format(new Date(expense.paidOn ?? expense.createdAt));
         const payerSplit = expense.splits.find((split) => split.userId === expense.paidByUserId);
         const coveredForOthersCents =
             payerSplit && Number.isFinite(payerSplit.amount) && Number.isFinite(expense.amount)

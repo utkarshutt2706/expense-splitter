@@ -63,6 +63,7 @@ const groceriesExpense: Expense = {
         { userId: CURRENT_USER_ID, amount: 21.25 },
         { userId: 'friend-1', amount: 21.25 },
     ],
+    paidOn: '2026-07-01T00:00:00.000Z',
     createdAt: '2026-07-02T00:00:00.000Z',
 };
 
@@ -173,6 +174,7 @@ describe('GroupActivityList', () => {
         const link = screen.getByRole('link', { name: /groceries/i });
         expect(link).toHaveAttribute('href', '/groups/group-1/expenses/expense-1');
         expect(screen.getByText(/you paid/i)).toBeInTheDocument();
+        expect(link).toHaveTextContent('Jul 1, 2026');
         expect(screen.getByText(/you lent ₹21\.25/i)).toBeInTheDocument();
     });
 
@@ -352,6 +354,7 @@ describe('GroupActivityList', () => {
                     fromUserId: CURRENT_USER_ID,
                     toUserId: 'friend-1',
                     amount: 25,
+                    paidOn: '2026-07-01T00:00:00.000Z',
                     createdAt: '2026-07-02T00:00:00.000Z',
                 },
             ]);
@@ -368,6 +371,7 @@ describe('GroupActivityList', () => {
 
             expect(screen.getByRole('heading', { name: 'Edit payment' })).toBeInTheDocument();
             expect(screen.getByLabelText('Amount')).toHaveValue(25);
+            expect(screen.getByLabelText('Paid on')).toHaveValue('2026-07-01');
         });
 
         it('asks for confirmation before deleting the payment', async () => {

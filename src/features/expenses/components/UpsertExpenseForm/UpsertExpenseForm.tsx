@@ -38,6 +38,10 @@ function formatDateInputValue(date: Date): string {
     return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
 }
 
+function normalizeDateInputValue(value?: string): string | undefined {
+    return value?.slice(0, 10);
+}
+
 function openDatePicker(event: MouseEvent<HTMLInputElement>) {
     try {
         event.currentTarget.showPicker?.();
@@ -103,7 +107,9 @@ export function UpsertExpenseForm({
         defaultValues: {
             description: initialValues?.description ?? '',
             amount: initialValues?.amount,
-            paidOn: initialValues?.paidOn ?? formatDefaultDateInputValue(defaultPaidOn),
+            paidOn:
+                normalizeDateInputValue(initialValues?.paidOn) ??
+                formatDefaultDateInputValue(defaultPaidOn),
             paidByUserId: initialValues?.paidByUserId ?? currentUser?.id ?? '',
         },
     });
