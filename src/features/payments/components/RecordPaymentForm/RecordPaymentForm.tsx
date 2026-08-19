@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ArrowRightLeft } from 'lucide-react';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, type MouseEvent } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
 
@@ -13,6 +13,13 @@ const recordPaymentSchema = z
     .object({
         fromUserId: z.string().min(1, 'Select who paid'),
         toUserId: z.string().min(1, 'Select who received it'),
+        paidOn: z
+            .string()
+            .min(1, 'Paid date is required')
+            .refine(
+                (value) => value <= formatDateInputValue(new Date()),
+                'Paid date cannot be in the future',
+            ),
         amount: z
             .number({
                 error: 'Amount is required',
@@ -28,16 +35,30 @@ const recordPaymentSchema = z
         path: ['toUserId'],
     });
 
+function formatDateInputValue(date: Date): string {
+    return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+}
+
+function openDatePicker(event: MouseEvent<HTMLInputElement>) {
+    try {
+        event.currentTarget.showPicker?.();
+    } catch {
+        // Fall back to the browser's normal date-input behavior when restricted.
+    }
+}
+
 export interface RecordPaymentFormValues {
     fromUserId: string;
     toUserId: string;
     amount: number;
+    paidOn: string;
 }
 
 export interface RecordPaymentFormInitialValues {
     fromUserId: string;
     toUserId: string;
     amount: number;
+    paidOn?: string;
 }
 
 interface RecordPaymentFormProps {
@@ -77,6 +98,7 @@ export function RecordPaymentForm({
             fromUserId: initialValues?.fromUserId ?? currentUser?.id ?? '',
             toUserId: initialValues?.toUserId ?? '',
             amount: initialValues?.amount,
+            paidOn: initialValues?.paidOn ?? formatDateInputValue(new Date()),
         },
     });
     const enteredAmount = useWatch({ control, name: 'amount' });
@@ -164,6 +186,24 @@ export function RecordPaymentForm({
                 {errors.toUserId && (
                     <p className="text-xs text-red-600">{errors.toUserId.message}</p>
                 )}
+            </div>
+
+            <div className="flex flex-col gap-1">
+                <label
+                    htmlFor="payment-paid-on"
+                    className="text-surface-foreground text-sm font-medium"
+                >
+                    Paid on
+                </label>
+                <input
+                    id="payment-paid-on"
+                    type="date"
+                    max={formatDateInputValue(new Date())}
+                    onClick={openDatePicker}
+                    {...register('paidOn')}
+                    className="border-border bg-surface text-surface-foreground focus-visible:ring-brand-500 rounded-md border px-3 py-2 text-sm outline-none focus-visible:ring-2"
+                />
+                {errors.paidOn && <p className="text-xs text-red-600">{errors.paidOn.message}</p>}
             </div>
 
             <div className="flex flex-col gap-1">

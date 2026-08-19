@@ -15,6 +15,7 @@ interface UpdateExpenseInput {
     description: string;
     amount: number;
     paidByUserId: string;
+    paidOn?: string;
     participantUserIds: string[];
     splitType: SplitType;
     exactSplits?: ExactSplitEntry[];
@@ -32,6 +33,7 @@ export function useUpdateExpense() {
             description,
             amount,
             paidByUserId,
+            paidOn,
             participantUserIds,
             splitType,
             exactSplits,
@@ -51,6 +53,7 @@ export function useUpdateExpense() {
                 description,
                 amount,
                 paidByUserId,
+                paidOn,
                 splitType,
                 splits,
                 ...(splitType === 'percentage' && { percentages: percentageSplits }),

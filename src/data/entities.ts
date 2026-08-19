@@ -29,6 +29,7 @@ export interface Expense {
     createdByUserId?: string;
     splitType: SplitType;
     splits: ExpenseSplit[];
+    paidOn?: string;
     createdAt: string;
 }
 
@@ -41,5 +42,6 @@ export interface Payment {
     fromUserId: string;
     toUserId: string;
     amount: number;
+    paidOn?: string;
     createdAt: string;
 }

@@ -9,6 +9,7 @@ export interface ExpenseWriteInput {
     description: string;
     amount: number;
     paidByUserId: string;
+    paidOn?: string;
     splitType: SplitType;
     splits: ExpenseSplit[];
     percentages?: PercentageSplitEntry[];

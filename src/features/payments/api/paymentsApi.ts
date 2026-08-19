@@ -5,6 +5,7 @@ export interface CreatePaymentInput {
     fromUserId: string;
     toUserId: string;
     amount: number;
+    paidOn?: string;
 }
 
 export type UpdatePaymentInput = CreatePaymentInput;

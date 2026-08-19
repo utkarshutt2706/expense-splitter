@@ -71,10 +71,17 @@ describe('RecordPaymentForm', () => {
         expect(onSubmit).not.toHaveBeenCalled();
     });
 
-    it('calls onSubmit with the entered values', async () => {
+    it('defaults the paid date to today and calls onSubmit with the entered values', async () => {
         const onSubmit = vi.fn();
         const user = userEvent.setup();
+        const today = new Date();
+        const todayInput = new Date(today.getTime() - today.getTimezoneOffset() * 60000)
+            .toISOString()
+            .slice(0, 10);
+
         render(<RecordPaymentForm members={members} onSubmit={onSubmit} onCancel={vi.fn()} />);
+
+        expect(screen.getByLabelText(/paid on/i)).toHaveValue(todayInput);
 
         await pickMember('To', /priya sharma/i);
         await user.type(screen.getByLabelText(/amount/i), '25');
@@ -84,7 +91,33 @@ describe('RecordPaymentForm', () => {
             fromUserId: CURRENT_USER_ID,
             toUserId: 'user-2',
             amount: 25,
+            paidOn: todayInput,
         });
+    });
+
+    it('opens the calendar when the paid date input is clicked', async () => {
+        const user = userEvent.setup();
+        const showPicker = vi.fn();
+        render(<RecordPaymentForm members={members} onSubmit={vi.fn()} onCancel={vi.fn()} />);
+        Object.defineProperty(screen.getByLabelText(/paid on/i), 'showPicker', {
+            configurable: true,
+            value: showPicker,
+        });
+
+        await user.click(screen.getByLabelText(/paid on/i));
+
+        expect(showPicker).toHaveBeenCalledOnce();
+    });
+
+    it('rejects a manually entered future paid date', async () => {
+        const user = userEvent.setup();
+        render(<RecordPaymentForm members={members} onSubmit={vi.fn()} onCancel={vi.fn()} />);
+
+        await user.clear(screen.getByLabelText(/paid on/i));
+        await user.type(screen.getByLabelText(/paid on/i), '2099-12-31');
+        await user.click(screen.getByRole('button', { name: /record payment/i }));
+
+        expect(await screen.findByText(/paid date cannot be in the future/i)).toBeInTheDocument();
     });
 
     it('prefills fields from initialValues', () => {

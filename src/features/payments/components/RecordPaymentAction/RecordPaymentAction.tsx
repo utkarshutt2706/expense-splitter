@@ -25,12 +25,17 @@ export function RecordPaymentAction({
     const [isRecordingPayment, setIsRecordingPayment] = useState(false);
     const [paymentError, setPaymentError] = useState<string>();
 
-    const handleRecordPayment = ({ fromUserId, toUserId, amount }: RecordPaymentFormValues) => {
+    const handleRecordPayment = ({
+        fromUserId,
+        toUserId,
+        amount,
+        paidOn,
+    }: RecordPaymentFormValues) => {
         if (createPayment.isPending) return;
         setPaymentError(undefined);
         const toastId = toast.loading('Payment is being recorded…');
         createPayment.mutate(
-            { groupId, fromUserId, toUserId, amount },
+            { groupId, fromUserId, toUserId, amount, paidOn },
             {
                 onSuccess: () => {
                     setIsRecordingPayment(false);

@@ -14,6 +14,7 @@ interface CreateExpenseInput {
     description: string;
     amount: number;
     paidByUserId: string;
+    paidOn?: string;
     participantUserIds: string[];
     splitType: SplitType;
     exactSplits?: ExactSplitEntry[];
@@ -30,6 +31,7 @@ export function useCreateExpense() {
             description,
             amount,
             paidByUserId,
+            paidOn,
             participantUserIds,
             splitType,
             exactSplits,
@@ -49,6 +51,7 @@ export function useCreateExpense() {
                 description,
                 amount,
                 paidByUserId,
+                paidOn,
                 splitType,
                 splits,
                 ...(splitType === 'percentage' && { percentages: percentageSplits }),
