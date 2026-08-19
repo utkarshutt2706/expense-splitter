@@ -124,7 +124,12 @@ describe('RecordPaymentForm', () => {
         render(
             <RecordPaymentForm
                 members={members}
-                initialValues={{ fromUserId: 'user-2', toUserId: CURRENT_USER_ID, amount: 40 }}
+                initialValues={{
+                    fromUserId: 'user-2',
+                    toUserId: CURRENT_USER_ID,
+                    amount: 40,
+                    paidOn: '2026-07-18T00:00:00.000Z',
+                }}
                 onSubmit={vi.fn()}
                 onCancel={vi.fn()}
             />,
@@ -133,6 +138,7 @@ describe('RecordPaymentForm', () => {
         expect(screen.getByRole('button', { name: 'From' })).toHaveTextContent('Priya Sharma');
         expect(screen.getByRole('button', { name: 'To' })).toHaveTextContent('You');
         expect(screen.getByLabelText(/amount/i)).toHaveValue(40);
+        expect(screen.getByLabelText(/paid on/i)).toHaveValue('2026-07-18');
     });
 
     it('locks settlement participants and explains full and partial payment amounts', async () => {

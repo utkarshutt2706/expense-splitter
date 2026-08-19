@@ -91,7 +91,7 @@ function ExpenseRow({
                     <p className="text-surface-foreground font-medium">{expense.description}</p>
                     <p className="text-muted-foreground text-sm">
                         {memberLabel(payer, currentUserId)} paid ·{' '}
-                        {dateFormatter.format(new Date(expense.createdAt))}
+                        {dateFormatter.format(new Date(expense.paidOn ?? expense.createdAt))}
                     </p>
                 </div>
                 <div className="flex flex-col items-end gap-0.5">
@@ -146,7 +146,7 @@ function PaymentRow({ payment, membersById, currentUserId, onEdit, onDelete }: P
                         {memberLabel(from, currentUserId)} paid {memberLabel(to, currentUserId)}
                     </p>
                     <p className="text-muted-foreground text-sm">
-                        {dateFormatter.format(new Date(payment.createdAt))}
+                        {dateFormatter.format(new Date(payment.paidOn ?? payment.createdAt))}
                     </p>
                 </div>
                 <p className="text-owed font-medium">{formatCurrency(payment.amount)}</p>
@@ -156,8 +156,8 @@ function PaymentRow({ payment, membersById, currentUserId, onEdit, onDelete }: P
 }
 
 type ActivityItem =
-    | { type: 'expense'; id: string; createdAt: string; expense: Expense }
-    | { type: 'payment'; id: string; createdAt: string; payment: Payment };
+    | { type: 'expense'; id: string; paidOn: string; expense: Expense }
+    | { type: 'payment'; id: string; paidOn: string; payment: Payment };
 
 export function GroupActivityList({
     groupId,
@@ -255,16 +255,16 @@ export function GroupActivityList({
         ...(expenses ?? []).map((expense): ActivityItem => ({
             type: 'expense',
             id: expense.id,
-            createdAt: expense.createdAt,
+            paidOn: expense.paidOn ?? expense.createdAt,
             expense,
         })),
         ...(payments ?? []).map((payment): ActivityItem => ({
             type: 'payment',
             id: payment.id,
-            createdAt: payment.createdAt,
+            paidOn: payment.paidOn ?? payment.createdAt,
             payment,
         })),
-    ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    ].sort((a, b) => new Date(b.paidOn).getTime() - new Date(a.paidOn).getTime());
 
     if (items.length === 0) {
         return (
@@ -340,6 +340,7 @@ export function GroupActivityList({
                               fromUserId: editingPayment.fromUserId,
                               toUserId: editingPayment.toUserId,
                               amount: editingPayment.amount,
+                              paidOn: editingPayment.paidOn ?? editingPayment.createdAt,
                           }
                         : undefined
                 }

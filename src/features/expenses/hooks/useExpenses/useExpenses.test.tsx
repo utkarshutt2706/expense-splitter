@@ -19,6 +19,7 @@ const olderExpense: Expense = {
     paidByUserId: 'current-user',
     splitType: 'equal',
     splits: [{ userId: 'current-user', amount: 30 }],
+    paidOn: '2026-07-03T00:00:00.000Z',
     createdAt: '2026-07-01T00:00:00.000Z',
 };
 
@@ -30,6 +31,7 @@ const newerExpense: Expense = {
     paidByUserId: 'friend-1',
     splitType: 'equal',
     splits: [{ userId: 'friend-1', amount: 20 }],
+    paidOn: '2026-07-02T00:00:00.000Z',
     createdAt: '2026-07-02T00:00:00.000Z',
 };
 
@@ -50,6 +52,6 @@ describe('useExpenses', () => {
         await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
         expect(expensesApi.getByGroupId).toHaveBeenCalledWith('group-1');
-        expect(result.current.data).toEqual([newerExpense, olderExpense]);
+        expect(result.current.data).toEqual([olderExpense, newerExpense]);
     });
 });

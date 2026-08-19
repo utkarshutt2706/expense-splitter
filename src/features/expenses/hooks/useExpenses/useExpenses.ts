@@ -8,7 +8,9 @@ export function useExpenses(groupId: string) {
         queryFn: async () => {
             const expenses = await getByGroupId(groupId);
             return [...expenses].sort(
-                (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+                (a, b) =>
+                    new Date(b.paidOn ?? b.createdAt).getTime() -
+                    new Date(a.paidOn ?? a.createdAt).getTime(),
             );
         },
     });
