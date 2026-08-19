@@ -573,6 +573,29 @@ function ContributionValues({
     );
 }
 
+function ProgressBar({
+    percentage,
+    variant = 'brand',
+    className = '',
+}: Readonly<{
+    percentage: number;
+    variant?: 'brand' | 'amber';
+    className?: string;
+}>) {
+    const trackClassName = variant === 'amber' ? 'bg-muted border-border border' : 'bg-muted';
+
+    const fillClassName = variant === 'amber' ? 'bg-amber-300 dark:bg-amber-700' : 'bg-brand-600';
+
+    return (
+        <span className={`h-2.5 overflow-hidden rounded-full ${trackClassName} ${className}`}>
+            <span
+                className={`block h-full rounded-full ${fillClassName}`}
+                style={{ width: `${percentage}%` }}
+            />
+        </span>
+    );
+}
+
 function Bar({
     label,
     value,
@@ -590,18 +613,7 @@ function Bar({
         <div className="grid grid-cols-[5.5rem_1fr_auto] items-center gap-2 text-xs">
             <span className="text-muted-foreground">{label}</span>
 
-            <span
-                className={`bg-muted h-2.5 overflow-hidden rounded-full ${
-                    solid ? '' : 'border-border border'
-                }`}
-            >
-                <span
-                    className={`block h-full rounded-full ${
-                        solid ? 'bg-brand-600' : 'bg-amber-300 dark:bg-amber-700'
-                    }`}
-                    style={{ width: `${percentage}%` }}
-                />
-            </span>
+            <ProgressBar percentage={percentage} variant={solid ? 'brand' : 'amber'} />
 
             <span className="min-w-20 text-right font-medium tabular-nums">
                 {formatCurrency(value)}
@@ -668,14 +680,7 @@ function Participants({
                                     </div>
 
                                     <div className="mt-2 flex items-center gap-3">
-                                        <span className="bg-muted h-2 flex-1 overflow-hidden rounded-full">
-                                            <span
-                                                className="bg-brand-600 block h-full rounded-full"
-                                                style={{
-                                                    width: `${width}%`,
-                                                }}
-                                            />
-                                        </span>
+                                        <ProgressBar percentage={width} className="flex-1" />
 
                                         <span className="text-muted-foreground w-14 text-right text-xs tabular-nums">
                                             {percent.toFixed(1)}%
@@ -732,48 +737,26 @@ function TrendChart({
 }
 
 function NoSpendingState({
-    groupId,
+    description,
+    link,
+    linkLabel,
 }: Readonly<{
-    groupId: string;
+    description: string;
+    link?: string;
+    linkLabel?: string;
 }>) {
     return (
         <section className="border-border bg-muted/40 rounded-2xl border p-6">
             <h2 className="font-display text-xl">No spending in this period</h2>
 
-            <p className="text-muted-foreground mt-1 text-sm">
-                Try another time period or add an expense to this group.
-            </p>
+            <p className="text-muted-foreground mt-1 text-sm">{description}</p>
 
-            <Link
-                to={`/groups/${groupId}/expenses/new`}
-                className="text-brand-600 mt-3 inline-flex min-h-11 cursor-pointer items-center font-semibold"
-            >
-                Add expense
-                <ArrowRight className="ml-2 size-4" />
-            </Link>
-        </section>
-    );
-}
-
-function NoGroupSpendingState({
-    groupId,
-}: Readonly<{
-    groupId?: string;
-}>) {
-    return (
-        <section className="border-border bg-muted/40 rounded-2xl border p-6">
-            <h2 className="font-display text-xl">No spending in this period</h2>
-
-            <p className="text-muted-foreground mt-1 text-sm">
-                Try another time period or add an expense to a group.
-            </p>
-
-            {groupId && (
+            {link && linkLabel && (
                 <Link
-                    to={`/groups/${groupId}`}
+                    to={link}
                     className="text-brand-600 mt-3 inline-flex min-h-11 cursor-pointer items-center font-semibold"
                 >
-                    Open group
+                    {linkLabel}
                     <ArrowRight className="ml-2 size-4" />
                 </Link>
             )}
@@ -900,7 +883,11 @@ export function DashboardPage() {
                             />
                         </>
                     ) : (
-                        <NoSpendingState groupId={selected.groupId} />
+                        <NoSpendingState
+                            description="Try another time period or add an expense to this group."
+                            link={`/groups/${selected.groupId}/expenses/new`}
+                            linkLabel="Add expense"
+                        />
                     )}
 
                     <Participants group={selected} />
@@ -920,7 +907,15 @@ export function DashboardPage() {
                     {hasExpenses ? (
                         <GroupBreakdown groups={data.groupSpend} />
                     ) : (
-                        <NoGroupSpendingState groupId={data.groupSpend[0]?.groupId} />
+                        <NoSpendingState
+                            description="Try another time period or add an expense to a group."
+                            link={
+                                data.groupSpend[0]
+                                    ? `/groups/${data.groupSpend[0].groupId}`
+                                    : undefined
+                            }
+                            linkLabel="Open group"
+                        />
                     )}
                 </>
             )}

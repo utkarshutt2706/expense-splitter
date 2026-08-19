@@ -26,11 +26,7 @@ import {
     type PieSectorShapeProps,
 } from 'recharts';
 
-import type {
-    DashboardDailySpend,
-    DashboardGroupSpend,
-    DashboardMonthlySpend,
-} from '@features/dashboard/api/dashboardApi';
+import type { DashboardGroupSpend } from '@features/dashboard/api/dashboardApi';
 import { useDashboard } from '@features/dashboard/hooks';
 import { formatCurrency } from '@shared/utils';
 import { combineDailySpending, combineMonthlySpending } from '../DashboardPage/dashboardMetrics';
@@ -497,6 +493,30 @@ function ShareDistributionChart({
     );
 }
 
+function TrendChart({
+    groups,
+    selected,
+    dailyTrend,
+}: Readonly<{
+    groups: DashboardGroupSpend[];
+    selected?: DashboardGroupSpend;
+    dailyTrend: boolean;
+}>) {
+    if (dailyTrend) {
+        const data = selected
+            ? selected.spendingByDay
+            : groups.every((group) => group.spendingByDay !== undefined)
+              ? combineDailySpending(groups)
+              : undefined;
+
+        return <SpendingTrendGraph data={data} granularity="day" />;
+    }
+
+    const data = selected ? selected.spendingByMonth : combineMonthlySpending(groups);
+
+    return <SpendingTrendGraph data={data} granularity="month" />;
+}
+
 function AnalyticsSkeleton() {
     return (
         <div role="status" aria-label="Loading analytics" className="mx-auto max-w-7xl space-y-6">
@@ -555,18 +575,6 @@ export function AnalyticsPage() {
 
     const dailyTrend = usesDailyTrend(period);
 
-    const trendData = dailyTrend
-        ? data.groupSpend.every((group) => group.spendingByDay !== undefined)
-            ? combineDailySpending(data.groupSpend)
-            : undefined
-        : combineMonthlySpending(data.groupSpend);
-
-    const selectedTrendData = selected
-        ? dailyTrend
-            ? selected.spendingByDay
-            : selected.spendingByMonth
-        : trendData;
-
     return (
         <div className="mx-auto max-w-7xl space-y-6">
             <header className="flex flex-col gap-4">
@@ -622,17 +630,11 @@ export function AnalyticsPage() {
                         description={`${dailyTrend ? 'Daily' : 'Monthly'} recorded expenses. Settlements are excluded.`}
                         icon={LineChart}
                     >
-                        {dailyTrend ? (
-                            <SpendingTrendGraph
-                                data={selectedTrendData as DashboardDailySpend[] | undefined}
-                                granularity="day"
-                            />
-                        ) : (
-                            <SpendingTrendGraph
-                                data={selectedTrendData as DashboardMonthlySpend[]}
-                                granularity="month"
-                            />
-                        )}
+                        <TrendChart
+                            groups={data.groupSpend}
+                            selected={selected}
+                            dailyTrend={dailyTrend}
+                        />
                     </ChartFrame>
 
                     <div className="grid gap-6 lg:grid-cols-2">
