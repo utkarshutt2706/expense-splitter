@@ -198,12 +198,17 @@ export function GroupActivityList({
         );
     };
 
-    const handleUpdatePayment = ({ fromUserId, toUserId, amount }: RecordPaymentFormValues) => {
+    const handleUpdatePayment = ({
+        fromUserId,
+        toUserId,
+        amount,
+        paidOn,
+    }: RecordPaymentFormValues) => {
         if (!editingPayment) return;
 
         const toastId = toast.loading('Payment is being updated…');
         updatePayment.mutate(
-            { groupId, id: editingPayment.id, fromUserId, toUserId, amount },
+            { groupId, id: editingPayment.id, fromUserId, toUserId, amount, paidOn },
             {
                 onSuccess: () => toast.success('Payment updated', { id: toastId }),
                 onError: (error) => toast.error(error.message, { id: toastId }),

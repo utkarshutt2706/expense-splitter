@@ -439,13 +439,14 @@ describe('GroupActivityList', () => {
 
             expect(toast.loading).toHaveBeenCalledWith('Payment is being updated…');
             expect(mutate).toHaveBeenCalledWith(
-                {
+                expect.objectContaining({
                     groupId: 'group-1',
                     id: 'payment-1',
                     fromUserId: CURRENT_USER_ID,
                     toUserId: 'friend-1',
                     amount: 30,
-                },
+                    paidOn: expect.any(String),
+                }),
                 expect.anything(),
             );
 

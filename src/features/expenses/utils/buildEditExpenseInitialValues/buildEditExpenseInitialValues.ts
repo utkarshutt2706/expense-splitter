@@ -22,6 +22,7 @@ export function buildEditExpenseInitialValues(expense: Expense): UpsertExpenseFo
         description: expense.description,
         amount: expense.amount,
         paidByUserId: expense.paidByUserId,
+        paidOn: expense.paidOn ?? expense.createdAt,
         participantUserIds: expense.splits.map((split) => split.userId),
         splitType: expense.splitType,
         splitValues,

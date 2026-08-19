@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Check, Receipt } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState, type MouseEvent } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
@@ -24,8 +24,27 @@ const upsertExpenseSchema = z.object({
             error: 'Amount is required',
         })
         .positive('Amount must be greater than zero'),
+    paidOn: z
+        .string()
+        .min(1, 'Paid date is required')
+        .refine(
+            (value) => value <= formatDateInputValue(new Date()),
+            'Paid date cannot be in the future',
+        ),
     paidByUserId: z.string().min(1, 'Select who paid'),
 });
+
+function formatDateInputValue(date: Date): string {
+    return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+}
+
+function openDatePicker(event: MouseEvent<HTMLInputElement>) {
+    try {
+        event.currentTarget.showPicker?.();
+    } catch {
+        // Fall back to the browser's normal date-input behavior when restricted.
+    }
+}
 
 type UpsertExpenseInput = z.infer<typeof upsertExpenseSchema>;
 
@@ -35,6 +54,7 @@ export interface UpsertExpenseFormValues {
     description: string;
     amount: number;
     paidByUserId: string;
+    paidOn: string;
     participantUserIds: string[];
     splitType: SplitType;
     exactSplits?: ExactSplitEntry[];
@@ -46,6 +66,7 @@ export interface UpsertExpenseFormInitialValues {
     description: string;
     amount: number;
     paidByUserId: string;
+    paidOn?: string;
     participantUserIds: string[];
     splitType: SplitType;
     splitValues: Record<string, string>;
@@ -67,6 +88,11 @@ export function UpsertExpenseForm({
     onCancel,
 }: UpsertExpenseFormProps) {
     const { data: currentUser } = useCurrentUser();
+    const defaultPaidOn = useMemo(() => new Date(), []);
+    const formatDefaultDateInputValue = (value?: Date) => {
+        const date = value ?? defaultPaidOn;
+        return formatDateInputValue(date);
+    };
     const {
         register,
         handleSubmit,
@@ -77,6 +103,7 @@ export function UpsertExpenseForm({
         defaultValues: {
             description: initialValues?.description ?? '',
             amount: initialValues?.amount,
+            paidOn: initialValues?.paidOn ?? formatDefaultDateInputValue(defaultPaidOn),
             paidByUserId: initialValues?.paidByUserId ?? currentUser?.id ?? '',
         },
     });
@@ -198,6 +225,7 @@ export function UpsertExpenseForm({
                 description: values.description,
                 amount: values.amount,
                 paidByUserId: values.paidByUserId,
+                paidOn: values.paidOn,
                 participantUserIds,
                 splitType: 'exact',
                 exactSplits,
@@ -214,6 +242,7 @@ export function UpsertExpenseForm({
                 description: values.description,
                 amount: values.amount,
                 paidByUserId: values.paidByUserId,
+                paidOn: values.paidOn,
                 participantUserIds,
                 splitType: 'percentage',
                 percentageSplits,
@@ -230,6 +259,7 @@ export function UpsertExpenseForm({
                 description: values.description,
                 amount: values.amount,
                 paidByUserId: values.paidByUserId,
+                paidOn: values.paidOn,
                 participantUserIds,
                 splitType: 'shares',
                 sharesSplits,
@@ -242,6 +272,7 @@ export function UpsertExpenseForm({
             description: values.description,
             amount: values.amount,
             paidByUserId: values.paidByUserId,
+            paidOn: values.paidOn,
             participantUserIds,
             splitType: 'equal',
         });
@@ -296,6 +327,24 @@ export function UpsertExpenseForm({
                         {errors.amount.message}
                     </p>
                 )}
+            </div>
+
+            <div className="flex flex-col gap-1">
+                <label
+                    htmlFor="expense-paid-on"
+                    className="text-surface-foreground text-sm font-medium"
+                >
+                    Paid on
+                </label>
+                <input
+                    id="expense-paid-on"
+                    type="date"
+                    max={formatDateInputValue(defaultPaidOn)}
+                    onClick={openDatePicker}
+                    {...register('paidOn')}
+                    className="border-border bg-surface text-surface-foreground focus-visible:ring-brand-500 rounded-md border px-3 py-2 text-sm outline-none focus-visible:ring-2"
+                />
+                {errors.paidOn && <p className="text-xs text-red-600">{errors.paidOn.message}</p>}
             </div>
 
             <div className="flex flex-col gap-1">

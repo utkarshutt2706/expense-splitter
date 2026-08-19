@@ -8,14 +8,15 @@ interface UpdatePaymentInput {
     fromUserId: string;
     toUserId: string;
     amount: number;
+    paidOn?: string;
 }
 
 export function useUpdatePayment() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({ groupId, id, fromUserId, toUserId, amount }: UpdatePaymentInput) =>
-            update(groupId, id, { fromUserId, toUserId, amount }),
+        mutationFn: ({ groupId, id, fromUserId, toUserId, amount, paidOn }: UpdatePaymentInput) =>
+            update(groupId, id, { fromUserId, toUserId, amount, paidOn }),
         onSuccess: (_, { groupId }) => {
             queryClient.invalidateQueries({ queryKey: ['payments', groupId] });
             queryClient.invalidateQueries({ queryKey: ['balances', groupId] });

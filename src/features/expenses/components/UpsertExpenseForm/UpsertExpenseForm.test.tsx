@@ -91,22 +91,57 @@ describe('UpsertExpenseForm', () => {
         );
     });
 
-    it('calls onSubmit with the entered values and default participants', async () => {
+    it('defaults the paid date to today and submits it with the entered values', async () => {
         const onSubmit = vi.fn();
         const user = userEvent.setup();
+        const today = new Date();
+        const todayInput = new Date(today.getTime() - today.getTimezoneOffset() * 60000)
+            .toISOString()
+            .slice(0, 10);
+
         render(<UpsertExpenseForm members={members} onSubmit={onSubmit} onCancel={vi.fn()} />);
+
+        expect(screen.getByLabelText(/paid on/i)).toHaveValue(todayInput);
 
         await user.type(screen.getByLabelText(/description/i), 'Groceries');
         await user.type(screen.getByLabelText(/amount/i), '42.50');
         await user.click(screen.getByRole('button', { name: /add expense/i }));
 
-        expect(onSubmit).toHaveBeenCalledWith({
-            description: 'Groceries',
-            amount: 42.5,
-            paidByUserId: CURRENT_USER_ID,
-            participantUserIds: [CURRENT_USER_ID, 'user-2'],
-            splitType: 'equal',
+        expect(onSubmit).toHaveBeenCalledWith(
+            expect.objectContaining({
+                description: 'Groceries',
+                amount: 42.5,
+                paidByUserId: CURRENT_USER_ID,
+                paidOn: todayInput,
+                participantUserIds: [CURRENT_USER_ID, 'user-2'],
+                splitType: 'equal',
+            }),
+        );
+    });
+
+    it('opens the calendar when the paid date input is clicked', async () => {
+        const user = userEvent.setup();
+        const showPicker = vi.fn();
+        render(<UpsertExpenseForm members={members} onSubmit={vi.fn()} onCancel={vi.fn()} />);
+        Object.defineProperty(screen.getByLabelText(/paid on/i), 'showPicker', {
+            configurable: true,
+            value: showPicker,
         });
+
+        await user.click(screen.getByLabelText(/paid on/i));
+
+        expect(showPicker).toHaveBeenCalledOnce();
+    });
+
+    it('rejects a manually entered future paid date', async () => {
+        const user = userEvent.setup();
+        render(<UpsertExpenseForm members={members} onSubmit={vi.fn()} onCancel={vi.fn()} />);
+
+        await user.clear(screen.getByLabelText(/paid on/i));
+        await user.type(screen.getByLabelText(/paid on/i), '2099-12-31');
+        await user.click(screen.getByRole('button', { name: /add expense/i }));
+
+        expect(await screen.findByText(/paid date cannot be in the future/i)).toBeInTheDocument();
     });
 
     it('excludes an unchecked participant from the submitted values', async () => {
@@ -119,13 +154,15 @@ describe('UpsertExpenseForm', () => {
         await user.click(screen.getByRole('checkbox', { name: /priya sharma/i }));
         await user.click(screen.getByRole('button', { name: /add expense/i }));
 
-        expect(onSubmit).toHaveBeenCalledWith({
-            description: 'Groceries',
-            amount: 42.5,
-            paidByUserId: CURRENT_USER_ID,
-            participantUserIds: [CURRENT_USER_ID],
-            splitType: 'equal',
-        });
+        expect(onSubmit).toHaveBeenCalledWith(
+            expect.objectContaining({
+                description: 'Groceries',
+                amount: 42.5,
+                paidByUserId: CURRENT_USER_ID,
+                participantUserIds: [CURRENT_USER_ID],
+                splitType: 'equal',
+            }),
+        );
     });
 
     it('shows an error and does not submit when every participant is unchecked', async () => {
@@ -209,17 +246,19 @@ describe('UpsertExpenseForm', () => {
             await user.type(screen.getByRole('spinbutton', { name: /priya sharma shares/i }), '1');
             await user.click(screen.getByRole('button', { name: /add expense/i }));
 
-            expect(onSubmit).toHaveBeenCalledWith({
-                description: 'Groceries',
-                amount: 42.5,
-                paidByUserId: CURRENT_USER_ID,
-                participantUserIds: [CURRENT_USER_ID, 'user-2'],
-                splitType: 'shares',
-                sharesSplits: [
-                    { userId: CURRENT_USER_ID, shares: 2 },
-                    { userId: 'user-2', shares: 1 },
-                ],
-            });
+            expect(onSubmit).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    description: 'Groceries',
+                    amount: 42.5,
+                    paidByUserId: CURRENT_USER_ID,
+                    participantUserIds: [CURRENT_USER_ID, 'user-2'],
+                    splitType: 'shares',
+                    sharesSplits: [
+                        { userId: CURRENT_USER_ID, shares: 2 },
+                        { userId: 'user-2', shares: 1 },
+                    ],
+                }),
+            );
         });
 
         it('shows an error and does not submit when a share count is left blank', async () => {
@@ -254,17 +293,19 @@ describe('UpsertExpenseForm', () => {
             );
             await user.click(screen.getByRole('button', { name: /add expense/i }));
 
-            expect(onSubmit).toHaveBeenCalledWith({
-                description: 'Groceries',
-                amount: 42.5,
-                paidByUserId: CURRENT_USER_ID,
-                participantUserIds: [CURRENT_USER_ID, 'user-2'],
-                splitType: 'exact',
-                exactSplits: [
-                    { userId: CURRENT_USER_ID, amount: 20 },
-                    { userId: 'user-2', amount: 22.5 },
-                ],
-            });
+            expect(onSubmit).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    description: 'Groceries',
+                    amount: 42.5,
+                    paidByUserId: CURRENT_USER_ID,
+                    participantUserIds: [CURRENT_USER_ID, 'user-2'],
+                    splitType: 'exact',
+                    exactSplits: [
+                        { userId: CURRENT_USER_ID, amount: 20 },
+                        { userId: 'user-2', amount: 22.5 },
+                    ],
+                }),
+            );
         });
 
         it('shows an error and does not submit when exact amounts do not add up to the total', async () => {
@@ -317,17 +358,19 @@ describe('UpsertExpenseForm', () => {
             );
             await user.click(screen.getByRole('button', { name: /add expense/i }));
 
-            expect(onSubmit).toHaveBeenCalledWith({
-                description: 'Groceries',
-                amount: 42.5,
-                paidByUserId: CURRENT_USER_ID,
-                participantUserIds: [CURRENT_USER_ID, 'user-2'],
-                splitType: 'percentage',
-                percentageSplits: [
-                    { userId: CURRENT_USER_ID, percentage: 60 },
-                    { userId: 'user-2', percentage: 40 },
-                ],
-            });
+            expect(onSubmit).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    description: 'Groceries',
+                    amount: 42.5,
+                    paidByUserId: CURRENT_USER_ID,
+                    participantUserIds: [CURRENT_USER_ID, 'user-2'],
+                    splitType: 'percentage',
+                    percentageSplits: [
+                        { userId: CURRENT_USER_ID, percentage: 60 },
+                        { userId: 'user-2', percentage: 40 },
+                    ],
+                }),
+            );
         });
 
         it('shows an error and does not submit when percentages do not add up to 100', async () => {
@@ -639,13 +682,15 @@ describe('UpsertExpenseForm', () => {
             await user.type(screen.getByLabelText(/description/i), 'Dinner');
             await user.click(screen.getByRole('button', { name: /save changes/i }));
 
-            expect(onSubmit).toHaveBeenCalledWith({
-                description: 'Dinner',
-                amount: 42.5,
-                paidByUserId: CURRENT_USER_ID,
-                participantUserIds: [CURRENT_USER_ID, 'user-2'],
-                splitType: 'equal',
-            });
+            expect(onSubmit).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    description: 'Dinner',
+                    amount: 42.5,
+                    paidByUserId: CURRENT_USER_ID,
+                    participantUserIds: [CURRENT_USER_ID, 'user-2'],
+                    splitType: 'equal',
+                }),
+            );
         });
     });
 });

@@ -7,14 +7,15 @@ interface CreatePaymentInput {
     fromUserId: string;
     toUserId: string;
     amount: number;
+    paidOn?: string;
 }
 
 export function useCreatePayment() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({ groupId, fromUserId, toUserId, amount }: CreatePaymentInput) =>
-            create(groupId, { fromUserId, toUserId, amount }),
+        mutationFn: ({ groupId, fromUserId, toUserId, amount, paidOn }: CreatePaymentInput) =>
+            create(groupId, { fromUserId, toUserId, amount, paidOn }),
         onSuccess: (_, { groupId }) => {
             queryClient.invalidateQueries({ queryKey: ['payments', groupId] });
             queryClient.invalidateQueries({ queryKey: ['balances', groupId] });
