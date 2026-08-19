@@ -124,11 +124,40 @@ describe('DashboardPage', () => {
         fireEvent.click(selector);
         fireEvent.click(screen.getByRole('option', { name: '10 Jul 2026' }));
         expect(within(trend).getByText('₹1,000.00')).toBeInTheDocument();
+        expect(screen.getByRole('link', { name: /view analytics/i })).toHaveAttribute(
+            'href',
+            '/analytics',
+        );
+    });
+
+    it('renders chart values through a responsive period selector', () => {
+        renderPage();
+        const trend = screen.getByRole('region', { name: /spending over time/i });
+        const selector = within(trend).getByRole('button', { name: /10 Aug 2026/ });
+        const visibleValues = trend.querySelector('dl')!;
+        expect(trend).not.toHaveClass('touch-device-only');
+        expect(within(visibleValues).getAllByText('₹2,000.00')).toHaveLength(2);
+        fireEvent.click(selector);
+        fireEvent.click(screen.getByRole('option', { name: '10 Jul 2026' }));
+        expect(within(visibleValues).getByText('₹1,000.00')).toBeInTheDocument();
+    });
+
+    it('does not crash when a daily-range response comes from an older backend', () => {
+        const legacyGroups = dashboard.groupSpend.map(
+            ({ spendingByDay: _daily, ...group }) => group,
+        );
+        renderPage({ ...dashboard, groupSpend: legacyGroups });
+        expect(
+            screen.getByRole('heading', { name: /daily trend unavailable/i }),
+        ).toBeInTheDocument();
+        expect(
+            screen.queryByRole('table', { name: /monthly spending values/i }),
+        ).not.toBeInTheDocument();
     });
 
     it('switches to a selected group and ranks participant shares', () => {
         renderPage();
-        fireEvent.click(screen.getByRole('button', { name: /view:.*all groups/i }));
+        fireEvent.click(screen.getByRole('button', { name: /group:.*all groups/i }));
         fireEvent.click(screen.getByRole('button', { name: 'A very long Goa trip group name' }));
         expect(screen.getAllByText('Total group spending').length).toBeGreaterThan(0);
         expect(screen.getByText(/A participant with a very long name/)).toBeInTheDocument();
@@ -143,7 +172,7 @@ describe('DashboardPage', () => {
             name: `Extra group ${index + 1}`,
         }));
         renderPage({ ...dashboard, groupSpend: [...dashboard.groupSpend, ...extraGroups] });
-        fireEvent.click(screen.getByRole('button', { name: /view:.*all groups/i }));
+        fireEvent.click(screen.getByRole('button', { name: /group:.*all groups/i }));
         fireEvent.change(screen.getByRole('searchbox', { name: /search groups/i }), {
             target: { value: 'empty' },
         });
@@ -155,7 +184,7 @@ describe('DashboardPage', () => {
 
     it('does not show group search for five or fewer groups', () => {
         renderPage();
-        fireEvent.click(screen.getByRole('button', { name: /view:.*all groups/i }));
+        fireEvent.click(screen.getByRole('button', { name: /group:.*all groups/i }));
         expect(screen.queryByRole('searchbox', { name: /search groups/i })).not.toBeInTheDocument();
     });
 

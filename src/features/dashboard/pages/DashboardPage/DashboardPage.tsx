@@ -1,5 +1,5 @@
 import * as Popover from '@radix-ui/react-popover';
-import { ArrowRight, Check, ChevronDown, Plus, RefreshCw, Search } from 'lucide-react';
+import { ArrowRight, BarChart3, Check, ChevronDown, Plus, RefreshCw, Search } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { Link } from 'react-router';
 
@@ -133,8 +133,8 @@ function GroupScopeSelector({
     }
 
     return (
-        <div className="w-full text-sm font-medium sm:w-72">
-            <span id="dashboard-scope-label">View:</span>
+        <div className="w-full text-sm font-medium">
+            <span id="dashboard-scope-label">Group:</span>
             <Popover.Root
                 open={open}
                 onOpenChange={(nextOpen) => {
@@ -319,11 +319,19 @@ function SpendingSummary({
                     help="Your assigned portion of shared expenses."
                 />
             </div>
-            <div className="border-border mt-5 border-t pt-4 text-sm">
-                <p className="font-medium">{contributionCopy(paid, share)}</p>
-                <p className="text-muted-foreground mt-1">
-                    Settlements are excluded from this comparison.
-                </p>
+            <div className="border-border mt-5 flex flex-col items-start gap-4 border-t pt-4 text-sm md:flex-row md:items-center md:justify-between">
+                <div>
+                    <p className="font-medium">{contributionCopy(paid, share)}</p>
+                    <p className="text-muted-foreground mt-1">
+                        Settlements are excluded from this comparison.
+                    </p>
+                </div>
+                <Link
+                    to="/analytics"
+                    className="border-border hover:bg-muted focus-visible:ring-brand-500 inline-flex min-h-11 w-full min-w-10 cursor-pointer items-center justify-center gap-2 rounded-lg border px-4 text-sm font-semibold focus-visible:ring-2 focus-visible:outline-none md:w-fit"
+                >
+                    <BarChart3 aria-hidden="true" className="size-4" /> View analytics
+                </Link>
             </div>
         </section>
     );
@@ -556,14 +564,14 @@ export function DashboardPage() {
     const dailyTrend = usesDailyTrend(period);
     return (
         <div className="mx-auto max-w-7xl space-y-6">
-            <header className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <header className="flex flex-col gap-4">
                 <div>
                     <h1 className="font-display text-3xl font-semibold">Spending overview</h1>
                     <p className="text-muted-foreground mt-1">
                         Your shared spending and balances across groups
                     </p>
                 </div>
-                <div className="flex w-full flex-col gap-3 sm:flex-row lg:w-auto lg:items-start">
+                <div className="flex w-full flex-col gap-3 sm:flex-row">
                     <DashboardTimeFilter period={period} onChange={setPeriod} />
                     {data.groupSpend.length > 1 && (
                         <GroupScopeSelector
