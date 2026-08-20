@@ -6,7 +6,10 @@ import { RouterProvider } from 'react-router';
 import { PwaInstallPrompt, ServerWakeGate } from '@app/components';
 import { AppProviders } from '@app/providers';
 import { router } from '@app/router.tsx';
+import { registerStaleChunkRecovery } from '@app/staleChunkRecovery';
 import './index.css';
+
+registerStaleChunkRecovery();
 
 createRoot(document.getElementById('root')!).render(
     <StrictMode>
