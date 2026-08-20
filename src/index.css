@@ -63,6 +63,13 @@
        the content offset that keeps <main> clear of it can never drift apart. */
     --spacing-bottom-nav: 3.5rem;
 
+    /* What anything pinned to the bottom of the viewport has to clear on mobile:
+       the bar's height, the home-indicator inset the bar pads itself with, and a
+       gutter so it does not sit flush against it. */
+    --spacing-nav-clearance: calc(
+        var(--spacing-bottom-nav) + env(safe-area-inset-bottom, 0px) + 1rem
+    );
+
     --animate-progress-fill: progress-fill 1.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
     --animate-theme-backdrop: theme-backdrop 1100ms ease-in-out forwards;
     --animate-theme-icon: theme-icon 1100ms cubic-bezier(0.22, 1, 0.36, 1) forwards;

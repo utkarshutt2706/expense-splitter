@@ -126,9 +126,10 @@ describe('AppLayout', () => {
         const { container } = renderLayout();
 
         const main = container.querySelector('main');
-        expect(main?.className).toContain(
-            'pb-[calc(var(--spacing-bottom-nav)+env(safe-area-inset-bottom,0px)+1rem)]',
-        );
+        // Shared with anything else pinned to the bottom of the viewport, so the
+        // scroll area and the floating action button clear the bar by the same
+        // amount.
+        expect(main?.className.split(/\s+/)).toContain('pb-nav-clearance');
         expect(main?.className.split(/\s+/)).toContain('md:p-6');
     });
 });
