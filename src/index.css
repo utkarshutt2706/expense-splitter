@@ -47,6 +47,10 @@
     --color-muted-foreground: var(--muted-foreground);
     --color-border: var(--border-color);
 
+    /* Height of the fixed mobile bottom navigation. Shared so the bar itself and
+       the content offset that keeps <main> clear of it can never drift apart. */
+    --spacing-bottom-nav: 3.5rem;
+
     --animate-progress-fill: progress-fill 1.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
     --animate-theme-backdrop: theme-backdrop 1100ms ease-in-out forwards;
     --animate-theme-icon: theme-icon 1100ms cubic-bezier(0.22, 1, 0.36, 1) forwards;

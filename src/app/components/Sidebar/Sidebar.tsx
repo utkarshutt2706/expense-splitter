@@ -6,6 +6,12 @@ import { UserMenu } from '@app/components';
 import { navItems } from '@app/configs/navigation';
 import logo from '@assets/logo.svg';
 
+/**
+ * Navigation from md up: a collapsible icon rail at md (hamburger + backdrop,
+ * the pattern that used to serve mobile), settling into a static full-width
+ * sidebar at lg. Below md it is not rendered at all — BottomNav takes over —
+ * so the expanded/collapsed state only ever matters in the md band.
+ */
 export function Sidebar() {
     const [isExpanded, setIsExpanded] = useState(false);
 
@@ -15,16 +21,16 @@ export function Sidebar() {
                 <div
                     aria-hidden="true"
                     onClick={() => setIsExpanded(false)}
-                    className="fixed inset-0 z-10 bg-black/50 md:hidden"
+                    className="fixed inset-0 z-10 hidden bg-black/50 md:block lg:hidden"
                 />
             )}
             <aside
-                className={`fixed inset-y-0 left-0 z-20 flex ${isExpanded ? 'w-72' : 'w-16'} border-border bg-muted shrink-0 flex-col gap-1 overflow-hidden border-r px-2 py-4 transition-all md:static md:w-64 md:px-4`}
+                className={`fixed inset-y-0 left-0 z-20 hidden ${isExpanded ? 'w-72' : 'w-16'} border-border bg-muted shrink-0 flex-col gap-1 overflow-hidden border-r px-2 py-4 transition-all md:flex lg:static lg:w-64 lg:px-4`}
             >
                 <div className="mb-4 flex shrink-0 items-center justify-between gap-2 px-2">
                     <Link
                         to="/"
-                        className={`min-w-0 items-center gap-2 ${isExpanded ? 'flex' : 'hidden'} md:flex`}
+                        className={`min-w-0 items-center gap-2 ${isExpanded ? 'flex' : 'hidden'} lg:flex`}
                     >
                         <img src={logo} alt="" className="size-8 shrink-0" />
                         <span className="font-display text-brand-600 text-lg font-semibold whitespace-nowrap">
@@ -35,12 +41,15 @@ export function Sidebar() {
                         type="button"
                         aria-label={isExpanded ? 'Collapse sidebar' : 'Expand sidebar'}
                         onClick={() => setIsExpanded((current) => !current)}
-                        className="text-muted-foreground hover:bg-border flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-md md:hidden"
+                        className="text-muted-foreground hover:bg-border flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-md lg:hidden"
                     >
                         {isExpanded ? <X className="size-6" /> : <Menu className="size-6" />}
                     </button>
                 </div>
-                <nav className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto">
+                <nav
+                    aria-label="Main"
+                    className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto"
+                >
                     {navItems.map(({ to, label, icon: Icon }) => (
                         <NavLink
                             key={to}
@@ -48,7 +57,7 @@ export function Sidebar() {
                             end={to === '/'}
                             onClick={() => setIsExpanded(false)}
                             className={({ isActive }) =>
-                                `flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors md:justify-start ${
+                                `flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors lg:justify-start ${
                                     isExpanded ? '' : 'justify-center'
                                 } ${
                                     isActive
@@ -58,14 +67,14 @@ export function Sidebar() {
                             }
                         >
                             <Icon className="size-4 shrink-0" />
-                            <span className={`${isExpanded ? 'inline' : 'hidden'} md:inline`}>
+                            <span className={`${isExpanded ? 'inline' : 'hidden'} lg:inline`}>
                                 {label}
                             </span>
                         </NavLink>
                     ))}
                 </nav>
                 <div
-                    className={`shrink-0 ${isExpanded ? 'border-border mt-1 border-t pt-4' : 'flex items-center justify-center'} md:border-border md:mt-1 md:border-t md:pt-4`}
+                    className={`shrink-0 ${isExpanded ? 'border-border mt-1 border-t pt-4' : 'flex items-center justify-center'} lg:border-border lg:mt-1 lg:border-t lg:pt-4`}
                 >
                     <UserMenu expanded={isExpanded} />
                 </div>

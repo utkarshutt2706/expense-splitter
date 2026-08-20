@@ -2,7 +2,7 @@ import { Navigate, Outlet } from 'react-router';
 
 import { useCurrentUser, useThemeAttribute } from '@app/hooks';
 import { useAuthStore } from '@app/stores';
-import { Header, Sidebar, ThemeTransitionOverlay } from '@app/components';
+import { BottomNav, Header, Sidebar, ThemeTransitionOverlay } from '@app/components';
 import { PhoneRequiredGate } from './PhoneRequiredGate';
 
 export function AppLayout() {
@@ -21,12 +21,18 @@ export function AppLayout() {
     return (
         <div className="bg-surface text-surface-foreground flex h-svh">
             <Sidebar />
-            <div className="flex flex-1 flex-col overflow-hidden pl-16 md:pl-0">
+            {/* md: the sidebar is a fixed 4rem rail, so the content is inset past
+                it. lg: it becomes a static flex sibling and claims its own width.
+                Below md there is no sidebar at all — BottomNav replaces it. */}
+            <div className="flex flex-1 flex-col overflow-hidden md:pl-16 lg:pl-0">
                 <Header />
-                <main className="flex-1 overflow-y-auto p-4 md:p-6">
+                {/* BottomNav is fixed, so reserve its height plus the iOS home
+                    indicator inset at the end of the scroll area below md. */}
+                <main className="flex-1 overflow-y-auto p-4 pb-[calc(var(--spacing-bottom-nav)+env(safe-area-inset-bottom,0px)+1rem)] md:p-6">
                     <Outlet />
                 </main>
             </div>
+            <BottomNav />
             <ThemeTransitionOverlay />
         </div>
     );

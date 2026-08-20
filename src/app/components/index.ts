@@ -1,3 +1,4 @@
+export { BottomNav } from './BottomNav';
 export { Header } from './Header';
 export { PwaInstallPrompt } from './PwaInstallPrompt';
 export { ServerWakeGate } from './ServerWakeGate';

@@ -241,4 +241,40 @@ describe('Sidebar', () => {
 
         expect(screen.getByRole('button', { name: /expand sidebar/i })).toBeInTheDocument();
     });
+
+    it('is hidden below md, where the bottom navigation takes over, and goes static at lg', () => {
+        render(
+            <MemoryRouter>
+                <Sidebar />
+            </MemoryRouter>,
+        );
+
+        const classTokens = screen.getByRole('complementary').className.split(/\s+/);
+        expect(classTokens).toContain('hidden');
+        expect(classTokens).toContain('md:flex');
+        expect(classTokens).toContain('lg:static');
+        expect(classTokens).toContain('lg:w-64');
+    });
+
+    it('keeps the collapse toggle out of the way once the sidebar is static at lg', () => {
+        render(
+            <MemoryRouter>
+                <Sidebar />
+            </MemoryRouter>,
+        );
+
+        expect(
+            screen.getByRole('button', { name: /expand sidebar/i }).className.split(/\s+/),
+        ).toContain('lg:hidden');
+    });
+
+    it('exposes its links as a labelled navigation landmark', () => {
+        render(
+            <MemoryRouter>
+                <Sidebar />
+            </MemoryRouter>,
+        );
+
+        expect(screen.getByRole('navigation', { name: 'Main' })).toBeInTheDocument();
+    });
 });

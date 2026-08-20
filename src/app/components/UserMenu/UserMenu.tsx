@@ -84,9 +84,13 @@ function ThemeToggleRow() {
 
 interface UserMenuProps {
     readonly expanded: boolean;
+    /** Defaults suit the sidebar, where the trigger sits at the bottom-left.
+     *  The mobile header flips these, since its trigger is top-right. */
+    readonly side?: 'top' | 'bottom';
+    readonly align?: 'start' | 'end';
 }
 
-export function UserMenu({ expanded }: UserMenuProps) {
+export function UserMenu({ expanded, side = 'top', align = 'start' }: UserMenuProps) {
     const { data: currentUser } = useCurrentUser();
     const logout = useAuthStore((state) => state.logout);
     const navigate = useNavigate();
@@ -104,10 +108,10 @@ export function UserMenu({ expanded }: UserMenuProps) {
                 <button
                     type="button"
                     aria-label="Open user menu"
-                    className={`hover:bg-border focus-visible:ring-brand-500 flex cursor-pointer items-center gap-3 rounded-md p-1 text-left outline-none focus-visible:ring-2 md:w-full ${expanded ? 'w-full px-3 py-2' : 'w-fit'}`}
+                    className={`hover:bg-border focus-visible:ring-brand-500 flex cursor-pointer items-center gap-3 rounded-md p-1 text-left outline-none focus-visible:ring-2 lg:w-full ${expanded ? 'w-full px-3 py-2' : 'w-fit'}`}
                 >
                     <Avatar name={currentUser?.name ?? ''} />
-                    <div className={`min-w-0 flex-1 ${expanded ? 'block' : 'hidden'} md:block`}>
+                    <div className={`min-w-0 flex-1 ${expanded ? 'block' : 'hidden'} lg:block`}>
                         <p className="text-surface-foreground truncate text-sm font-medium">
                             {currentUser?.name}
                         </p>
@@ -119,9 +123,10 @@ export function UserMenu({ expanded }: UserMenuProps) {
             </Popover.Trigger>
             <Popover.Portal>
                 <Popover.Content
-                    align="start"
-                    side="top"
+                    align={align}
+                    side={side}
                     sideOffset={8}
+                    collisionPadding={8}
                     data-testid="user-menu-content"
                     className="border-border bg-surface z-30 w-56 rounded-lg border p-1 shadow-lg"
                 >

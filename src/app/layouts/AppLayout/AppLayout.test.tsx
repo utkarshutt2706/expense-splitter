@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -16,6 +16,10 @@ vi.mock('@app/hooks', async (importOriginal) => ({
 
 vi.mock('@features/groups', () => ({
     useGroup: () => ({ data: undefined }),
+}));
+
+vi.mock('@features/auth', () => ({
+    ChangePasswordDialog: () => null,
 }));
 
 function renderLayout() {
@@ -45,6 +49,11 @@ describe('AppLayout', () => {
     beforeEach(() => {
         localStorage.clear();
         useAuthStore.setState({ currentUserId: null });
+        // Restored explicitly: the phone-gate case below replaces this return
+        // value, and vitest is not configured to reset mocks between tests.
+        vi.mocked(useCurrentUser).mockReturnValue({
+            data: { id: 'current-user', name: 'Alex Morgan', email: '', phone: '9876543210' },
+        });
     });
 
     it('renders the matched child route through the outlet when logged in and has a phone number', () => {
@@ -71,5 +80,55 @@ describe('AppLayout', () => {
         renderLayout();
 
         expect(screen.getByText('login page')).toBeInTheDocument();
+    });
+
+    it('renders the sidebar and the mobile bottom navigation from one config', () => {
+        useAuthStore.setState({ currentUserId: 'current-user' });
+
+        const { container } = renderLayout();
+
+        const navs = screen.getAllByRole('navigation', { name: 'Main' });
+        expect(navs).toHaveLength(2);
+        const [sidebarNav, bottomNav] = navs as [HTMLElement, HTMLElement];
+
+        expect(container.querySelector('aside')).toContainElement(sidebarNav);
+        expect(bottomNav.className.split(/\s+/)).toContain('md:hidden');
+        expect(within(sidebarNav).getAllByRole('link')).toHaveLength(
+            within(bottomNav).getAllByRole('link').length,
+        );
+    });
+
+    it('hides the sidebar below md, where the bottom bar takes over', () => {
+        useAuthStore.setState({ currentUserId: 'current-user' });
+
+        const { container } = renderLayout();
+
+        const asideTokens = container.querySelector('aside')?.className.split(/\s+/) ?? [];
+        expect(asideTokens).toContain('hidden');
+        expect(asideTokens).toContain('md:flex');
+    });
+
+    it('insets the content past the md rail and lets the lg sidebar claim its own width', () => {
+        useAuthStore.setState({ currentUserId: 'current-user' });
+
+        const { container } = renderLayout();
+
+        const contentTokens =
+            container.querySelector('main')?.parentElement?.className.split(/\s+/) ?? [];
+        expect(contentTokens).toContain('md:pl-16');
+        expect(contentTokens).toContain('lg:pl-0');
+        expect(contentTokens).not.toContain('pl-16');
+    });
+
+    it('reserves room at the end of the scroll area for the fixed bottom navigation', () => {
+        useAuthStore.setState({ currentUserId: 'current-user' });
+
+        const { container } = renderLayout();
+
+        const main = container.querySelector('main');
+        expect(main?.className).toContain(
+            'pb-[calc(var(--spacing-bottom-nav)+env(safe-area-inset-bottom,0px)+1rem)]',
+        );
+        expect(main?.className.split(/\s+/)).toContain('md:p-6');
     });
 });
