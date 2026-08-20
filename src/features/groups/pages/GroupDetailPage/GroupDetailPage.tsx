@@ -1,4 +1,4 @@
-import { ArrowLeft, Settings } from 'lucide-react';
+import { ArrowLeft, BarChart3, Settings } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { Link, useParams } from 'react-router';
 
@@ -55,6 +55,15 @@ export function GroupDetailPage() {
                 >
                     <Settings className="size-4" />
                     <span className="hidden md:inline">Settings</span>
+                </Link>
+                <Link
+                    to={`/analytics?groupId=${group.id}`}
+                    aria-label="View group analytics"
+                    title="View group analytics"
+                    className="border-border text-surface-foreground hover:bg-muted inline-flex cursor-pointer items-center gap-1 rounded-md border p-2 text-sm font-medium md:px-3 md:py-1.5"
+                >
+                    <BarChart3 className="size-4" />
+                    <span className="hidden md:inline">Analytics</span>
                 </Link>
             </div>
         );

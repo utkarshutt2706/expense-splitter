@@ -175,5 +175,14 @@ describe('GroupDetailPage', () => {
                 '/groups/group-1/settings',
             );
         });
+
+        it('links to analytics scoped to the current group', () => {
+            renderPage();
+
+            expect(screen.getByRole('link', { name: /view group analytics/i })).toHaveAttribute(
+                'href',
+                '/analytics?groupId=group-1',
+            );
+        });
     });
 });

@@ -18,6 +18,12 @@ export const DashboardPage = lazy(() =>
     })),
 );
 
+export const AnalyticsPage = lazy(() =>
+    import('@features/dashboard/pages/AnalyticsPage').then((module) => ({
+        default: module.AnalyticsPage,
+    })),
+);
+
 export const FriendsPage = lazy(() =>
     import('@features/friends/pages/FriendsPage').then((module) => ({
         default: module.FriendsPage,

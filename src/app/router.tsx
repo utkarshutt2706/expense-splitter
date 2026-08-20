@@ -4,6 +4,7 @@ import { createBrowserRouter, type RouteObject } from 'react-router';
 import { AppLayout } from '@app/layouts';
 import {
     DashboardPage,
+    AnalyticsPage,
     ExpenseDetailPage,
     FriendsPage,
     GroupBalancePage,
@@ -47,6 +48,7 @@ export const routes: RouteObject[] = [
         errorElement: <ErrorPage />,
         children: [
             { index: true, element: <DashboardPage /> },
+            { path: 'analytics', element: <AnalyticsPage /> },
             { path: 'friends', element: <FriendsPage /> },
             { path: 'groups', element: <GroupsPage /> },
             { path: 'groups/:groupId', element: <GroupDetailPage /> },

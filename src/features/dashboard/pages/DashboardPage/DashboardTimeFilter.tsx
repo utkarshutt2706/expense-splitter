@@ -74,7 +74,7 @@ export function DashboardTimeFilter({
     }
 
     return (
-        <div className="w-full text-sm font-medium sm:w-72">
+        <div className="w-full text-sm font-medium">
             <span id="dashboard-period-label">Time period</span>
             <Popover.Root
                 open={open}

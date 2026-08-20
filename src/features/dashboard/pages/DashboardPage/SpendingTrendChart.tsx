@@ -30,29 +30,174 @@ type SpendingTrendChartProps = Readonly<
     | { data: DashboardMonthlySpend[]; granularity: 'month' }
 >;
 
+type TrendEntry = {
+    period: string;
+    label: string;
+    amount: number;
+    currentUserShare: number;
+    actualPaid: number;
+};
+
+const SUMMARY_LABELS = [
+    ['Total group spending', 'amount'],
+    ['Your share', 'currentUserShare'],
+    ['Paid by you', 'actualPaid'],
+] as const;
+
+function getPeriod(entry: DashboardDailySpend | DashboardMonthlySpend): string {
+    return 'date' in entry ? entry.date : entry.month;
+}
+
+function getPeriodLabel(period: string, granularity: 'day' | 'month'): string {
+    return granularity === 'day' ? dayLabel(period) : monthLabel(period);
+}
+
+function buildChartData(
+    data: DashboardDailySpend[] | DashboardMonthlySpend[],
+    granularity: 'day' | 'month',
+): TrendEntry[] {
+    return data.map((entry) => {
+        const period = getPeriod(entry);
+
+        return {
+            period,
+            label: getPeriodLabel(period, granularity),
+            amount: entry.amount,
+            currentUserShare: entry.currentUserShare,
+            actualPaid: entry.actualPaid,
+        };
+    });
+}
+
+function UnavailableTrend() {
+    return (
+        <section className="border-border bg-muted/40 rounded-2xl border p-5 md:p-6">
+            <h2 className="font-display text-xl font-semibold">Daily trend unavailable</h2>
+
+            <p className="text-muted-foreground mt-1 text-sm">
+                Refresh after the dashboard server has been updated.
+            </p>
+        </section>
+    );
+}
+
+function PeriodSelector({
+    entries,
+    selectedPeriod,
+    open,
+    onOpenChange,
+    onSelect,
+}: Readonly<{
+    entries: TrendEntry[];
+    selectedPeriod: string;
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    onSelect: (period: string) => void;
+}>) {
+    const selected = entries.find((entry) => entry.period === selectedPeriod) ?? entries.at(-1)!;
+
+    return (
+        <Popover.Root open={open} onOpenChange={onOpenChange}>
+            <Popover.Trigger asChild>
+                <button
+                    type="button"
+                    aria-labelledby="dashboard-chart-period-label dashboard-chart-period-value"
+                    aria-haspopup="listbox"
+                    aria-expanded={open}
+                    className="border-border bg-surface focus-visible:ring-brand-500 flex min-h-11 w-full cursor-pointer items-center justify-between gap-3 rounded-md border px-3 text-left outline-none focus-visible:ring-2 md:w-fit"
+                >
+                    <span id="dashboard-chart-period-value" className="truncate">
+                        {selected.label}
+                    </span>
+
+                    <ChevronDown
+                        aria-hidden="true"
+                        className={`text-muted-foreground size-4 shrink-0 transition-transform ${
+                            open ? 'rotate-180' : ''
+                        }`}
+                    />
+                </button>
+            </Popover.Trigger>
+
+            <Popover.Portal>
+                <Popover.Content
+                    align="start"
+                    sideOffset={8}
+                    role="listbox"
+                    aria-label="Choose chart date"
+                    className="border-border bg-surface z-50 w-[var(--radix-popover-trigger-width)] rounded-lg border p-2 shadow-lg"
+                >
+                    <div className="max-h-64 overflow-y-auto">
+                        {entries.map((entry) => {
+                            const isSelected = entry.period === selected.period;
+
+                            return (
+                                <button
+                                    key={entry.period}
+                                    type="button"
+                                    role="option"
+                                    aria-selected={isSelected}
+                                    onClick={() => {
+                                        onSelect(entry.period);
+                                        onOpenChange(false);
+                                    }}
+                                    className="hover:bg-muted focus-visible:bg-muted flex min-h-11 w-full cursor-pointer items-center justify-between gap-3 rounded-md px-2 text-left outline-none"
+                                >
+                                    <span className="truncate">{entry.label}</span>
+
+                                    {isSelected && (
+                                        <Check
+                                            aria-hidden="true"
+                                            className="text-brand-600 size-4 shrink-0"
+                                        />
+                                    )}
+                                </button>
+                            );
+                        })}
+                    </div>
+                </Popover.Content>
+            </Popover.Portal>
+        </Popover.Root>
+    );
+}
+
+function TrendSummary({
+    selected,
+}: Readonly<{
+    selected: TrendEntry;
+}>) {
+    return (
+        <dl className="w-full space-y-2 text-sm" aria-live="polite">
+            {SUMMARY_LABELS.map(([label, key]) => (
+                <div key={key} className="flex justify-between gap-3">
+                    <dt className="text-muted-foreground">{label}</dt>
+
+                    <dd className="shrink-0 font-semibold tabular-nums">
+                        {formatCurrency(selected[key])}
+                    </dd>
+                </div>
+            ))}
+        </dl>
+    );
+}
+
 export function SpendingTrendChart({ data, granularity }: SpendingTrendChartProps) {
     const [selectedPeriod, setSelectedPeriod] = useState('');
     const [periodPopoverOpen, setPeriodPopoverOpen] = useState(false);
-    if (data === undefined)
-        return (
-            <section className="border-border bg-muted/40 rounded-2xl border p-5 md:p-6">
-                <h2 className="font-display text-xl font-semibold">Daily trend unavailable</h2>
-                <p className="text-muted-foreground mt-1 text-sm">
-                    Refresh after the dashboard server has been updated.
-                </p>
-            </section>
-        );
-    if (data.length === 0) return null;
-    const chartData = data.map((entry) => {
-        const period = 'date' in entry ? entry.date : entry.month;
-        return {
-            ...entry,
-            period,
-            label: granularity === 'day' ? dayLabel(period) : monthLabel(period),
-        };
-    });
+
+    if (data === undefined) {
+        return <UnavailableTrend />;
+    }
+
+    if (data.length === 0) {
+        return null;
+    }
+
+    const chartData = buildChartData(data, granularity);
+
     const selected =
         chartData.find((entry) => entry.period === selectedPeriod) ?? chartData.at(-1)!;
+
     const periodName = granularity === 'day' ? 'Daily' : 'Monthly';
 
     return (
@@ -65,77 +210,22 @@ export function SpendingTrendChart({ data, granularity }: SpendingTrendChartProp
                     <h2 id="trend-heading" className="font-display text-2xl font-semibold">
                         Spending over time
                     </h2>
+
                     <p className="text-muted-foreground mt-1 text-sm">
                         {periodName} recorded expenses. Settlement payments are excluded.
                     </p>
                 </div>
-                <Popover.Root open={periodPopoverOpen} onOpenChange={setPeriodPopoverOpen}>
-                    <Popover.Trigger asChild>
-                        <button
-                            type="button"
-                            aria-labelledby="dashboard-chart-period-label dashboard-chart-period-value"
-                            aria-haspopup="listbox"
-                            aria-expanded={periodPopoverOpen}
-                            className="border-border bg-surface focus-visible:ring-brand-500 flex min-h-11 w-full cursor-pointer items-center justify-between gap-3 rounded-md border px-3 text-left outline-none focus-visible:ring-2 md:w-fit"
-                        >
-                            <span id="dashboard-chart-period-value" className="truncate">
-                                {selected.label}
-                            </span>
-                            <ChevronDown
-                                aria-hidden="true"
-                                className={`text-muted-foreground size-4 shrink-0 transition-transform ${periodPopoverOpen ? 'rotate-180' : ''}`}
-                            />
-                        </button>
-                    </Popover.Trigger>
-                    <Popover.Portal>
-                        <Popover.Content
-                            align="start"
-                            sideOffset={8}
-                            role="listbox"
-                            aria-label="Choose chart date"
-                            className="border-border bg-surface z-50 w-[var(--radix-popover-trigger-width)] rounded-lg border p-2 shadow-lg"
-                        >
-                            <div className="max-h-64 overflow-y-auto">
-                                {chartData.map((entry) => (
-                                    <button
-                                        key={entry.period}
-                                        type="button"
-                                        role="option"
-                                        aria-selected={entry.period === selected.period}
-                                        onClick={() => {
-                                            setSelectedPeriod(entry.period);
-                                            setPeriodPopoverOpen(false);
-                                        }}
-                                        className="hover:bg-muted focus-visible:bg-muted flex min-h-11 w-full cursor-pointer items-center justify-between gap-3 rounded-md px-2 text-left outline-none"
-                                    >
-                                        <span className="truncate">{entry.label}</span>
-                                        {entry.period === selected.period && (
-                                            <Check
-                                                aria-hidden="true"
-                                                className="text-brand-600 size-4 shrink-0"
-                                            />
-                                        )}
-                                    </button>
-                                ))}
-                            </div>
-                        </Popover.Content>
-                    </Popover.Portal>
-                </Popover.Root>
+
+                <PeriodSelector
+                    entries={chartData}
+                    selectedPeriod={selectedPeriod}
+                    open={periodPopoverOpen}
+                    onOpenChange={setPeriodPopoverOpen}
+                    onSelect={setSelectedPeriod}
+                />
             </div>
-            <dl className="w-full space-y-2 text-sm" aria-live="polite">
-                {[
-                    ['Total group spending', selected.amount],
-                    ['Your share', selected.currentUserShare],
-                    ['Paid by you', selected.actualPaid],
-                ].map(([label, value]) => (
-                    <div key={String(label)} className="flex justify-between gap-3">
-                        <dt className="text-muted-foreground">{label}</dt>
-                        <dd className="shrink-0 font-semibold tabular-nums">
-                            {formatCurrency(Number(value))}
-                        </dd>
-                    </div>
-                ))}
-            </dl>
+
+            <TrendSummary selected={selected} />
         </section>
     );
 }
