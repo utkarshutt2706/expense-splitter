@@ -1,5 +1,23 @@
 @import 'tailwindcss';
 
+/* Tailwind's stock `dark:` variant is a bare prefers-color-scheme media query,
+   which ignores the in-app theme toggle entirely — components built on the
+   semantic tokens below followed the chosen theme while anything using a raw
+   dark: utility silently followed the OS. Redefine the variant against the same
+   two conditions the tokens use: an explicit data-theme='dark', or the system
+   preference when no explicit choice has been made. */
+@custom-variant dark {
+    &:where(:root[data-theme='dark'], :root[data-theme='dark'] *) {
+        @slot;
+    }
+
+    @media (prefers-color-scheme: dark) {
+        &:where(:root:not([data-theme='light']), :root:not([data-theme='light']) *) {
+            @slot;
+        }
+    }
+}
+
 /* Ember: a warm amber/terracotta brand scale, chosen deliberately over the
    green/teal expense-app convention and generic SaaS indigo/violet. */
 @theme {
