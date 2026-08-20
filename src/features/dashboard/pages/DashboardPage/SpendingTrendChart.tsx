@@ -72,7 +72,7 @@ function buildChartData(
 function UnavailableTrend() {
     return (
         <section className="border-border bg-muted/40 rounded-2xl border p-5 md:p-6">
-            <h2 className="font-display text-xl font-semibold">Daily trend unavailable</h2>
+            <h2 className="text-xl font-semibold">Daily trend unavailable</h2>
 
             <p className="text-muted-foreground mt-1 text-sm">
                 Refresh after the dashboard server has been updated.
@@ -172,9 +172,7 @@ function TrendSummary({
                 <div key={key} className="flex justify-between gap-3">
                     <dt className="text-muted-foreground">{label}</dt>
 
-                    <dd className="shrink-0 font-semibold tabular-nums">
-                        {formatCurrency(selected[key])}
-                    </dd>
+                    <dd className="shrink-0 font-semibold">{formatCurrency(selected[key])}</dd>
                 </div>
             ))}
         </dl>
@@ -207,7 +205,7 @@ export function SpendingTrendChart({ data, granularity }: SpendingTrendChartProp
         >
             <div className="flex flex-col items-start justify-between gap-3 md:flex-row">
                 <div className="flex flex-col items-start justify-between">
-                    <h2 id="trend-heading" className="font-display text-2xl font-semibold">
+                    <h2 id="trend-heading" className="text-2xl font-semibold">
                         Spending over time
                     </h2>
 

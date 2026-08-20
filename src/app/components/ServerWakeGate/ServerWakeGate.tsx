@@ -166,7 +166,7 @@ export function ServerWakeGate({ children }: ServerWakeGateProps) {
                 <p className="text-brand-600 mb-2 text-xs font-semibold tracking-[0.2em] uppercase">
                     Expense Splitter
                 </p>
-                <h1 className="font-display text-3xl font-semibold">
+                <h1 className="text-3xl font-semibold">
                     {isUnavailable ? 'The server is taking a break' : 'Getting things ready'}
                 </h1>
                 <p className="text-muted-foreground mt-3 max-w-sm text-sm leading-relaxed">

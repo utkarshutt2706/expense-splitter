@@ -66,7 +66,7 @@ function DashboardSkeleton() {
                 </div>
             </header>
 
-            <section className="border-border rounded-2xl border p-5 md:flex md:items-center md:justify-between md:gap-6">
+            <section className="border-border rounded-2xl border p-5 md:flex md:items-center md:justify-between md:gap-6 md:p-6">
                 <div className="flex-1">
                     <Skeleton className="h-4 w-40" />
                     <Skeleton className="mt-2 h-8 w-64 max-w-full" />
@@ -149,14 +149,14 @@ function CurrentPosition({
     return (
         <section
             aria-labelledby="position-heading"
-            className="border-border bg-surface rounded-2xl border p-5 md:flex md:items-center md:justify-between md:gap-6"
+            className="border-border bg-surface rounded-2xl border p-5 md:flex md:items-center md:justify-between md:gap-6 md:p-6"
         >
             <div>
                 <p id="position-heading" className="text-muted-foreground text-sm font-medium">
                     Position for {periodLabel.toLocaleLowerCase()}
                 </p>
 
-                <div className="font-display mt-1 flex flex-wrap gap-x-6 gap-y-1 text-2xl">
+                <div className="mt-1 flex flex-wrap gap-x-6 gap-y-1 text-2xl">
                     <PositionBalance receive={receive} pay={pay} selected={selected} />
                 </div>
 
@@ -233,7 +233,7 @@ function SpendingSummary({
             className="border-border bg-surface rounded-2xl border p-5 md:p-6"
         >
             <div className="flex items-baseline justify-between gap-4">
-                <h2 id="spending-heading" className="font-display text-xl font-semibold">
+                <h2 id="spending-heading" className="text-xl font-semibold">
                     Shared-spending summary
                 </h2>
 
@@ -300,9 +300,7 @@ function Metric({
         <div>
             <p className="text-muted-foreground text-sm font-medium">{label}</p>
 
-            <p className="font-display mt-1 text-3xl font-semibold tabular-nums">
-                {formatCurrency(value)}
-            </p>
+            <p className="mt-1 text-3xl font-semibold">{formatCurrency(value)}</p>
 
             <p className="text-muted-foreground mt-2 text-xs">{help}</p>
         </div>
@@ -322,7 +320,7 @@ function GroupBreakdown({
     return (
         <section aria-labelledby="groups-heading" className="space-y-4">
             <div>
-                <h2 id="groups-heading" className="font-display text-2xl font-semibold">
+                <h2 id="groups-heading" className="text-2xl font-semibold">
                     Spending by group
                 </h2>
 
@@ -345,7 +343,7 @@ function GroupBreakdown({
 
                             <p className="text-muted-foreground mt-1 text-sm">
                                 Total group spending{' '}
-                                <span className="text-surface-foreground font-medium tabular-nums">
+                                <span className="text-surface-foreground font-medium">
                                     {formatCurrency(group.amount)}
                                 </span>
                             </p>
@@ -418,7 +416,7 @@ function ContributionValues({
             {values.map(([label, value]) => (
                 <div key={label}>
                     <dt className="text-muted-foreground">{label}</dt>
-                    <dd className="font-semibold tabular-nums">{formatCurrency(value)}</dd>
+                    <dd className="font-semibold">{formatCurrency(value)}</dd>
                 </div>
             ))}
         </dl>
@@ -467,9 +465,7 @@ function Bar({
 
             <ProgressBar percentage={percentage} variant={solid ? 'brand' : 'amber'} />
 
-            <span className="min-w-20 text-right font-medium tabular-nums">
-                {formatCurrency(value)}
-            </span>
+            <span className="min-w-20 text-right font-medium">{formatCurrency(value)}</span>
         </div>
     );
 }
@@ -495,7 +491,7 @@ function Participants({
     return (
         <section aria-labelledby="participants-heading">
             <div>
-                <h2 id="participants-heading" className="font-display text-2xl font-semibold">
+                <h2 id="participants-heading" className="text-2xl font-semibold">
                     Participant shares
                 </h2>
 
@@ -513,7 +509,7 @@ function Participants({
                     return (
                         <li key={member.userId} className="p-4">
                             <div className="flex items-center gap-3">
-                                <span className="text-muted-foreground w-5 text-sm tabular-nums">
+                                <span className="text-muted-foreground w-5 text-sm">
                                     {index + 1}
                                 </span>
 
@@ -529,7 +525,7 @@ function Participants({
                                                 : member.name}
                                         </span>
 
-                                        <span className="shrink-0 font-semibold tabular-nums">
+                                        <span className="shrink-0 font-semibold">
                                             {formatCurrency(member.amount)}
                                         </span>
                                     </div>
@@ -537,7 +533,7 @@ function Participants({
                                     <div className="mt-2 flex items-center gap-3">
                                         <ProgressBar percentage={width} className="flex-1" />
 
-                                        <span className="text-muted-foreground w-14 text-right text-xs tabular-nums">
+                                        <span className="text-muted-foreground w-14 text-right text-xs">
                                             {percent.toFixed(1)}%
                                         </span>
                                     </div>
@@ -601,8 +597,8 @@ function NoSpendingState({
     linkLabel?: string;
 }>) {
     return (
-        <section className="border-border bg-muted/40 rounded-2xl border p-6">
-            <h2 className="font-display text-xl">No spending in this period</h2>
+        <section className="border-border bg-muted/40 rounded-2xl border p-5 md:p-6">
+            <h2 className="text-xl font-semibold">No spending in this period</h2>
 
             <p className="text-muted-foreground mt-1 text-sm">{description}</p>
 
@@ -622,7 +618,7 @@ function NoSpendingState({
 function EmptyDashboard() {
     return (
         <section className="border-border bg-muted/40 rounded-2xl border p-8 text-center">
-            <h2 className="font-display text-2xl">No shared spending yet</h2>
+            <h2 className="text-2xl font-semibold">No shared spending yet</h2>
 
             <p className="text-muted-foreground mx-auto mt-2 max-w-lg text-sm">
                 Create a group and record your first shared expense. Your payment, share, and
@@ -647,7 +643,7 @@ function DashboardError({
 }>) {
     return (
         <div className="border-border mx-auto max-w-xl rounded-2xl border p-8 text-center">
-            <h1 className="font-display text-2xl">We couldn't load your dashboard</h1>
+            <h1 className="text-2xl font-semibold">We couldn't load your dashboard</h1>
 
             <p className="text-muted-foreground mt-2 text-sm">
                 Your expenses have not been changed. Try loading the summary again.
@@ -692,7 +688,7 @@ export function DashboardPage() {
         <div className="mx-auto max-w-7xl space-y-6">
             <header className="flex flex-col gap-4">
                 <div>
-                    <h1 className="font-display text-3xl font-semibold">Spending overview</h1>
+                    <h1 className="text-3xl font-semibold">Spending overview</h1>
 
                     <p className="text-muted-foreground mt-1">
                         Your shared spending and balances across groups

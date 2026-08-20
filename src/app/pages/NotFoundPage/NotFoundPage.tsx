@@ -7,9 +7,7 @@ export function NotFoundPage() {
     return (
         <div className="flex h-full flex-col items-center justify-center gap-3 py-16 text-center">
             <AlertTriangle className="text-muted-foreground size-10" />
-            <h1 className="font-display text-surface-foreground text-2xl font-medium">
-                Page not found
-            </h1>
+            <h1 className="text-surface-foreground text-2xl font-medium">Page not found</h1>
             <p className="text-muted-foreground max-w-sm text-sm">
                 The page you're looking for doesn't exist or may have moved.
             </p>

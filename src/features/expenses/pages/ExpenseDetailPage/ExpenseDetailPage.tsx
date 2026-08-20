@@ -178,7 +178,7 @@ export function ExpenseDetailPage() {
             </Link>
 
             <div className="mb-4 flex items-center gap-3">
-                <h1 className="font-display text-surface-foreground text-xl font-medium">
+                <h1 className="text-surface-foreground text-xl font-medium">
                     {isLoading ? (
                         <Skeleton className="h-7 w-40" />
                     ) : (

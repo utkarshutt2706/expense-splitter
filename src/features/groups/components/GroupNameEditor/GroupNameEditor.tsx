@@ -63,7 +63,7 @@ export function GroupNameEditor({ group, isEditing, onEditingChange }: GroupName
                     }}
                     disabled={renameGroup.isPending}
                     aria-label="Group name"
-                    className="border-border bg-surface font-display text-surface-foreground focus-visible:ring-brand-500 rounded-md border px-2 py-1 text-xl font-medium outline-none focus-visible:ring-2 disabled:opacity-60"
+                    className="border-border bg-surface text-surface-foreground focus-visible:ring-brand-500 rounded-md border px-2 py-1 text-xl font-medium outline-none focus-visible:ring-2 disabled:opacity-60"
                 />
                 <div className="flex items-center">
                     <button
@@ -93,9 +93,7 @@ export function GroupNameEditor({ group, isEditing, onEditingChange }: GroupName
 
     return (
         <>
-            <h1 className="font-display text-surface-foreground text-xl font-medium">
-                {group.name}
-            </h1>
+            <h1 className="text-surface-foreground text-xl font-medium">{group.name}</h1>
             <button
                 type="button"
                 aria-label={`Edit ${group.name}`}

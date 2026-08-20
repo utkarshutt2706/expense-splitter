@@ -25,7 +25,7 @@ export function Header() {
             >
                 <img src={logo} alt="" className="size-8" />
             </Link>
-            <h1 className="text-surface-foreground font-display min-w-0 flex-1 truncate text-xl font-medium">
+            <h1 className="text-surface-foreground min-w-0 flex-1 truncate text-xl font-medium">
                 {title}
             </h1>
             <div className="shrink-0 md:hidden">

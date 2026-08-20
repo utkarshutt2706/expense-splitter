@@ -37,7 +37,7 @@ export function FormDialog({
                     className="border-border bg-surface fixed top-1/2 left-1/2 z-50 max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg border p-5 shadow-lg sm:p-6"
                 >
                     <div className="mb-4 flex items-center justify-between gap-3">
-                        <Dialog.Title className="font-display text-surface-foreground min-w-0 text-lg font-medium">
+                        <Dialog.Title className="text-surface-foreground min-w-0 text-lg font-medium">
                             {title}
                         </Dialog.Title>
                         <Dialog.Close asChild>

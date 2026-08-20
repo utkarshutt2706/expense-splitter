@@ -108,9 +108,7 @@ export function PwaInstallPrompt() {
                     <img src={logo} alt="" className="size-8" />
                 </span>
                 <div>
-                    <h2 className="font-display text-base font-semibold">
-                        Keep Expense Splitter handy
-                    </h2>
+                    <h2 className="text-base font-semibold">Keep Expense Splitter handy</h2>
                     <p className="text-muted-foreground mt-1 text-sm leading-relaxed">
                         Install the app for quick access from your home screen.
                     </p>

@@ -144,10 +144,7 @@ export function GroupBalanceAccordionList({ groupId, members, netBalances, trans
         <div className="flex flex-col gap-5 sm:gap-6">
             {everyoneSettled && (
                 <section aria-labelledby="everyone-settled-heading">
-                    <h2
-                        id="everyone-settled-heading"
-                        className="font-display text-xl font-semibold"
-                    >
+                    <h2 id="everyone-settled-heading" className="text-xl font-semibold">
                         Everyone is settled up
                     </h2>
                     <p className="text-muted-foreground mt-1 text-sm">
@@ -157,7 +154,7 @@ export function GroupBalanceAccordionList({ groupId, members, netBalances, trans
             )}
 
             <section aria-labelledby="your-position-heading">
-                <h2 id="your-position-heading" className="font-display text-xl font-semibold">
+                <h2 id="your-position-heading" className="text-xl font-semibold">
                     Your position
                 </h2>
                 <div className="border-border bg-surface mt-2 rounded-xl border p-3 sm:mt-3 sm:p-4">
@@ -199,7 +196,7 @@ export function GroupBalanceAccordionList({ groupId, members, netBalances, trans
             </section>
 
             <section aria-labelledby="your-settlements-heading">
-                <h2 id="your-settlements-heading" className="font-display text-xl font-semibold">
+                <h2 id="your-settlements-heading" className="text-xl font-semibold">
                     Your settlements
                 </h2>
                 {personal.length > 0 ? (
@@ -317,7 +314,7 @@ function Disclosure({
                 <Accordion.Header>
                     <Accordion.Trigger className="group focus-visible:ring-brand-500 flex min-h-11 w-full cursor-pointer items-center justify-between gap-3 rounded-xl p-3 text-left outline-none focus-visible:ring-2 sm:p-4">
                         <span>
-                            <span className="font-display text-lg font-semibold">{label}</span>
+                            <span className="text-lg font-semibold">{label}</span>
                             {description && (
                                 <span className="text-muted-foreground mt-0.5 block text-sm">
                                     {description}
