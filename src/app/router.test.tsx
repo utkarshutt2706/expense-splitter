@@ -14,6 +14,19 @@ vi.mock('./hooks/useCurrentUser', () => ({
 
 vi.mock('@features/groups', () => ({
     useGroup: () => ({ data: undefined }),
+    useGroupSummaries: () => ({
+        data: [],
+        isLoading: false,
+        isFetching: false,
+        isError: false,
+        refetch: vi.fn(),
+    }),
+    useCreateGroup: () => ({ mutate: vi.fn() }),
+    CreateGroupDialog: () => null,
+}));
+
+vi.mock('@features/friends', () => ({
+    useFriends: () => ({ data: [] }),
 }));
 
 vi.mock('@features/dashboard/hooks', () => ({
@@ -56,10 +69,31 @@ describe('router', () => {
         expect(await screen.findByLabelText(/email/i)).toBeInTheDocument();
     });
 
-    it('renders the dashboard at the root path when logged in', async () => {
+    it('redirects the root path to the group list when logged in', async () => {
         useAuthStore.setState({ currentUserId: 'current-user' });
+        const memoryRouter = createMemoryRouter(routes, { initialEntries: ['/'] });
 
-        renderRouterWithClient();
+        renderRouterWithClient(memoryRouter);
+
+        expect(await screen.findByText(/no groups yet/i)).toBeInTheDocument();
+        expect(memoryRouter.state.location.pathname).toBe('/groups');
+    });
+
+    it('replaces the root entry so back does not bounce through the redirect', async () => {
+        useAuthStore.setState({ currentUserId: 'current-user' });
+        const memoryRouter = createMemoryRouter(routes, { initialEntries: ['/'] });
+
+        renderRouterWithClient(memoryRouter);
+        await screen.findByText(/no groups yet/i);
+
+        expect(memoryRouter.state.historyAction).toBe('REPLACE');
+    });
+
+    it('renders the dashboard at its own path when logged in', async () => {
+        useAuthStore.setState({ currentUserId: 'current-user' });
+        const memoryRouter = createMemoryRouter(routes, { initialEntries: ['/dashboard'] });
+
+        renderRouterWithClient(memoryRouter);
 
         expect(await screen.findByText(/no shared spending yet/i)).toBeInTheDocument();
     });

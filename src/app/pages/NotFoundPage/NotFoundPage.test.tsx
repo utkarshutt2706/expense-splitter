@@ -22,9 +22,9 @@ describe('NotFoundPage', () => {
             </MemoryRouter>,
         );
 
-        expect(screen.getByRole('link', { name: /back to dashboard/i })).toHaveAttribute(
+        expect(screen.getByRole('link', { name: /back to groups/i })).toHaveAttribute(
             'href',
-            '/',
+            '/groups',
         );
     });
 });

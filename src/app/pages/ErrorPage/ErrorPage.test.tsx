@@ -53,9 +53,9 @@ describe('ErrorPage', () => {
         render(<RouterProvider router={router} />);
         await screen.findByRole('heading', { name: /page not found/i });
 
-        expect(screen.getByRole('link', { name: /back to dashboard/i })).toHaveAttribute(
+        expect(screen.getByRole('link', { name: /back to groups/i })).toHaveAttribute(
             'href',
-            '/',
+            '/groups',
         );
     });
 });

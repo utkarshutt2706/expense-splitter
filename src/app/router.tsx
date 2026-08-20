@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import { createBrowserRouter, type RouteObject } from 'react-router';
+import { createBrowserRouter, Navigate, type RouteObject } from 'react-router';
 
 import { AppLayout } from '@app/layouts';
 import {
@@ -47,7 +47,12 @@ export const routes: RouteObject[] = [
         element: <AppLayout />,
         errorElement: <ErrorPage />,
         children: [
-            { index: true, element: <DashboardPage /> },
+            // The group list is the daily-driver screen, so it owns the root
+            // path. Redirecting rather than rendering GroupsPage here keeps a
+            // single canonical URL for the list, which /groups/:groupId nests
+            // under and which NavLink matches for the parent-active state.
+            { index: true, element: <Navigate to="/groups" replace /> },
+            { path: 'dashboard', element: <DashboardPage /> },
             { path: 'analytics', element: <AnalyticsPage /> },
             { path: 'friends', element: <FriendsPage /> },
             { path: 'groups', element: <GroupsPage /> },

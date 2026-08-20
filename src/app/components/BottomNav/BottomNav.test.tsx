@@ -17,7 +17,7 @@ describe('BottomNav', () => {
         renderNav();
 
         const nav = within(screen.getByRole('navigation', { name: 'Main' }));
-        expect(nav.getByRole('link', { name: /dashboard/i })).toHaveAttribute('href', '/');
+        expect(nav.getByRole('link', { name: /dashboard/i })).toHaveAttribute('href', '/dashboard');
         expect(nav.getByRole('link', { name: /friends/i })).toHaveAttribute('href', '/friends');
         expect(nav.getByRole('link', { name: /groups/i })).toHaveAttribute('href', '/groups');
         expect(nav.getByRole('link', { name: /analytics/i })).toHaveAttribute('href', '/analytics');

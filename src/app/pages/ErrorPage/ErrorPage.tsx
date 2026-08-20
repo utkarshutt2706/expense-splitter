@@ -22,10 +22,10 @@ export function ErrorPage() {
                 <p className="text-muted-foreground max-w-sm text-xs">{error.message}</p>
             )}
             <Link
-                to="/"
+                to="/groups"
                 className="bg-brand-600 hover:bg-brand-700 mt-2 inline-flex cursor-pointer items-center gap-1 rounded-md px-4 py-2 text-sm font-medium text-white"
             >
-                Back to dashboard
+                Back to groups
             </Link>
         </div>
     );
