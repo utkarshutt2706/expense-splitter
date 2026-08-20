@@ -10,17 +10,12 @@ import type { RecordPaymentFormValues } from '../RecordPaymentForm';
 interface RecordPaymentActionProps {
     readonly groupId: string;
     readonly members: User[];
-    // Fired when the trigger button is clicked, before the dialog opens — lets a
-    // parent fan-out menu (GroupFabMenu) collapse itself without this component
-    // needing to know that menu exists.
-    readonly onTriggerClick?: () => void;
 }
 
-export function RecordPaymentAction({
-    groupId,
-    members,
-    onTriggerClick,
-}: RecordPaymentActionProps) {
+// Sits beside the balance summary rather than in a floating menu, where "record
+// a payment" and "settle up" read as the same thing. Here the balance it acts on
+// is right above it.
+export function RecordPaymentAction({ groupId, members }: RecordPaymentActionProps) {
     const createPayment = useCreatePayment();
     const [isRecordingPayment, setIsRecordingPayment] = useState(false);
     const [paymentError, setPaymentError] = useState<string>();
@@ -56,16 +51,18 @@ export function RecordPaymentAction({
             {members.length > 1 && (
                 <button
                     type="button"
-                    aria-label="Record a payment"
-                    title="Record a payment"
                     onClick={() => {
-                        onTriggerClick?.();
                         setPaymentError(undefined);
                         setIsRecordingPayment(true);
                     }}
-                    className="bg-owed inline-flex size-12 cursor-pointer items-center justify-center rounded-full text-white shadow-lg"
+                    /* Deliberately not bg-owed: that green means "you are owed"
+                       everywhere else, so it read as a status rather than an
+                       action. A secondary button keeps the balance card above it
+                       as the primary thing on this row. */
+                    className="border-border text-surface-foreground hover:bg-muted focus-visible:ring-brand-500 inline-flex min-h-11 cursor-pointer items-center gap-2 self-start rounded-lg border px-4 text-sm font-medium outline-none focus-visible:ring-2"
                 >
-                    <ArrowRightLeft className="size-5" />
+                    <ArrowRightLeft aria-hidden="true" className="size-4" />
+                    Record a payment
                 </button>
             )}
 

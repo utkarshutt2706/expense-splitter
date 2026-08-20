@@ -32,11 +32,8 @@ vi.mock('@features/expenses', () => ({
     GroupBalanceSummary: ({ groupId }: { groupId: string }) => (
         <div data-testid="group-balance-summary">{groupId}</div>
     ),
-}));
-
-vi.mock('@features/groups/components/GroupFabMenu', () => ({
-    GroupFabMenu: ({ groupId, members }: { groupId: string; members: User[] }) => (
-        <div data-testid="group-fab-menu">{`${groupId}-${members.length}`}</div>
+    AddExpenseAction: ({ groupId, members }: { groupId: string; members: User[] }) => (
+        <div data-testid="add-expense-action">{`${groupId}-${members.length}`}</div>
     ),
 }));
 
@@ -78,7 +75,7 @@ describe('GroupDetailPage', () => {
 
         expect(screen.getByRole('status', { name: /loading group/i })).toBeInTheDocument();
         expect(screen.queryByRole('heading', { name: 'Weekend Trip' })).not.toBeInTheDocument();
-        expect(screen.queryByTestId('group-fab-menu')).not.toBeInTheDocument();
+        expect(screen.queryByTestId('add-expense-action')).not.toBeInTheDocument();
         // Balance/expenses don't need the group query to resolve — groupId comes
         // straight from the route — so they mount and start fetching immediately
         // instead of waiting behind the group query, avoiding a skeleton waterfall.
@@ -156,7 +153,7 @@ describe('GroupDetailPage', () => {
             } as unknown as ReturnType<typeof useGroupMembers>);
         });
 
-        it('renders the group name, members section, settings link, balance summary, activity list, and the fab menu', () => {
+        it('renders the group name, members section, settings link, balance summary, activity list, and the add-expense action', () => {
             renderPage();
 
             expect(screen.getByRole('heading', { name: 'Weekend Trip' })).toBeInTheDocument();
@@ -164,7 +161,11 @@ describe('GroupDetailPage', () => {
             expect(screen.getByTestId('group-balance-summary')).toHaveTextContent('group-1');
             expect(screen.getByRole('heading', { name: /activity/i })).toBeInTheDocument();
             expect(screen.getByTestId('group-activity-list')).toHaveTextContent('group-1-2');
-            expect(screen.getByTestId('group-fab-menu')).toHaveTextContent('group-1-2');
+            expect(screen.getByTestId('add-expense-action')).toHaveTextContent('group-1-2');
+
+            // Recording a payment lives on the balance page now, beside the
+            // position it settles, so this page should not offer it too.
+            expect(screen.queryByTestId('record-payment-action')).not.toBeInTheDocument();
         });
 
         it('links the settings button to the group settings page', () => {

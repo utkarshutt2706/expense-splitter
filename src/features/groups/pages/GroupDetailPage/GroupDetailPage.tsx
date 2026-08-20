@@ -2,10 +2,9 @@ import { ArrowLeft, BarChart3, Settings } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { Link, useParams } from 'react-router';
 
-import { GroupActivityList, GroupBalanceSummary } from '@features/expenses';
+import { AddExpenseAction, GroupActivityList, GroupBalanceSummary } from '@features/expenses';
 import { useGroup, useGroupMembers } from '@features/groups';
 import { GroupDetailHeaderSkeleton } from '@features/groups/components/GroupDetailHeaderSkeleton';
-import { GroupFabMenu } from '@features/groups/components/GroupFabMenu';
 import { GroupMembersSection } from '@features/groups/components/GroupMembersSection';
 import { groupErrorMessage } from '@features/groups/utils/groupErrorMessage';
 
@@ -96,7 +95,7 @@ export function GroupDetailPage() {
                 </div>
             )}
 
-            {group && <GroupFabMenu groupId={group.id} members={members ?? []} />}
+            {group && <AddExpenseAction groupId={group.id} members={members ?? []} />}
         </div>
     );
 }

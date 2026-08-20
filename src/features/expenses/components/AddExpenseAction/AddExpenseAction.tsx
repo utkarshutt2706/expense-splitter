@@ -1,4 +1,4 @@
-import { ReceiptIndianRupee } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { Link } from 'react-router';
 
 import type { User } from '@data/entities';
@@ -6,24 +6,24 @@ import type { User } from '@data/entities';
 interface AddExpenseActionProps {
     readonly groupId: string;
     readonly members: User[];
-    // Fired when the trigger is clicked, before navigating away — lets a parent
-    // fan-out menu (GroupFabMenu) collapse itself without this component needing
-    // to know that menu exists.
-    readonly onTriggerClick?: () => void;
 }
 
-export function AddExpenseAction({ groupId, members, onTriggerClick }: AddExpenseActionProps) {
+// The group's one floating action, carrying its label rather than an icon alone:
+// a bare glyph left readers guessing which of several circles did what, and the
+// title attribute that explained it needs a hover that touch devices do not
+// have. Adding an expense is the overwhelmingly common thing to do here, so it
+// gets the corner to itself instead of fanning out a menu.
+export function AddExpenseAction({ groupId, members }: AddExpenseActionProps) {
+    // Nothing to split against until somebody else is in the group.
     if (members.length === 0) return null;
 
     return (
         <Link
             to={`/groups/${groupId}/expenses/new`}
-            aria-label="Add expense"
-            title="Add expense"
-            onClick={onTriggerClick}
-            className="bg-brand-600 hover:bg-brand-700 inline-flex size-12 cursor-pointer items-center justify-center rounded-full text-white shadow-lg"
+            className="bg-brand-600 hover:bg-brand-700 focus-visible:ring-brand-500 bottom-nav-clearance fixed right-6 inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-full px-5 font-medium text-white shadow-lg outline-none focus-visible:ring-2 focus-visible:ring-offset-2 md:bottom-6"
         >
-            <ReceiptIndianRupee className="size-5" />
+            <Plus aria-hidden="true" className="size-5" />
+            Add expense
         </Link>
     );
 }
