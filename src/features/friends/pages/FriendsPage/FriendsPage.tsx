@@ -278,12 +278,12 @@ export function FriendsPage() {
                     People you share a group with will appear here automatically.
                 </p>
                 <p className="text-muted-foreground">Create a group to get started.</p>
-                <a
-                    href="/groups"
+                <Link
+                    to="/groups"
                     className="bg-brand-600 hover:bg-brand-700 focus-visible:ring-brand-500 mt-5 inline-flex min-h-11 items-center rounded-lg px-4 font-semibold text-white focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
                 >
                     Create group
-                </a>
+                </Link>
             </div>
         );
     } else if (!filteredFriends.length) {
