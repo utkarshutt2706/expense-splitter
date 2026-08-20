@@ -1,5 +1,6 @@
 import type { User } from '@data/entities';
 import { Avatar } from '@shared/components';
+import { sortMembersByName } from '@shared/utils';
 
 interface MemberCheckboxListProps {
     readonly users: User[];
@@ -8,6 +9,13 @@ interface MemberCheckboxListProps {
     readonly emptyMessage?: string;
     readonly currentUserId?: string;
     readonly lockCurrentUser?: boolean;
+    /**
+     * Ids that sort above the other candidates, below the current user. The
+     * group settings editor passes the group's membership as it was loaded —
+     * not the live selection, so that ticking a checkbox does not make the row
+     * jump out from under the pointer.
+     */
+    readonly priorityIds?: readonly string[];
 }
 
 export function MemberCheckboxList({
@@ -17,15 +25,15 @@ export function MemberCheckboxList({
     emptyMessage = "You don't have any friends yet — you can add members later.",
     currentUserId,
     lockCurrentUser = false,
+    priorityIds,
 }: MemberCheckboxListProps) {
     if (users.length === 0) {
         return <p className="text-muted-foreground text-sm">{emptyMessage}</p>;
     }
 
-    const orderedUsers = [...users].sort((a, b) => {
-        if (a.id === currentUserId) return -1;
-        if (b.id === currentUserId) return 1;
-        return 0;
+    const orderedUsers = sortMembersByName(users, {
+        isCurrentUser: (user) => user.id === currentUserId,
+        isPriority: priorityIds && ((user) => priorityIds.includes(user.id)),
     });
 
     return (

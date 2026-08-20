@@ -71,4 +71,41 @@ describe('MemberPicker', () => {
 
         expect(onChange).toHaveBeenCalledWith('user-2');
     });
+
+    it('orders the options alphabetically with the current user first', async () => {
+        const user = userEvent.setup();
+        const unsorted: User[] = [
+            { id: 'user-3', name: 'Zoe Tan' },
+            { id: 'user-2', name: 'Priya Sharma' },
+            { id: CURRENT_USER_ID, name: 'Alex Morgan' },
+            { id: 'user-4', name: 'Arun Nair' },
+        ];
+        render(
+            <MemberPicker
+                members={unsorted}
+                value={CURRENT_USER_ID}
+                onChange={vi.fn()}
+                ariaLabel="Paid by"
+                placeholder="Select who paid"
+            />,
+        );
+
+        await user.click(screen.getByRole('button', { name: 'Paid by' }));
+
+        // The avatar is an aria-hidden sibling rendering initials, so read only
+        // the option's own text node.
+        const optionLabel = (item: HTMLElement) =>
+            Array.from(item.childNodes)
+                .filter((node) => node.nodeType === Node.TEXT_NODE)
+                .map((node) => node.textContent)
+                .join('')
+                .trim();
+
+        expect(screen.getAllByRole('menuitemradio').map(optionLabel)).toEqual([
+            'You',
+            'Arun Nair',
+            'Priya Sharma',
+            'Zoe Tan',
+        ]);
+    });
 });

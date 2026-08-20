@@ -574,4 +574,37 @@ describe('ExpenseDetailPage', () => {
             expect(navigateMock).not.toHaveBeenCalled();
         });
     });
+
+    it('orders split participants alphabetically with the current user first', () => {
+        const roster: User[] = [
+            { id: 'friend-3', name: 'Zoe Tan' },
+            { id: 'friend-1', name: 'Priya Sharma' },
+            { id: CURRENT_USER_ID, name: 'Utkarsh Srivastava' },
+            { id: 'friend-2', name: 'Arun Nair' },
+        ];
+        mockLoadedExpense(
+            {
+                ...expense,
+                splits: [
+                    { userId: 'friend-3', amount: 25 },
+                    { userId: 'friend-1', amount: 25 },
+                    { userId: CURRENT_USER_ID, amount: 20 },
+                    { userId: 'friend-2', amount: 20 },
+                ],
+            },
+            roster,
+        );
+
+        renderPage();
+
+        const shares = screen
+            .getAllByText(/share/i)
+            .map((node) => node.textContent?.replace(/\s*₹.*$/, '') ?? '');
+        expect(shares).toEqual([
+            'Your share',
+            'Arun Nair’s share',
+            'Priya Sharma’s share',
+            'Zoe Tan’s share',
+        ]);
+    });
 });

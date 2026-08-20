@@ -10,7 +10,7 @@ import type { SettlementTransaction } from '@features/balances/api/balancesApi';
 import { RecordPaymentDialog } from '@features/payments/components/RecordPaymentDialog';
 import type { RecordPaymentFormValues } from '@features/payments/components/RecordPaymentForm';
 import { useCreatePayment } from '@features/payments/hooks/useCreatePayment';
-import { formatCurrency } from '@shared/utils';
+import { formatCurrency, sortMembersByName } from '@shared/utils';
 
 interface Props {
     readonly groupId: string;
@@ -41,14 +41,26 @@ export function GroupBalanceAccordionList({ groupId, members, netBalances, trans
             const bPay = b.fromUserId === currentUserId;
             return aPay !== bPay ? (aPay ? -1 : 1) : b.amount - a.amount;
         });
-    const others = transactions.filter(
-        ({ fromUserId, toUserId }) => fromUserId !== currentUserId && toUserId !== currentUserId,
-    );
-    const settled = members.filter(
-        (member) =>
-            member.id !== currentUserId &&
-            netBalances.has(member.id) &&
-            netBalances.get(member.id) === 0,
+    // Rows between other people had no defined order; sort them by who owes,
+    // then by who is owed. `personal` keeps its own ordering (payments to make
+    // first, then by size) — that is a priority list, not a member list.
+    const others = transactions
+        .filter(
+            ({ fromUserId, toUserId }) =>
+                fromUserId !== currentUserId && toUserId !== currentUserId,
+        )
+        .sort(
+            (left, right) =>
+                nameFor(left.fromUserId).localeCompare(nameFor(right.fromUserId)) ||
+                nameFor(left.toUserId).localeCompare(nameFor(right.toUserId)),
+        );
+    const settled = sortMembersByName(
+        members.filter(
+            (member) =>
+                member.id !== currentUserId &&
+                netBalances.has(member.id) &&
+                netBalances.get(member.id) === 0,
+        ),
     );
     const toPay = personal
         .filter(({ fromUserId }) => fromUserId === currentUserId)

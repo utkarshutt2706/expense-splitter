@@ -132,4 +132,94 @@ describe('MemberCheckboxList', () => {
             expect(rows[1]).toHaveAccessibleName(/priya sharma/i);
         });
     });
+
+    describe('ordering', () => {
+        const roster: User[] = [
+            { id: 'user-4', name: 'Zoe Tan' },
+            { id: 'user-1', name: 'Priya Sharma' },
+            { id: 'user-3', name: 'Arun Nair' },
+            { id: 'user-2', name: 'Jordan Lee' },
+        ];
+
+        // The avatar span is aria-hidden and renders initials, so read the
+        // visible name span rather than the whole label's text.
+        const labels = () =>
+            screen
+                .getAllByRole('listitem')
+                .map(
+                    (item) =>
+                        item.querySelector('label > span:not([aria-hidden])')?.textContent ?? '',
+                );
+
+        it('lists members alphabetically', () => {
+            render(<MemberCheckboxList users={roster} selectedIds={[]} onToggle={vi.fn()} />);
+
+            expect(labels()).toEqual(['Arun Nair', 'Jordan Lee', 'Priya Sharma', 'Zoe Tan']);
+        });
+
+        it('pins the current user above the alphabetical remainder', () => {
+            render(
+                <MemberCheckboxList
+                    users={roster}
+                    selectedIds={[]}
+                    onToggle={vi.fn()}
+                    currentUserId="user-4"
+                />,
+            );
+
+            expect(labels()).toEqual(['You', 'Arun Nair', 'Jordan Lee', 'Priya Sharma']);
+        });
+
+        it('floats priority ids above the other candidates, each band alphabetical', () => {
+            render(
+                <MemberCheckboxList
+                    users={roster}
+                    selectedIds={[]}
+                    onToggle={vi.fn()}
+                    priorityIds={['user-4', 'user-2']}
+                />,
+            );
+
+            expect(labels()).toEqual(['Jordan Lee', 'Zoe Tan', 'Arun Nair', 'Priya Sharma']);
+        });
+
+        it('keeps the current user above the priority band', () => {
+            render(
+                <MemberCheckboxList
+                    users={roster}
+                    selectedIds={[]}
+                    onToggle={vi.fn()}
+                    currentUserId="user-1"
+                    priorityIds={['user-4', 'user-1']}
+                />,
+            );
+
+            expect(labels()).toEqual(['You', 'Zoe Tan', 'Arun Nair', 'Jordan Lee']);
+        });
+
+        it('does not reorder while the selection changes, so rows stay put as they are ticked', async () => {
+            const user = userEvent.setup();
+            const { rerender } = render(
+                <MemberCheckboxList
+                    users={roster}
+                    selectedIds={[]}
+                    onToggle={vi.fn()}
+                    priorityIds={['user-4']}
+                />,
+            );
+
+            const before = labels();
+            await user.click(screen.getByRole('checkbox', { name: /arun nair/i }));
+            rerender(
+                <MemberCheckboxList
+                    users={roster}
+                    selectedIds={['user-3']}
+                    onToggle={vi.fn()}
+                    priorityIds={['user-4']}
+                />,
+            );
+
+            expect(labels()).toEqual(before);
+        });
+    });
 });

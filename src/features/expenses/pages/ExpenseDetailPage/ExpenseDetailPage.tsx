@@ -11,7 +11,7 @@ import { useDeleteExpense } from '@features/expenses/hooks/useDeleteExpense';
 import { useExpense } from '@features/expenses/hooks/useExpense';
 import { useGroup, useGroupMembers } from '@features/groups';
 import { Avatar, ConfirmationDialog, FetchingIndicator, Skeleton } from '@shared/components';
-import { formatCurrency } from '@shared/utils';
+import { formatCurrency, sortMembersByName } from '@shared/utils';
 
 const dateFormatter = new Intl.DateTimeFormat('en-US', {
     month: 'short',
@@ -91,13 +91,10 @@ export function ExpenseDetailPage() {
         const membersById = new Map((members ?? []).map((member) => [member.id, member]));
         const splitsByUserId = new Map(expense.splits.map((split) => [split.userId, split.amount]));
         const payer = membersById.get(expense.paidByUserId);
-        const participants = (members ?? [])
-            .filter((member) => splitsByUserId.has(member.id))
-            .sort((left, right) => {
-                if (left.id === currentUser?.id) return -1;
-                if (right.id === currentUser?.id) return 1;
-                return 0;
-            });
+        const participants = sortMembersByName(
+            (members ?? []).filter((member) => splitsByUserId.has(member.id)),
+            { isCurrentUser: (member) => member.id === currentUser?.id },
+        );
         const addedBy = membersById.get(expense.createdByUserId ?? expense.paidByUserId);
         const createdDate = dateFormatter.format(new Date(expense.createdAt));
         const paidDate = dateFormatter.format(new Date(expense.paidOn ?? expense.createdAt));

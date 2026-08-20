@@ -1,7 +1,7 @@
 import { useCurrentUser } from '@app/hooks';
 import type { User } from '@data/entities';
 import { Avatar } from '@shared/components';
-import { cn } from '@shared/utils';
+import { cn, sortMembersByName } from '@shared/utils';
 
 interface MemberListProps {
     readonly members: User[];
@@ -12,10 +12,8 @@ interface MemberListProps {
 // avatar rows and GroupBalanceAccordionList.
 export function MemberList({ members, className }: MemberListProps) {
     const { data: currentUser } = useCurrentUser();
-    const orderedMembers = [...members].sort((a, b) => {
-        if (a.id === currentUser?.id) return -1;
-        if (b.id === currentUser?.id) return 1;
-        return 0;
+    const orderedMembers = sortMembersByName(members, {
+        isCurrentUser: (member) => member.id === currentUser?.id,
     });
 
     return (

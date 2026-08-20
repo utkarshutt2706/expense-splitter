@@ -49,6 +49,7 @@ export function EditGroupMembersForm({
                 emptyMessage="No members to show."
                 currentUserId={currentUser?.id ?? ''}
                 lockCurrentUser
+                priorityIds={initialMemberIds}
             />
 
             <div className="flex justify-end gap-2">

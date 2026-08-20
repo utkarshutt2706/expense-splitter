@@ -167,4 +167,49 @@ describe('GroupBalanceAccordionList', () => {
 
         expect(screen.getByTestId('payment-dialog')).toHaveTextContent(JSON.stringify(transaction));
     });
+
+    it('lists settled participants alphabetically', async () => {
+        const user = userEvent.setup();
+        renderList(
+            [{ fromUserId: 'jayant', toUserId: CURRENT_USER_ID, amount: 100 }],
+            new Map([
+                [CURRENT_USER_ID, 100],
+                ['jayant', -100],
+                ['shivam', 0],
+                ['settled', 0],
+                ['rohan', 0],
+            ]),
+        );
+
+        await user.click(screen.getByRole('button', { name: /settled participants/i }));
+
+        const names = screen
+            .getAllByText(/settled up/i)
+            .map((node) => node.previousElementSibling?.textContent)
+            .filter(Boolean);
+        expect(names).toEqual(['Rohan Dwivedi', 'Shivam Rajput', 'Sibali Singh']);
+    });
+
+    it('orders balances between other people by who owes, then by who is owed', async () => {
+        const user = userEvent.setup();
+        renderList(
+            [
+                { fromUserId: 'shivam', toUserId: 'rohan', amount: 100 },
+                { fromUserId: 'jayant', toUserId: 'shivam', amount: 200 },
+                { fromUserId: 'jayant', toUserId: 'rohan', amount: 300 },
+            ],
+            new Map([['jayant', -500]]),
+        );
+
+        await user.click(screen.getByRole('button', { name: /other group balances/i }));
+
+        const sentences = screen
+            .getAllByRole('button', { name: /^settle up:/i })
+            .map((button) => button.getAttribute('aria-label'));
+        expect(sentences).toEqual([
+            'Settle up: Jayant Sachan owes Rohan Dwivedi ₹300.00',
+            'Settle up: Jayant Sachan owes Shivam Rajput ₹200.00',
+            'Settle up: Shivam Rajput owes Rohan Dwivedi ₹100.00',
+        ]);
+    });
 });

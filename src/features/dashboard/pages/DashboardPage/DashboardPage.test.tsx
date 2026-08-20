@@ -295,4 +295,31 @@ describe('comparisonScale', () => {
         expect(comparisonScale(100, 275)).toBe(275);
         expect(comparisonScale(0, 0)).toBe(1);
     });
+
+    it('orders participant shares alphabetically with the current user first', () => {
+        const group = dashboard.groupSpend[0]!;
+        renderPage({
+            ...dashboard,
+            groupSpend: [
+                {
+                    ...group,
+                    memberShares: [
+                        { userId: 'u3', name: 'Zoe Tan', amount: 400, isCurrentUser: false },
+                        { userId: 'u1', name: 'Priya Sharma', amount: 300, isCurrentUser: false },
+                        { userId: 'me', name: 'Utkarsh', amount: 200, isCurrentUser: true },
+                        { userId: 'u2', name: 'Arun Nair', amount: 100, isCurrentUser: false },
+                    ],
+                },
+                ...dashboard.groupSpend.slice(1),
+            ],
+        });
+        fireEvent.click(screen.getByRole('button', { name: /group:.*all groups/i }));
+        fireEvent.click(screen.getByRole('button', { name: 'A very long Goa trip group name' }));
+
+        const names = screen
+            .getAllByRole('listitem')
+            .map((item) => item.querySelector('span[title]')?.textContent)
+            .filter(Boolean);
+        expect(names).toEqual(['Utkarsh (You)', 'Arun Nair', 'Priya Sharma', 'Zoe Tan']);
+    });
 });
