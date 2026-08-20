@@ -212,4 +212,15 @@ describe('GroupBalanceAccordionList', () => {
             'Settle up: Shivam Rajput owes Rohan Dwivedi ₹100.00',
         ]);
     });
+
+    it('offers recording a payment on the heading row of the position it settles', () => {
+        renderList([{ fromUserId: CURRENT_USER_ID, toUserId: 'shivam', amount: 2500 }]);
+
+        const trigger = screen.getByRole('button', { name: 'Record a payment' });
+        const heading = screen.getByRole('heading', { name: 'Your position' });
+
+        // Same row as the heading, pushed to the opposite end.
+        expect(trigger.parentElement).toBe(heading.parentElement);
+        expect(heading.parentElement?.className).toContain('justify-between');
+    });
 });

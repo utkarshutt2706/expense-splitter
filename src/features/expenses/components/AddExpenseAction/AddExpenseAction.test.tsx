@@ -1,21 +1,16 @@
 import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import type { User } from '@data/entities';
 import { AddExpenseAction } from './AddExpenseAction';
 
 const members: User[] = [{ id: 'current-user', name: 'Alex Morgan', email: 'alex@example.com' }];
 
-function renderAction(memberList: User[] = members, onTriggerClick?: () => void) {
+function renderAction(memberList: User[] = members) {
     return render(
         <MemoryRouter>
-            <AddExpenseAction
-                groupId="group-1"
-                members={memberList}
-                onTriggerClick={onTriggerClick}
-            />
+            <AddExpenseAction groupId="group-1" members={memberList} />
         </MemoryRouter>,
     );
 }
@@ -36,13 +31,20 @@ describe('AddExpenseAction', () => {
         expect(container).toBeEmptyDOMElement();
     });
 
-    it('calls onTriggerClick when the add expense link is clicked', async () => {
-        const onTriggerClick = vi.fn();
-        const user = userEvent.setup();
-        renderAction(members, onTriggerClick);
+    it('carries its label on screen, not just in a title attribute', () => {
+        renderAction();
 
-        await user.click(screen.getByRole('link', { name: 'Add expense' }));
+        // A hover-only tooltip told a touch reader nothing, which is what made
+        // the old icon-only button unguessable.
+        expect(screen.getByRole('link', { name: 'Add expense' })).toHaveTextContent('Add expense');
+    });
 
-        expect(onTriggerClick).toHaveBeenCalled();
+    it('clears the mobile bottom navigation, and returns to the corner above it', () => {
+        renderAction();
+
+        const classes = screen.getByRole('link', { name: 'Add expense' }).className.split(/\s+/);
+
+        expect(classes).toContain('bottom-nav-clearance');
+        expect(classes).toContain('md:bottom-6');
     });
 });

@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { useCurrentUser } from '@app/hooks';
 import type { User } from '@data/entities';
 import type { SettlementTransaction } from '@features/balances/api/balancesApi';
+import { RecordPaymentAction } from '@features/payments';
 import { RecordPaymentDialog } from '@features/payments/components/RecordPaymentDialog';
 import type { RecordPaymentFormValues } from '@features/payments/components/RecordPaymentForm';
 import { useCreatePayment } from '@features/payments/hooks/useCreatePayment';
@@ -154,9 +155,15 @@ export function GroupBalanceAccordionList({ groupId, members, netBalances, trans
             )}
 
             <section aria-labelledby="your-position-heading">
-                <h2 id="your-position-heading" className="text-xl font-semibold">
-                    Your position
-                </h2>
+                {/* Paired with the heading it acts on: this is the screen where a
+                    reader can already see who they owe and how much. */}
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                    <h2 id="your-position-heading" className="text-xl font-semibold">
+                        Your position
+                    </h2>
+
+                    <RecordPaymentAction groupId={groupId} members={members} />
+                </div>
                 <div className="border-border bg-surface mt-2 rounded-xl border p-3 sm:mt-3 sm:p-4">
                     {toPay === 0 && toReceive === 0 ? (
                         <>
