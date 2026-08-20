@@ -5,7 +5,7 @@ import { Link } from 'react-router';
 import type { DashboardGroupSpend } from '@features/dashboard/api/dashboardApi';
 import { useDashboard } from '@features/dashboard/hooks';
 import { Avatar, Skeleton } from '@shared/components';
-import { formatCurrency } from '@shared/utils';
+import { formatCurrency, sortMembersByName } from '@shared/utils';
 import {
     combineDailySpending,
     combineMonthlySpending,
@@ -481,7 +481,10 @@ function Participants({
 }>) {
     const [showAll, setShowAll] = useState(false);
 
-    const participants = showAll ? group.memberShares : group.memberShares.slice(0, 8);
+    const orderedMembers = sortMembersByName(group.memberShares, {
+        isCurrentUser: (member) => member.isCurrentUser,
+    });
+    const participants = showAll ? orderedMembers : orderedMembers.slice(0, 8);
 
     const max = Math.max(...group.memberShares.map((member) => member.amount), 1);
 

@@ -19,7 +19,7 @@ import {
 
 import type { DashboardGroupSpend } from '@features/dashboard/api/dashboardApi';
 import { useDashboard } from '@features/dashboard/hooks';
-import { formatCurrency } from '@shared/utils';
+import { formatCurrency, sortMembersByName } from '@shared/utils';
 import { combineDailySpending, combineMonthlySpending } from '../DashboardPage/dashboardMetrics';
 import {
     presetPeriod,
@@ -291,7 +291,12 @@ function ShareDistributionChart({
 }: Readonly<{
     group?: DashboardGroupSpend;
 }>) {
-    const activeMembers = (group?.memberShares ?? []).filter((member) => member.amount > 0);
+    const activeMembers = sortMembersByName(
+        (group?.memberShares ?? []).filter((member) => member.amount > 0),
+        { isCurrentUser: (member) => member.isCurrentUser },
+    );
+    // Ordering has to settle before this: the returned names are aligned by
+    // position with the array handed in.
     const disambiguatedNames = disambiguateParticipantNames(activeMembers);
 
     const chartData = activeMembers.map((member, index) => ({

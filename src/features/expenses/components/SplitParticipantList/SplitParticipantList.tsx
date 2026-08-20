@@ -1,7 +1,7 @@
 import { useCurrentUser } from '@app/hooks';
 import type { SplitType, User } from '@data/entities';
 import { Avatar, CurrencyInput } from '@shared/components';
-import { formatCurrency } from '@shared/utils';
+import { formatCurrency, sortMembersByName } from '@shared/utils';
 
 interface SplitParticipantListProps {
     readonly users: User[];
@@ -38,10 +38,8 @@ export function SplitParticipantList({
         return <p className="text-muted-foreground text-sm">{emptyMessage}</p>;
     }
 
-    const orderedUsers = [...users].sort((a, b) => {
-        if (a.id === currentUser?.id) return -1;
-        if (b.id === currentUser?.id) return 1;
-        return 0;
+    const orderedUsers = sortMembersByName(users, {
+        isCurrentUser: (user) => user.id === currentUser?.id,
     });
 
     const inputConfig = inputConfigByType[splitType];

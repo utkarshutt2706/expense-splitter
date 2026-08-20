@@ -3,6 +3,7 @@ import { ChevronDown } from 'lucide-react';
 
 import { useCurrentUser } from '@app/hooks';
 import type { User } from '@data/entities';
+import { sortMembersByName } from '@shared/utils';
 import { Avatar } from '../Avatar';
 
 interface MemberPickerProps {
@@ -26,6 +27,9 @@ export function MemberPicker({
 }: MemberPickerProps) {
     const { data: currentUser } = useCurrentUser();
     const selected = members.find((member) => member.id === value);
+    const orderedMembers = sortMembersByName(members, {
+        isCurrentUser: (member) => member.id === currentUser?.id,
+    });
 
     return (
         <DropdownMenu.Root>
@@ -49,7 +53,7 @@ export function MemberPicker({
                     className="border-border bg-surface z-50 w-64 rounded-lg border p-1 shadow-lg"
                 >
                     <DropdownMenu.RadioGroup value={value} onValueChange={onChange}>
-                        {members.map((member) => (
+                        {orderedMembers.map((member) => (
                             <DropdownMenu.RadioItem
                                 key={member.id}
                                 value={member.id}

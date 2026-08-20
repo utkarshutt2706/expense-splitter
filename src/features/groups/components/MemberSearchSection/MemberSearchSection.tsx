@@ -13,6 +13,7 @@ interface MemberSearchSectionProps {
     readonly emptyMessage?: string;
     readonly currentUserId?: string;
     readonly lockCurrentUser?: boolean;
+    readonly priorityIds?: readonly string[];
 }
 
 // Shared behind CreateGroupForm and EditGroupMembersForm: the search box, the
@@ -27,6 +28,7 @@ export function MemberSearchSection({
     emptyMessage,
     currentUserId,
     lockCurrentUser,
+    priorityIds,
 }: MemberSearchSectionProps) {
     return (
         <div className="flex flex-col gap-2">
@@ -48,6 +50,7 @@ export function MemberSearchSection({
                 emptyMessage={emptyMessage}
                 currentUserId={currentUserId}
                 lockCurrentUser={lockCurrentUser}
+                priorityIds={priorityIds}
             />
         </div>
     );

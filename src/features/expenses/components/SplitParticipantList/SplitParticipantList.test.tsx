@@ -188,4 +188,30 @@ describe('SplitParticipantList', () => {
 
         expect(screen.getByText('No members yet.')).toBeInTheDocument();
     });
+
+    it('orders the remaining participants alphabetically below the current user', () => {
+        const roster: User[] = [
+            { id: 'user-3', name: 'Zoe Tan' },
+            { id: 'user-2', name: 'Priya Sharma' },
+            { id: CURRENT_USER_ID, name: 'Alex Morgan' },
+            { id: 'user-4', name: 'Arun Nair' },
+        ];
+
+        render(
+            <SplitParticipantList
+                users={roster}
+                splitType="equal"
+                selectedIds={roster.map((user) => user.id)}
+                onToggle={vi.fn()}
+                values={{}}
+                onValueChange={vi.fn()}
+            />,
+        );
+
+        const checkboxes = screen.getAllByRole('checkbox');
+        expect(checkboxes[0]).toHaveAccessibleName('You');
+        expect(checkboxes[1]).toHaveAccessibleName('Arun Nair');
+        expect(checkboxes[2]).toHaveAccessibleName('Priya Sharma');
+        expect(checkboxes[3]).toHaveAccessibleName('Zoe Tan');
+    });
 });

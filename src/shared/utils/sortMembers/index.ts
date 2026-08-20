@@ -1,0 +1,1 @@
+export { sortMembersByName } from './sortMembers';

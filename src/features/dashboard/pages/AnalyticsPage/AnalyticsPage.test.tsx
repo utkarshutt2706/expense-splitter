@@ -393,4 +393,52 @@ describe('AnalyticsPage', () => {
         expect(screen.getByText('Vijay Si')).toBeInTheDocument();
         expect(screen.getByText('Vijay T (You)')).toBeInTheDocument();
     });
+
+    it('orders the participant share chart alphabetically with the current user first', () => {
+        vi.mocked(useDashboard).mockReturnValue({
+            data: {
+                ...dashboard,
+                groupSpend: [
+                    {
+                        groupId: 'trip',
+                        name: 'Weekend Trip',
+                        amount: 400,
+                        actualPaid: 400,
+                        currentUserShare: 100,
+                        currentBalance: 0,
+                        memberShares: [
+                            { userId: 'u1', name: 'Zoe Tan', amount: 100, isCurrentUser: false },
+                            {
+                                userId: 'u2',
+                                name: 'Priya Sharma',
+                                amount: 100,
+                                isCurrentUser: false,
+                            },
+                            { userId: 'u3', name: 'Mira Rao', amount: 100, isCurrentUser: true },
+                            { userId: 'u4', name: 'Arun Nair', amount: 100, isCurrentUser: false },
+                        ],
+                        spendingByMonth: [],
+                        spendingByDay: [],
+                    },
+                ],
+            },
+            isLoading: false,
+            isError: false,
+            refetch: vi.fn(),
+        } as unknown as ReturnType<typeof useDashboard>);
+
+        render(
+            <MemoryRouter initialEntries={['/analytics?groupId=trip']}>
+                <AnalyticsPage />
+            </MemoryRouter>,
+        );
+
+        // The accessible table mirrors the pie's slice order, and unlike the SVG
+        // it is readable in jsdom.
+        const shareTable = screen.getByRole('table', { name: /participant share values/i });
+        const participants = Array.from(shareTable.querySelectorAll('tbody th')).map(
+            (cell) => cell.textContent,
+        );
+        expect(participants).toEqual(['Mira (You)', 'Arun', 'Priya', 'Zoe']);
+    });
 });

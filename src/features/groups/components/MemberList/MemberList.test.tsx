@@ -41,4 +41,20 @@ describe('MemberList', () => {
         const names = screen.getAllByRole('listitem').map((item) => item.textContent);
         expect(names[0]).toContain('You');
     });
+
+    it('orders the remaining members alphabetically below the current user', () => {
+        const unsorted: User[] = [
+            { id: 'friend-3', name: 'Zoe Tan' },
+            { id: 'friend-1', name: 'Priya Sharma' },
+            { id: CURRENT_USER_ID, name: 'Alex Morgan' },
+            { id: 'friend-2', name: 'Arun Nair' },
+        ];
+
+        render(<MemberList members={unsorted} />);
+
+        const names = screen
+            .getAllByRole('listitem')
+            .map((item) => item.querySelector('p')?.textContent ?? '');
+        expect(names).toEqual(['You', 'Arun Nair', 'Priya Sharma', 'Zoe Tan']);
+    });
 });

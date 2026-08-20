@@ -3,6 +3,7 @@ import * as Popover from '@radix-ui/react-popover';
 import { useCurrentUser } from '@app/hooks';
 import type { User } from '@data/entities';
 import { Avatar } from '@shared/components';
+import { sortMembersByName } from '@shared/utils';
 import { MemberList } from '../MemberList';
 
 interface GroupMembersStackProps {
@@ -44,10 +45,8 @@ export function GroupMembersStack({
     maxVisibleMobile = 2,
 }: GroupMembersStackProps) {
     const { data: currentUser } = useCurrentUser();
-    const orderedMembers = [...members].sort((a, b) => {
-        if (a.id === currentUser?.id) return -1;
-        if (b.id === currentUser?.id) return 1;
-        return 0;
+    const orderedMembers = sortMembersByName(members, {
+        isCurrentUser: (member) => member.id === currentUser?.id,
     });
 
     return (
