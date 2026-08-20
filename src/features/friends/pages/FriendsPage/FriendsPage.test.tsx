@@ -103,7 +103,11 @@ describe('FriendsPage', () => {
             isError: false,
         } as unknown as ReturnType<typeof useFriends>);
 
-        render(<FriendsPage />);
+        render(
+            <MemoryRouter>
+                <FriendsPage />
+            </MemoryRouter>,
+        );
 
         expect(
             screen.getByText(/people you share a group with will appear here automatically/i),
@@ -114,6 +118,31 @@ describe('FriendsPage', () => {
         );
     });
 
+    it("prefixes the empty state's create-group link with the router basename", () => {
+        vi.mocked(useFriends).mockReturnValue({
+            data: [],
+            isLoading: false,
+            isError: false,
+        } as unknown as ReturnType<typeof useFriends>);
+
+        // The production build is served from a sub-path (see vite base and the
+        // router's basename), so this link has to go through the router — a bare
+        // <a href="/groups"> resolves against the origin root and 404s there.
+        render(
+            <MemoryRouter
+                basename="/expense-splitter"
+                initialEntries={['/expense-splitter/friends']}
+            >
+                <FriendsPage />
+            </MemoryRouter>,
+        );
+
+        expect(screen.getByRole('link', { name: /create group/i })).toHaveAttribute(
+            'href',
+            '/expense-splitter/groups',
+        );
+    });
+
     it('hides the search box when there are no friends', () => {
         vi.mocked(useFriends).mockReturnValue({
             data: [],
@@ -121,7 +150,11 @@ describe('FriendsPage', () => {
             isError: false,
         } as unknown as ReturnType<typeof useFriends>);
 
-        render(<FriendsPage />);
+        render(
+            <MemoryRouter>
+                <FriendsPage />
+            </MemoryRouter>,
+        );
 
         expect(screen.queryByRole('searchbox')).not.toBeInTheDocument();
     });
