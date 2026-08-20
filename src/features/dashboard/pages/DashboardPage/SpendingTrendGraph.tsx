@@ -14,25 +14,9 @@ import type {
     DashboardDailySpend,
     DashboardMonthlySpend,
 } from '@features/dashboard/api/dashboardApi';
-import { formatCurrency } from '@shared/utils';
+import { formatCompactCurrency, formatCurrency } from '@shared/utils';
+import { dayLabel, monthLabel } from './periodLabels';
 import { addSingletonEndpoints } from './spendingTrendChartData';
-
-function monthLabel(month: string): string {
-    return new Intl.DateTimeFormat('en-IN', {
-        month: 'short',
-        year: '2-digit',
-        timeZone: 'UTC',
-    }).format(new Date(`${month}-01T00:00:00Z`));
-}
-
-function dayLabel(date: string): string {
-    return new Intl.DateTimeFormat('en-IN', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-        timeZone: 'UTC',
-    }).format(new Date(`${date}T00:00:00Z`));
-}
 
 type SpendingTrendGraphProps = Readonly<
     | { data?: DashboardDailySpend[]; granularity: 'day' }
@@ -86,7 +70,7 @@ export function SpendingTrendGraph({ data, granularity }: SpendingTrendGraphProp
                     />
                     <YAxis
                         width={58}
-                        tickFormatter={formatCurrency}
+                        tickFormatter={formatCompactCurrency}
                         tick={{ fill: 'var(--muted-foreground)', fontSize: 12 }}
                         tickLine={false}
                         axisLine={false}
