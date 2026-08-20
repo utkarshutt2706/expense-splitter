@@ -102,7 +102,7 @@ export function UpsertExpensePage() {
                 {isEditMode ? 'Back to expense' : 'Back to group'}
             </Link>
 
-            <h1 className="font-display text-surface-foreground mb-1 text-xl font-medium">
+            <h1 className="text-surface-foreground mb-1 text-xl font-medium">
                 {isEditMode ? 'Edit expense' : 'Add an expense'}
             </h1>
             <p className="text-muted-foreground mb-4 text-sm">

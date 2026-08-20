@@ -257,10 +257,8 @@ export function FriendsPage() {
     if (isLoading) content = <FriendsListSkeleton />;
     else if (isError) {
         content = (
-            <div role="alert" className="border-border rounded-xl border p-6 text-center">
-                <h2 className="font-display text-xl font-semibold">
-                    We couldn’t load your friends.
-                </h2>
+            <div role="alert" className="border-border rounded-xl border p-8 text-center">
+                <h2 className="text-xl font-semibold">We couldn’t load your friends.</h2>
                 <button
                     type="button"
                     onClick={() => void refetch()}
@@ -273,7 +271,7 @@ export function FriendsPage() {
     } else if (!friends?.length) {
         content = (
             <div className="border-border rounded-xl border p-8 text-center">
-                <h2 className="font-display text-2xl font-semibold">No friends yet</h2>
+                <h2 className="text-2xl font-semibold">No friends yet</h2>
                 <p className="text-muted-foreground mt-2">
                     People you share a group with will appear here automatically.
                 </p>
@@ -289,7 +287,7 @@ export function FriendsPage() {
     } else if (!filteredFriends.length) {
         content = (
             <div className="border-border rounded-xl border p-8 text-center">
-                <h2 className="font-display text-2xl font-semibold">No friends found</h2>
+                <h2 className="text-2xl font-semibold">No friends found</h2>
                 <p className="text-muted-foreground mt-2">
                     Try a different name, email, or phone number.
                 </p>

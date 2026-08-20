@@ -49,7 +49,7 @@ export function GroupBalancePage() {
         );
     } else if (isError || !group) {
         content = (
-            <div className="border-border rounded-xl border p-4" role="alert">
+            <div className="border-border rounded-xl border p-8" role="alert">
                 <p className="font-medium text-red-600">We couldn’t load the group balances.</p>
                 <p className="text-muted-foreground mt-1 text-sm">
                     Nothing was changed. Try again.
@@ -76,8 +76,8 @@ export function GroupBalancePage() {
 
         content =
             (groupBalances?.balances.length ?? 0) === 0 && transactions.length === 0 ? (
-                <div className="border-border rounded-xl border p-5">
-                    <h2 className="font-display text-xl font-semibold">No balances yet</h2>
+                <div className="border-border rounded-xl border p-8">
+                    <h2 className="text-xl font-semibold">No balances yet</h2>
                     <p className="text-muted-foreground mt-1 text-sm">
                         Add a shared expense to start tracking what everyone owes.
                     </p>
@@ -108,7 +108,7 @@ export function GroupBalancePage() {
                 Back to group
             </Link>
 
-            <h1 className="font-display text-surface-foreground flex items-center gap-2 text-2xl font-semibold">
+            <h1 className="text-surface-foreground flex items-center gap-2 text-2xl font-semibold">
                 Balances
                 {isRefreshing && <FetchingIndicator />}
             </h1>

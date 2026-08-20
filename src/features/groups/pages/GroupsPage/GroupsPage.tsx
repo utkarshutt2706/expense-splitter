@@ -106,10 +106,8 @@ export function GroupsPage() {
     if (isLoading) content = <GroupListSkeleton />;
     else if (isError) {
         content = (
-            <div role="alert" className="border-border rounded-xl border p-6 text-center">
-                <h2 className="font-display text-xl font-semibold">
-                    We couldn’t load your groups.
-                </h2>
+            <div role="alert" className="border-border rounded-xl border p-8 text-center">
+                <h2 className="text-xl font-semibold">We couldn’t load your groups.</h2>
                 <button
                     type="button"
                     onClick={() => void refetch()}
@@ -122,7 +120,7 @@ export function GroupsPage() {
     } else if (!groups?.length) {
         content = (
             <div className="border-border rounded-xl border p-8 text-center">
-                <h2 className="font-display text-2xl font-semibold">No groups yet</h2>
+                <h2 className="text-2xl font-semibold">No groups yet</h2>
                 <p className="text-muted-foreground mt-2">
                     Create a group to start sharing expenses with other people.
                 </p>
@@ -138,7 +136,7 @@ export function GroupsPage() {
     } else if (!filteredGroups.length) {
         content = (
             <div className="border-border rounded-xl border p-8 text-center">
-                <h2 className="font-display text-2xl font-semibold">No groups found</h2>
+                <h2 className="text-2xl font-semibold">No groups found</h2>
                 <p className="text-muted-foreground mt-2">Try a different search.</p>
                 <button
                     type="button"

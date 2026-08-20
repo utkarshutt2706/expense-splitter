@@ -83,7 +83,7 @@ function ChartFrame({
                 </span>
 
                 <div>
-                    <h2 id={`${title}-heading`} className="font-display text-xl font-semibold">
+                    <h2 id={`${title}-heading`} className="text-xl font-semibold">
                         {title}
                     </h2>
 
@@ -427,7 +427,7 @@ export function AnalyticsPage() {
     if (isError || !data) {
         return (
             <div className="mx-auto max-w-xl p-8 text-center">
-                <h1 className="font-display text-2xl">We couldn't load analytics</h1>
+                <h1 className="text-2xl font-semibold">We couldn't load analytics</h1>
 
                 <p className="text-muted-foreground mt-2 text-sm">
                     Your expenses have not been changed. Try loading the analytics again.
@@ -456,7 +456,7 @@ export function AnalyticsPage() {
                         Insights
                     </p>
 
-                    <h1 className="font-display text-3xl font-semibold">Spending analytics</h1>
+                    <h1 className="text-3xl font-semibold">Spending analytics</h1>
 
                     <p className="text-muted-foreground mt-1">
                         Explore your shared spending patterns across time, groups, and people.
@@ -484,7 +484,7 @@ export function AnalyticsPage() {
 
             {data.groupSpend.length === 0 ? (
                 <section className="border-border bg-muted/40 rounded-2xl border p-8 text-center">
-                    <h2 className="font-display text-2xl">No shared spending yet</h2>
+                    <h2 className="text-2xl font-semibold">No shared spending yet</h2>
 
                     <p className="text-muted-foreground mt-2 text-sm">
                         Record a shared expense to see analytics here.

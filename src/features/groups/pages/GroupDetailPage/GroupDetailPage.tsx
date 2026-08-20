@@ -36,9 +36,7 @@ export function GroupDetailPage() {
     } else {
         content = (
             <div className="flex items-center gap-3">
-                <h1 className="font-display text-surface-foreground text-xl font-medium">
-                    {group.name}
-                </h1>
+                <h1 className="text-surface-foreground text-xl font-medium">{group.name}</h1>
 
                 <GroupMembersSection
                     members={members ?? []}
@@ -86,7 +84,7 @@ export function GroupDetailPage() {
                     <GroupBalanceSummary groupId={groupId ?? ''} members={members ?? []} />
 
                     <div>
-                        <h2 className="font-display text-surface-foreground mb-3 text-lg font-medium">
+                        <h2 className="text-surface-foreground mb-3 text-lg font-medium">
                             Activity
                         </h2>
                         <GroupActivityList

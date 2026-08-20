@@ -56,7 +56,7 @@ export function LoginPage() {
             >
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="font-display text-surface-foreground text-xl font-medium">
+                        <h1 className="text-surface-foreground text-xl font-medium">
                             Expense Splitter
                         </h1>
                         <p className="text-muted-foreground mt-1 text-sm">

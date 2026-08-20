@@ -48,7 +48,7 @@ export function ConfirmationDialog({
                     }}
                     className="border-border bg-surface fixed top-1/2 left-1/2 z-50 max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg border p-5 shadow-lg sm:p-6"
                 >
-                    <AlertDialog.Title className="font-display text-surface-foreground text-lg font-medium">
+                    <AlertDialog.Title className="text-surface-foreground text-lg font-medium">
                         {title}
                     </AlertDialog.Title>
                     <AlertDialog.Description className="text-muted-foreground mt-2 text-sm">

@@ -1,5 +1,16 @@
 @import 'tailwindcss';
 
+/* Tailwind's stock `dark:` variant is a bare prefers-color-scheme media query,
+   which ignores the in-app theme toggle entirely — components built on the
+   semantic tokens below followed the chosen theme while anything using a raw
+   dark: utility silently followed the OS. Point the variant at the same
+   data-theme attribute the tokens use instead. useThemeAttribute always writes
+   that attribute and always resolves 'system' to a concrete light/dark first,
+   so this one selector covers every case. :where() keeps it at zero
+   specificity, so a dark: utility still beats its base only by being emitted
+   later, exactly as Tailwind's own variants do. */
+@custom-variant dark (&:where(:root[data-theme='dark'], :root[data-theme='dark'] *));
+
 /* Ember: a warm amber/terracotta brand scale, chosen deliberately over the
    green/teal expense-app convention and generic SaaS indigo/violet. */
 @theme {
@@ -31,10 +42,11 @@
     --color-toast-warning-bg: var(--toast-warning-bg);
     --color-toast-warning-text: var(--toast-warning-text);
 
-    /* Fraunces for headings (warm, editorial character, ties into the Ember
-       theme); IBM Plex Sans for body/UI, chosen partly for its tabular
-       figures given how number-heavy balances and expense amounts will be. */
-    --font-display: 'Fraunces Variable', ui-serif, Georgia, serif;
+    /* One family throughout: IBM Plex Sans for headings, body and UI alike.
+       The earlier Fraunces display face was dropped in favour of a single
+       voice, so hierarchy now comes from size and weight rather than from a
+       change of typeface. Plex also carries the tabular figures the root rule
+       below switches on, which the number-heavy balances rely on. */
     --font-sans: 'IBM Plex Sans Variable', system-ui, 'Segoe UI', Roboto, sans-serif;
 
     /* Semantic surface/text/border tokens for real components (Phase 3+) to
@@ -151,6 +163,11 @@
 
     font: 18px/145% var(--font-sans);
     letter-spacing: 0.18px;
+    /* IBM Plex Sans was picked for its tabular figures (see --font-sans above),
+       but only a handful of call sites opted in, so amounts jittered between
+       rows in the very lists the choice was made for. Applied once here rather
+       than per-element: every figure in a balance, expense or chart lines up. */
+    font-variant-numeric: tabular-nums;
     color-scheme: light dark;
     color: var(--surface-foreground);
     background: var(--surface);

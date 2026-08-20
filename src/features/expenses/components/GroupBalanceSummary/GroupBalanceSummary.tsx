@@ -145,9 +145,7 @@ export function GroupBalanceSummary({ groupId, members }: GroupBalanceSummaryPro
                     groupId={groupId}
                     celebration="group"
                 />
-                <p className="font-display text-settled text-lg font-medium">
-                    Everyone is settled up
-                </p>
+                <p className="text-settled text-lg font-medium">Everyone is settled up</p>
                 <p className="text-muted-foreground mt-1 text-sm">
                     No outstanding balances in this group
                 </p>
@@ -190,7 +188,7 @@ export function GroupBalanceSummary({ groupId, members }: GroupBalanceSummaryPro
                 to={`/groups/${groupId}/balance`}
                 className="border-border bg-surface hover:bg-muted focus-visible:ring-brand-500 flex min-h-16 w-full flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-xl border p-4 transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
             >
-                <span className="font-display min-w-0 flex-1 text-lg font-medium">{summary}</span>
+                <span className="min-w-0 flex-1 text-lg font-medium">{summary}</span>
                 <span className="flex shrink-0 items-center gap-2">
                     <span className="text-surface-foreground flex items-center gap-1 text-sm font-semibold sm:text-base">
                         View balances

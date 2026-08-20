@@ -16,7 +16,7 @@ export function ErrorPage() {
     return (
         <div className="flex h-full flex-col items-center justify-center gap-3 py-16 text-center">
             <AlertTriangle className="text-muted-foreground size-10" />
-            <h1 className="font-display text-surface-foreground text-2xl font-medium">{title}</h1>
+            <h1 className="text-surface-foreground text-2xl font-medium">{title}</h1>
             <p className="text-muted-foreground max-w-sm text-sm">{description}</p>
             {!isNotFound && error instanceof Error && (
                 <p className="text-muted-foreground max-w-sm text-xs">{error.message}</p>

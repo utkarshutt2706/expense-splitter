@@ -33,7 +33,7 @@ export function Sidebar() {
                         className={`min-w-0 items-center gap-2 ${isExpanded ? 'flex' : 'hidden'} lg:flex`}
                     >
                         <img src={logo} alt="" className="size-8 shrink-0" />
-                        <span className="font-display text-brand-600 text-lg font-semibold whitespace-nowrap">
+                        <span className="text-brand-600 text-lg font-semibold whitespace-nowrap">
                             Expense Splitter
                         </span>
                     </Link>

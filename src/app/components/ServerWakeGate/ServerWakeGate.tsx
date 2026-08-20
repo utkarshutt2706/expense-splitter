@@ -32,11 +32,7 @@ function InjuredServerIllustration() {
                     className="fill-surface stroke-brand-500"
                     strokeWidth="4"
                 />
-                <path
-                    d="M22 35h68M22 57h68"
-                    className="stroke-brand-200 dark:stroke-brand-800"
-                    strokeWidth="3"
-                />
+                <path d="M22 35h68M22 57h68" className={styles.rule} strokeWidth="3" />
                 <circle cx="33" cy="22" r="4" className="fill-brand-500" />
                 <circle cx="33" cy="46" r="4" className="fill-brand-400" />
                 <circle cx="33" cy="69" r="4" className="fill-brand-300" />
@@ -135,8 +131,12 @@ export function ServerWakeGate({ children }: ServerWakeGateProps) {
 
     return (
         <main className="bg-surface text-surface-foreground relative flex min-h-svh items-center justify-center overflow-hidden px-6">
-            <div className="bg-brand-100/60 dark:bg-brand-950/30 absolute -top-32 -right-24 size-96 rounded-full blur-3xl" />
-            <div className="bg-brand-50 dark:bg-brand-900/20 absolute -bottom-40 -left-28 size-[28rem] rounded-full blur-3xl" />
+            <div
+                className={`${styles.glowPrimary} absolute -top-32 -right-24 size-96 rounded-full blur-3xl`}
+            />
+            <div
+                className={`${styles.glowSecondary} absolute -bottom-40 -left-28 size-[28rem] rounded-full blur-3xl`}
+            />
 
             <section
                 className="relative flex w-full max-w-md flex-col items-center text-center"
@@ -147,7 +147,9 @@ export function ServerWakeGate({ children }: ServerWakeGateProps) {
                     {!isUnavailable && (
                         <>
                             <span className="border-brand-300/60 absolute inset-0 animate-ping rounded-full border" />
-                            <span className="border-brand-200 dark:border-brand-800 absolute -inset-3 rounded-full border" />
+                            <span
+                                className={`${styles.hairline} absolute -inset-3 rounded-full border`}
+                            />
                         </>
                     )}
                     <span
@@ -166,7 +168,7 @@ export function ServerWakeGate({ children }: ServerWakeGateProps) {
                 <p className="text-brand-600 mb-2 text-xs font-semibold tracking-[0.2em] uppercase">
                     Expense Splitter
                 </p>
-                <h1 className="font-display text-3xl font-semibold">
+                <h1 className="text-3xl font-semibold">
                     {isUnavailable ? 'The server is taking a break' : 'Getting things ready'}
                 </h1>
                 <p className="text-muted-foreground mt-3 max-w-sm text-sm leading-relaxed">
