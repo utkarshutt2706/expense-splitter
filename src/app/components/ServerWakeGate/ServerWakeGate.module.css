@@ -1,3 +1,42 @@
+/* This screen renders before the router, and therefore before AppLayout sets the
+   data-theme attribute the dark: variant keys off — a dark: utility here would
+   simply never match, leaving light accents over the dark surface the token
+   media query has already painted. A media query is the one thing that resolves
+   correctly on the very first frame, with no JS in the path. */
+.glowPrimary {
+    background-color: color-mix(in oklab, var(--color-brand-100) 60%, transparent);
+}
+
+.glowSecondary {
+    background-color: var(--color-brand-50);
+}
+
+.hairline {
+    border-color: var(--color-brand-200);
+}
+
+.rule {
+    stroke: var(--color-brand-200);
+}
+
+@media (prefers-color-scheme: dark) {
+    .glowPrimary {
+        background-color: color-mix(in oklab, var(--color-brand-950) 30%, transparent);
+    }
+
+    .glowSecondary {
+        background-color: color-mix(in oklab, var(--color-brand-900) 20%, transparent);
+    }
+
+    .hairline {
+        border-color: var(--color-brand-800);
+    }
+
+    .rule {
+        stroke: var(--color-brand-800);
+    }
+}
+
 .sadEyes,
 .quiveringMouth {
     transform-box: fill-box;
