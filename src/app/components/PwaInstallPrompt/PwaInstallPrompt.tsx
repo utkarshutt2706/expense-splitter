@@ -89,7 +89,7 @@ export function PwaInstallPrompt() {
     return (
         <aside
             aria-label="Install Expense Splitter"
-            className="border-border bg-surface fixed right-3 bottom-3 left-3 z-50 mx-auto max-w-md rounded-2xl border p-4 shadow-2xl sm:right-5 sm:bottom-5 sm:left-auto"
+            className="border-border bg-surface bottom-nav-clearance fixed right-3 left-3 z-50 mx-auto max-w-md rounded-2xl border p-4 shadow-2xl sm:right-5 sm:left-auto md:bottom-5"
         >
             <button
                 type="button"

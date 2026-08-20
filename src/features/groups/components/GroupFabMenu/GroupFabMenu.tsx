@@ -43,7 +43,7 @@ interface FanSlotProps {
 function FanSlot({ isOpen, offset, delayMs, children }: FanSlotProps) {
     return (
         <div
-            className="fixed right-6 bottom-6 transition-all duration-200 ease-out"
+            className="bottom-nav-clearance fixed right-6 transition-all duration-200 ease-out md:bottom-6"
             style={{
                 transform: isOpen
                     ? `translate(${offset.x}px, ${offset.y}px) scale(1)`
@@ -80,7 +80,7 @@ export function GroupFabMenu({ groupId, members }: GroupFabMenuProps) {
                 title={isOpen ? 'Close actions menu' : 'Open actions menu'}
                 aria-expanded={isOpen}
                 onClick={() => setIsOpen((open) => !open)}
-                className="bg-brand-600 hover:bg-brand-700 fixed right-6 bottom-6 inline-flex size-14 cursor-pointer items-center justify-center rounded-full text-white shadow-lg"
+                className="bg-brand-600 hover:bg-brand-700 bottom-nav-clearance fixed right-6 inline-flex size-14 cursor-pointer items-center justify-center rounded-full text-white shadow-lg md:bottom-6"
             >
                 <Plus
                     className="size-6 transition-transform duration-200 ease-out"

@@ -28,7 +28,7 @@ export function AppLayout() {
                 <Header />
                 {/* BottomNav is fixed, so reserve its height plus the iOS home
                     indicator inset at the end of the scroll area below md. */}
-                <main className="flex-1 overflow-y-auto p-4 pb-[calc(var(--spacing-bottom-nav)+env(safe-area-inset-bottom,0px)+1rem)] md:p-6">
+                <main className="pb-nav-clearance flex-1 overflow-y-auto p-4 md:p-6">
                     <Outlet />
                 </main>
             </div>

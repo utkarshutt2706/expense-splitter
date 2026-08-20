@@ -83,4 +83,29 @@ describe('GroupFabMenu', () => {
 
         expect(fanButton(/fake add expense trigger/i)).not.toBeVisible();
     });
+
+    it('sits above the mobile bottom navigation, and back at the corner once it is gone', () => {
+        render(<GroupFabMenu groupId="group-1" members={members} />);
+
+        const toggle = screen.getByRole('button', { name: /open actions menu/i });
+        const classes = toggle.className.split(/\s+/);
+
+        // Without this the button lands under the fixed bottom bar on mobile.
+        expect(classes).toContain('bottom-nav-clearance');
+        // The bar is md:hidden, so the plain corner offset returns from md up.
+        expect(classes).toContain('md:bottom-6');
+    });
+
+    it('anchors the fan to the same point as the toggle', () => {
+        const { container } = render(<GroupFabMenu groupId="group-1" members={members} />);
+
+        // The fan offsets are measured from the toggle's own position, so a
+        // mismatch here would leave the actions floating away from the button.
+        const anchors = container.querySelectorAll('.bottom-nav-clearance');
+        expect(anchors.length).toBeGreaterThan(1);
+
+        for (const anchor of anchors) {
+            expect(anchor.className).toContain('md:bottom-6');
+        }
+    });
 });
