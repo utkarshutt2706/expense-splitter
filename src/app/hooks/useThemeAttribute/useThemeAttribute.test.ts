@@ -20,7 +20,20 @@ describe('useThemeAttribute', () => {
         expect(document.documentElement.dataset.theme).toBe('dark');
     });
 
-    it('clears the attribute when the preference is system', () => {
+    it('keeps writing the attribute for an explicit light preference', () => {
+        renderHook(() => useThemeAttribute());
+
+        act(() => {
+            useThemeStore.getState().setTheme('light');
+        });
+
+        expect(document.documentElement.dataset.theme).toBe('light');
+    });
+
+    // The dark: variant in index.css keys off this attribute alone, so it has to
+    // be present even on 'system' — resolved to whatever the OS currently is,
+    // rather than cleared.
+    it('resolves a system preference to a concrete theme instead of clearing it', () => {
         useThemeStore.setState({ theme: 'dark' });
         renderHook(() => useThemeAttribute());
 
@@ -28,6 +41,6 @@ describe('useThemeAttribute', () => {
             useThemeStore.getState().setTheme('system');
         });
 
-        expect(document.documentElement.dataset.theme).toBeUndefined();
+        expect(document.documentElement.dataset.theme).toBe('light');
     });
 });
