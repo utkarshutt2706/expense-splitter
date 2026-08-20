@@ -6,13 +6,13 @@ import type { DashboardGroupSpend } from '@features/dashboard/api/dashboardApi';
 import { useDashboard } from '@features/dashboard/hooks';
 import { Avatar, Skeleton } from '@shared/components';
 import { formatCurrency, sortMembersByName } from '@shared/utils';
+import { presetPeriod, usesDailyTrend } from './dashboardDateRange';
 import {
     combineDailySpending,
     combineMonthlySpending,
     comparisonScale,
     contributionCopy,
 } from './dashboardMetrics';
-import { presetPeriod, usesDailyTrend } from './dashboardDateRange';
 import { DashboardTimeFilter } from './DashboardTimeFilter';
 import { GroupScopeSelector } from './GroupScopeSelector';
 import { SpendingTrendChart } from './SpendingTrendChart';
@@ -199,7 +199,7 @@ function PositionBalance({
 
     if (receive > 0) {
         return (
-            <span className="text-owed">
+            <span className="text-owed font-semibold">
                 You are owed {formatCurrency(receive)} {selected ? '' : 'overall'}
             </span>
         );
@@ -207,7 +207,7 @@ function PositionBalance({
 
     if (pay > 0) {
         return (
-            <span className="text-owe">
+            <span className="text-owe font-semibold">
                 You owe {formatCurrency(pay)} {selected ? '' : 'overall'}
             </span>
         );

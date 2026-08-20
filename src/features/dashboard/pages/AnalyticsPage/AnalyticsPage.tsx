@@ -1,14 +1,15 @@
-import { BarChart3, BarChartHorizontal, LineChart, PieChart } from 'lucide-react';
-import { useState } from 'react';
+import { BarChart3, BarChartHorizontal, LineChart, PieChart, TrendingUp } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import {
     Bar,
     BarChart,
     CartesianGrid,
-    Legend,
+    Cell,
     Pie,
     PieChart as RechartsPieChart,
+    ReferenceLine,
     ResponsiveContainer,
     Sector,
     Tooltip,
@@ -19,25 +20,36 @@ import {
 
 import type { DashboardGroupSpend } from '@features/dashboard/api/dashboardApi';
 import { useDashboard } from '@features/dashboard/hooks';
-import { formatCurrency, sortMembersByName } from '@shared/utils';
-import { combineDailySpending, combineMonthlySpending } from '../DashboardPage/dashboardMetrics';
+import { formatCompactCurrency, formatCurrency, sortMembersByName } from '@shared/utils';
 import {
     presetPeriod,
     usesDailyTrend,
     type DashboardPeriod,
 } from '../DashboardPage/dashboardDateRange';
+import { combineDailySpending, combineMonthlySpending } from '../DashboardPage/dashboardMetrics';
 import { DashboardTimeFilter } from '../DashboardPage/DashboardTimeFilter';
 import { GroupScopeSelector } from '../DashboardPage/GroupScopeSelector';
+import { monthLabel, shortDayLabel } from '../DashboardPage/periodLabels';
 import { SpendingTrendGraph } from '../DashboardPage/SpendingTrendGraph';
+import {
+    bucketGroupSpending,
+    contributionBalance,
+    cumulativeNetPosition,
+    niceTicks,
+} from './analyticsMetrics';
 import { disambiguateParticipantNames } from './disambiguateParticipantNames';
 
 const COLORS = [
     'var(--color-brand-600)',
-    'var(--color-amber-500)',
+    'var(--color-sky-500)',
     'var(--color-emerald-500)',
     'var(--color-rose-500)',
-    'var(--color-sky-500)',
     'var(--color-violet-500)',
+    'var(--color-amber-500)',
+    'var(--color-teal-500)',
+    'var(--color-fuchsia-500)',
+    'var(--color-lime-600)',
+    'var(--color-slate-500)',
 ];
 
 const CHART_MARGIN = {
@@ -61,6 +73,24 @@ const CHART_TICK = {
 
 const BAR_RADIUS: [number, number, number, number] = [5, 5, 0, 0];
 
+// Enough for a bucket label ("10 Aug", "Aug 26") plus breathing room. Once the
+// buckets no longer fit, the plot keeps this width each and the frame scrolls,
+// rather than compressing bars until the axis is unreadable.
+const MIN_CATEGORY_WIDTH = 56;
+
+// A cluster also has to fit one legible bar per group, which overtakes the
+// label width from about three groups up.
+const MIN_BAR_WIDTH = 20;
+
+// Recharts lays a cartesian plot out as margin.top .. height - margin.bottom -
+// xAxisHeight. Pinning these means the pinned axis can place its labels at the
+// same rows the plot draws its gridlines on. Pixels, not rem: the root font
+// size changes at 1024px, which would otherwise move the plot but not the
+// labels.
+const PLOT_HEIGHT = 288;
+const X_AXIS_HEIGHT = 30;
+const VALUE_AXIS_WIDTH = 58;
+
 function ChartFrame({
     title,
     description,
@@ -75,7 +105,7 @@ function ChartFrame({
     return (
         <section
             aria-labelledby={`${title}-heading`}
-            className="border-border bg-surface rounded-2xl border p-5 md:p-6"
+            className="border-border bg-surface min-w-0 rounded-2xl border p-5 md:p-6"
         >
             <div className="flex items-start gap-3">
                 <span className="bg-brand-100 text-brand-700 dark:bg-brand-900/40 dark:text-brand-300 flex size-10 shrink-0 items-center justify-center rounded-lg">
@@ -96,30 +126,118 @@ function ChartFrame({
     );
 }
 
-function formatGroupLabel(name: string): string {
-    return name.length > 18 ? `${name.slice(0, 16)}...` : name;
+/**
+ * Keeps a categorical chart legible however many groups it holds: the plot
+ * claims at least MIN_CATEGORY_WIDTH per group and this frame scrolls when that
+ * exceeds the space available. The chart's accessible table carries the same
+ * numbers, so nothing is only reachable by scrolling.
+ */
+function ScrollableChart({
+    categories,
+    perCategory = MIN_CATEGORY_WIDTH,
+    label,
+    ticks,
+    legend,
+    children,
+}: Readonly<{
+    categories: number;
+    perCategory?: number;
+    label: string;
+    ticks: number[];
+    legend: readonly { name: string; fill: string }[];
+    children: ReactNode;
+}>) {
+    return (
+        <div className="mt-6">
+            {/* The gutter is padding on the wrapper rather than a margin on the
+                scroller: a margin would sit outside the scroller's own width and
+                push the whole card 58px wider than its column. */}
+            <div className="relative" style={{ paddingLeft: VALUE_AXIS_WIDTH }}>
+                <PinnedValueAxis ticks={ticks} />
+
+                {/* Only the plot scrolls. The axis sits in the gutter and the key
+                    below, both outside this container, so neither travels off
+                    screen when the reader scrolls through the buckets. */}
+                <div className="min-w-0 overflow-x-auto">
+                    <div
+                        style={{
+                            minWidth: `${categories * perCategory}px`,
+                            height: PLOT_HEIGHT,
+                        }}
+                        aria-label={label}
+                    >
+                        <ResponsiveContainer width="100%" height="100%">
+                            {children}
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+            </div>
+
+            <ul className="text-muted-foreground mt-3 flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs">
+                {legend.map((item) => (
+                    <li key={item.name} className="flex items-center gap-1.5">
+                        <span
+                            aria-hidden="true"
+                            className="size-2.5 shrink-0 rounded-sm"
+                            style={{ background: item.fill }}
+                        />
+                        {item.name}
+                    </li>
+                ))}
+            </ul>
+        </div>
+    );
 }
 
-function ChartAxes() {
+function ChartAxes({ ticks }: Readonly<{ ticks: number[] }>) {
     return (
         <>
             <CartesianGrid stroke="var(--border-color)" strokeDasharray="3 3" vertical={false} />
 
             <XAxis
                 dataKey="name"
+                height={X_AXIS_HEIGHT}
                 tick={CHART_TICK}
                 tickLine={false}
                 axisLine={{ stroke: 'var(--border-color)' }}
             />
 
-            <YAxis
-                width={58}
-                tickFormatter={formatCurrency}
-                tick={CHART_TICK}
-                tickLine={false}
-                axisLine={false}
-            />
+            {/* Hidden, not absent: it still defines the scale, and PinnedValueAxis
+                renders the labels for it outside the scrolling area. */}
+            <YAxis hide domain={[0, ticks.at(-1) ?? 0]} ticks={ticks} />
         </>
+    );
+}
+
+/**
+ * The value axis as HTML beside the plot rather than inside it, so it stays put
+ * while the plot scrolls. Positions come from the same plot rectangle Recharts
+ * derives from PLOT_HEIGHT, CHART_MARGIN and X_AXIS_HEIGHT, so a label sits on
+ * the row its gridline is drawn.
+ */
+function PinnedValueAxis({ ticks }: Readonly<{ ticks: number[] }>) {
+    const top = ticks.at(-1) ?? 0;
+    const plotTop = CHART_MARGIN.top;
+    const plotBottom = PLOT_HEIGHT - CHART_MARGIN.bottom - X_AXIS_HEIGHT;
+
+    return (
+        <div
+            aria-hidden="true"
+            className="bg-surface pointer-events-none absolute top-0 left-0 z-10"
+            style={{ width: VALUE_AXIS_WIDTH, height: PLOT_HEIGHT }}
+        >
+            {ticks.map((tick) => (
+                <span
+                    key={tick}
+                    className="text-muted-foreground absolute right-2 -translate-y-1/2 text-xs whitespace-nowrap"
+                    style={{
+                        top: plotBottom - (top === 0 ? 0 : tick / top) * (plotBottom - plotTop),
+                    }}
+                >
+                    {formatCompactCurrency(tick)}
+                </span>
+            ))}
+        </div>
     );
 }
 
@@ -167,46 +285,118 @@ function AccessibleChartTable({
     );
 }
 
-function GroupSpendingChart({ groups }: Readonly<{ groups: DashboardGroupSpend[] }>) {
-    const chartData = groups
-        .filter((group) => group.amount > 0)
-        .map((group) => ({
-            name: formatGroupLabel(group.name),
-            fullName: group.name,
-            amount: group.amount,
-        }));
+interface PeriodPoint {
+    label: string;
+    amount: number;
+    actualPaid: number;
+    currentUserShare: number;
+}
 
-    if (chartData.length === 0) {
+/**
+ * Resolves the scoped groups into one labelled point per time bucket, at the
+ * granularity the time filter implies. Daily needs every group to carry a daily
+ * series, otherwise whichever group lacks one would be missing from the totals.
+ */
+function periodPoints(
+    groups: DashboardGroupSpend[],
+    dailyTrend: boolean,
+): { daily: boolean; points: PeriodPoint[] } {
+    const daily = dailyTrend && groups.every((group) => group.spendingByDay !== undefined);
+
+    const points = daily
+        ? combineDailySpending(groups).map((entry) => ({
+              ...entry,
+              label: shortDayLabel(entry.date),
+          }))
+        : combineMonthlySpending(groups).map((entry) => ({
+              ...entry,
+              label: monthLabel(entry.month),
+          }));
+
+    return { daily, points };
+}
+
+interface GroupBucketRow {
+    name: string;
+    /** One entry per group id, carrying that group's spend in this bucket. */
+    [groupId: string]: string | number;
+}
+
+/**
+ * A cluster per time bucket, one bar per group, so a reader can follow both
+ * "which group costs most" and "how that changed over the range" in one chart.
+ * Granularity follows the time filter: dates while the range is a calendar
+ * month or less, months beyond that — the same rule the spending trend uses.
+ */
+function GroupSpendingChart({
+    groups,
+    dailyTrend,
+}: Readonly<{
+    groups: DashboardGroupSpend[];
+    dailyTrend: boolean;
+}>) {
+    const active = groups.filter((group) => group.amount > 0);
+
+    // Daily buckets need every group to carry a daily series; without that the
+    // union would silently drop whichever group lacks one.
+    const daily = dailyTrend && active.every((group) => group.spendingByDay !== undefined);
+    const buckets = bucketGroupSpending(active, daily ? 'day' : 'month');
+
+    const chartData: GroupBucketRow[] = buckets.map(({ bucket, amounts }) => ({
+        ...amounts,
+        name: daily ? shortDayLabel(bucket) : monthLabel(bucket),
+    }));
+
+    if (active.length === 0 || chartData.length === 0) {
         return <p className="text-muted-foreground mt-6 text-sm">No spending in this period.</p>;
     }
 
+    const legend = active.map((group, index) => ({
+        name: group.name,
+        fill: COLORS[index % COLORS.length]!,
+    }));
+    const ticks = niceTicks(
+        Math.max(...buckets.flatMap(({ amounts }) => Object.values(amounts)), 0),
+    );
+
     return (
         <>
-            <div className="mt-6 h-72 w-full min-w-0" aria-label="Spending by group chart">
-                <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={chartData} margin={CHART_MARGIN}>
-                        <ChartAxes />
+            <ScrollableChart
+                categories={chartData.length}
+                perCategory={Math.max(MIN_CATEGORY_WIDTH, active.length * MIN_BAR_WIDTH)}
+                label="Spending by group chart"
+                ticks={ticks}
+                legend={legend}
+            >
+                <BarChart data={chartData} margin={CHART_MARGIN}>
+                    <ChartAxes ticks={ticks} />
 
-                        <ChartTooltip showLabel />
+                    <ChartTooltip />
 
+                    {active.map((group, index) => (
                         <Bar
-                            dataKey="amount"
-                            name="Total spending"
-                            fill="var(--color-brand-600)"
+                            key={group.groupId}
+                            dataKey={group.groupId}
+                            name={group.name}
+                            fill={COLORS[index % COLORS.length]}
                             radius={BAR_RADIUS}
                             isAnimationActive
                         />
-                    </BarChart>
-                </ResponsiveContainer>
-            </div>
+                    ))}
+                </BarChart>
+            </ScrollableChart>
 
             <AccessibleChartTable
                 caption="Spending by group values"
-                headers={['Group', 'Total spending']}
+                headers={[daily ? 'Day' : 'Month', ...active.map((group) => group.name)]}
                 rows={chartData.map((entry) => (
-                    <tr key={entry.fullName}>
-                        <th>{entry.fullName}</th>
-                        <td>{formatCurrency(entry.amount)}</td>
+                    <tr key={entry.name}>
+                        <th>{entry.name}</th>
+                        {active.map((group) => (
+                            <td key={group.groupId}>
+                                {formatCurrency(Number(entry[group.groupId] ?? 0))}
+                            </td>
+                        ))}
                     </tr>
                 ))}
             />
@@ -214,73 +404,134 @@ function GroupSpendingChart({ groups }: Readonly<{ groups: DashboardGroupSpend[]
     );
 }
 
-function ContributionChart({ groups }: Readonly<{ groups: DashboardGroupSpend[] }>) {
-    const chartData = groups
-        .filter((group) => group.amount > 0)
-        .map((group) => ({
-            name: formatGroupLabel(group.name),
-            fullName: group.name,
-            paid: group.actualPaid,
-            share: group.currentUserShare,
-        }));
+/**
+ * Two bars per time bucket rather than one stack: what you actually paid out
+ * beside what you were assigned, so the gap between them is the imbalance and
+ * its direction is which bar is taller. Both series sit in the brand scale —
+ * they are two readings of the same thing, not opposing outcomes.
+ */
+function ContributionTooltip({
+    active,
+    label,
+    payload,
+}: Readonly<{
+    active?: boolean;
+    label?: string;
+    payload?: { payload?: ContributionDatum }[];
+}>) {
+    const datum = payload?.[0]?.payload;
+    if (!active || !datum) return null;
 
-    const bars = [
-        {
-            dataKey: 'paid',
-            name: 'Paid by you',
-            fill: 'var(--color-brand-600)',
-        },
-        {
-            dataKey: 'share',
-            name: 'Your share',
-            fill: 'var(--color-amber-500)',
-        },
-    ];
+    const { owed, owe } = contributionBalance(datum.paid, datum.share);
+    const balanceLabel =
+        owed > 0
+            ? `You are owed ${formatCurrency(owed)}`
+            : owe > 0
+              ? `You owe ${formatCurrency(owe)}`
+              : 'Level with your share';
+
+    return (
+        <div className="border-border bg-surface text-surface-foreground min-w-44 rounded-xl border px-3 py-2 text-xs shadow-lg">
+            <p className="font-semibold">{label}</p>
+
+            <dl className="mt-1 space-y-0.5">
+                <div className="flex justify-between gap-4">
+                    <dt className="text-muted-foreground">Paid by you</dt>
+                    <dd>{formatCurrency(datum.paid)}</dd>
+                </div>
+
+                <div className="flex justify-between gap-4">
+                    <dt className="text-muted-foreground">Your share</dt>
+                    <dd>{formatCurrency(datum.share)}</dd>
+                </div>
+            </dl>
+
+            <p className="text-muted-foreground mt-1.5 font-semibold">{balanceLabel}</p>
+        </div>
+    );
+}
+
+interface ContributionDatum {
+    name: string;
+    paid: number;
+    share: number;
+}
+
+function ContributionChart({
+    groups,
+    dailyTrend,
+}: Readonly<{
+    groups: DashboardGroupSpend[];
+    dailyTrend: boolean;
+}>) {
+    const { daily, points } = periodPoints(groups, dailyTrend);
+
+    const chartData: ContributionDatum[] = points.map((point) => ({
+        name: point.label,
+        paid: point.actualPaid,
+        share: point.currentUserShare,
+    }));
 
     if (chartData.length === 0) {
         return <p className="text-muted-foreground mt-6 text-sm">No spending in this period.</p>;
     }
 
+    const series = [
+        { dataKey: 'paid', name: 'Paid by you', fill: 'var(--color-brand-600)' },
+        { dataKey: 'share', name: 'Your share', fill: 'var(--color-brand-300)' },
+    ] as const;
+
+    const ticks = niceTicks(
+        Math.max(...chartData.flatMap((entry) => [entry.paid, entry.share]), 0),
+    );
+
     return (
         <>
-            <div className="mt-6 h-72 w-full min-w-0" aria-label="Paid versus share chart">
-                <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={chartData} margin={CHART_MARGIN}>
-                        <ChartAxes />
+            <ScrollableChart
+                categories={chartData.length}
+                label="Paid versus share chart"
+                ticks={ticks}
+                legend={series}
+            >
+                <BarChart data={chartData} margin={CHART_MARGIN}>
+                    <ChartAxes ticks={ticks} />
 
-                        <ChartTooltip showLabel />
+                    <Tooltip cursor={{ fill: 'var(--muted)' }} content={<ContributionTooltip />} />
 
-                        <Legend
-                            wrapperStyle={{
-                                fontSize: '0.75rem',
-                                paddingTop: '0.75rem',
-                            }}
+                    {series.map((bar) => (
+                        <Bar
+                            key={bar.dataKey}
+                            dataKey={bar.dataKey}
+                            name={bar.name}
+                            fill={bar.fill}
+                            radius={BAR_RADIUS}
+                            isAnimationActive
                         />
-
-                        {bars.map((bar) => (
-                            <Bar
-                                key={bar.dataKey}
-                                dataKey={bar.dataKey}
-                                name={bar.name}
-                                fill={bar.fill}
-                                radius={BAR_RADIUS}
-                                isAnimationActive
-                            />
-                        ))}
-                    </BarChart>
-                </ResponsiveContainer>
-            </div>
+                    ))}
+                </BarChart>
+            </ScrollableChart>
 
             <AccessibleChartTable
                 caption="Paid versus share values"
-                headers={['Group', 'Paid by you', 'Your share']}
-                rows={chartData.map((entry) => (
-                    <tr key={entry.fullName}>
-                        <th>{entry.fullName}</th>
-                        <td>{formatCurrency(entry.paid)}</td>
-                        <td>{formatCurrency(entry.share)}</td>
-                    </tr>
-                ))}
+                headers={[daily ? 'Day' : 'Month', 'Paid by you', 'Your share', 'Balance']}
+                rows={chartData.map((entry) => {
+                    const { owed, owe } = contributionBalance(entry.paid, entry.share);
+
+                    return (
+                        <tr key={entry.name}>
+                            <th>{entry.name}</th>
+                            <td>{formatCurrency(entry.paid)}</td>
+                            <td>{formatCurrency(entry.share)}</td>
+                            <td>
+                                {owed > 0
+                                    ? `You are owed ${formatCurrency(owed)}`
+                                    : owe > 0
+                                      ? `You owe ${formatCurrency(owe)}`
+                                      : 'Level with your share'}
+                            </td>
+                        </tr>
+                    );
+                })}
             />
         </>
     );
@@ -366,6 +617,107 @@ function ShareDistributionChart({
     );
 }
 
+/**
+ * The running answer to "am I the one fronting money?": each bar is what you
+ * had paid beyond your share by the end of that bucket, so the series crossing
+ * zero is the moment the balance flipped. Bars are coloured by side rather than
+ * by series, since the sign is the whole point.
+ */
+function NetPositionChart({
+    groups,
+    dailyTrend,
+}: Readonly<{
+    groups: DashboardGroupSpend[];
+    dailyTrend: boolean;
+}>) {
+    const { daily, points } = periodPoints(groups, dailyTrend);
+
+    const chartData = cumulativeNetPosition(points).map(({ entry, net, cumulative }) => ({
+        name: entry.label,
+        net,
+        cumulative,
+    }));
+
+    if (chartData.length === 0) {
+        return <p className="text-muted-foreground mt-6 text-sm">No spending in this period.</p>;
+    }
+
+    const closing = chartData.at(-1)?.cumulative ?? 0;
+
+    return (
+        <>
+            <p className="text-muted-foreground mt-4 text-sm">
+                {closing > 0
+                    ? `By the end of this period you had fronted ${formatCurrency(closing)} more than your share.`
+                    : closing < 0
+                      ? `By the end of this period others had covered ${formatCurrency(Math.abs(closing))} of your share.`
+                      : 'You ended this period level with your share.'}
+            </p>
+
+            <div className="mt-4 h-72 w-full min-w-0" aria-label="Net position over time chart">
+                <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={chartData} margin={CHART_MARGIN}>
+                        <CartesianGrid
+                            stroke="var(--border-color)"
+                            strokeDasharray="3 3"
+                            vertical={false}
+                        />
+
+                        <XAxis
+                            dataKey="name"
+                            tick={CHART_TICK}
+                            tickLine={false}
+                            interval="preserveStartEnd"
+                            axisLine={{ stroke: 'var(--border-color)' }}
+                        />
+
+                        <YAxis
+                            width={58}
+                            tickFormatter={formatCompactCurrency}
+                            tick={CHART_TICK}
+                            tickLine={false}
+                            axisLine={false}
+                        />
+
+                        <ReferenceLine y={0} stroke="var(--muted-foreground)" />
+
+                        <Tooltip
+                            cursor={{ fill: 'var(--muted)' }}
+                            formatter={(value) => formatCurrency(Number(value))}
+                            contentStyle={CHART_TOOLTIP_STYLE}
+                        />
+
+                        <Bar dataKey="cumulative" name="Running position" isAnimationActive>
+                            {chartData.map((entry) => (
+                                <Cell
+                                    key={entry.name}
+                                    fill={
+                                        entry.cumulative < 0
+                                            ? 'var(--color-owe)'
+                                            : 'var(--color-owed)'
+                                    }
+                                />
+                            ))}
+                        </Bar>
+                    </BarChart>
+                </ResponsiveContainer>
+            </div>
+
+            <AccessibleChartTable
+                caption="Net position over time values"
+                headers={[daily ? 'Day' : 'Month', 'Change', 'Running position']}
+                rows={chartData.map((entry) => (
+                    <tr key={entry.name}>
+                        <th>{entry.name}</th>
+                        <td>{formatCurrency(entry.net)}</td>
+                        <td>{formatCurrency(entry.cumulative)}</td>
+                    </tr>
+                ))}
+            />
+        </>
+    );
+}
+
 function TrendChart({
     groups,
     selected,
@@ -397,7 +749,7 @@ function AnalyticsSkeleton() {
 
             <div className="bg-muted h-28 animate-pulse rounded-2xl" />
 
-            <div className="grid gap-6 lg:grid-cols-2">
+            <div className="grid gap-6">
                 <div className="bg-muted h-96 animate-pulse rounded-2xl" />
                 <div className="bg-muted h-96 animate-pulse rounded-2xl" />
             </div>
@@ -511,13 +863,16 @@ export function AnalyticsPage() {
                         />
                     </ChartFrame>
 
-                    <div className="grid gap-6 lg:grid-cols-2">
+                    <div className="grid gap-6">
                         <ChartFrame
                             title="Spending by group"
                             description="Compare the total recorded expenses in each group."
                             icon={BarChartHorizontal}
                         >
-                            <GroupSpendingChart groups={selected ? [selected] : data.groupSpend} />
+                            <GroupSpendingChart
+                                groups={selected ? [selected] : data.groupSpend}
+                                dailyTrend={dailyTrend}
+                            />
                         </ChartFrame>
 
                         <ChartFrame
@@ -525,9 +880,23 @@ export function AnalyticsPage() {
                             description="See where your contribution differs from your assigned share."
                             icon={BarChart3}
                         >
-                            <ContributionChart groups={selected ? [selected] : data.groupSpend} />
+                            <ContributionChart
+                                groups={selected ? [selected] : data.groupSpend}
+                                dailyTrend={dailyTrend}
+                            />
                         </ChartFrame>
                     </div>
+
+                    <ChartFrame
+                        title="Net position over time"
+                        description="Track whether you have been fronting money or being carried, as it accumulates."
+                        icon={TrendingUp}
+                    >
+                        <NetPositionChart
+                            groups={selected ? [selected] : data.groupSpend}
+                            dailyTrend={dailyTrend}
+                        />
+                    </ChartFrame>
 
                     <ChartFrame
                         title="Participant share"

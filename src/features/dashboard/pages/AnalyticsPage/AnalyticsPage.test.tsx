@@ -17,9 +17,11 @@ vi.mock('recharts', () => {
         Bar: Chart,
         BarChart: Chart,
         CartesianGrid: Chart,
+        Cell: () => null,
         Legend: () => null,
         Pie: Chart,
         PieChart: Chart,
+        ReferenceLine: () => null,
         ResponsiveContainer: Chart,
         Sector: () => null,
         Tooltip: () => null,
@@ -338,7 +340,9 @@ describe('AnalyticsPage', () => {
             </MemoryRouter>,
         );
 
-        expect(screen.getAllByText('No spending in this period.')).toHaveLength(2);
+        // Spending by group, paid versus share, and net position over time all
+        // draw from the same empty series.
+        expect(screen.getAllByText('No spending in this period.')).toHaveLength(3);
     });
 
     it('smartly disambiguates participant first names on the participant share chart', () => {
@@ -440,5 +444,173 @@ describe('AnalyticsPage', () => {
             (cell) => cell.textContent,
         );
         expect(participants).toEqual(['Mira (You)', 'Arun', 'Priya', 'Zoe']);
+    });
+
+    it('compares paid against share per time bucket, with the resulting balance', () => {
+        render(
+            <MemoryRouter>
+                <AnalyticsPage />
+            </MemoryRouter>,
+        );
+
+        const table = screen.getByRole('table', { name: /paid versus share values/i });
+        const headers = Array.from(table.querySelectorAll('thead th')).map(
+            (cell) => cell.textContent,
+        );
+        expect(headers).toEqual(['Day', 'Paid by you', 'Your share', 'Balance']);
+
+        // 10 Aug: paid 150 against a 100 share across the scoped groups.
+        const row = Array.from(table.querySelectorAll('tbody tr')).find(
+            (candidate) => candidate.querySelector('th')?.textContent === '10 Aug',
+        );
+        expect(row?.textContent).toContain('You are owed ₹50.00');
+
+        // 15 Aug: paid 50 against a 50 share.
+        const level = Array.from(table.querySelectorAll('tbody tr')).find(
+            (candidate) => candidate.querySelector('th')?.textContent === '15 Aug',
+        );
+        expect(level?.textContent).toContain('Level with your share');
+    });
+
+    it('states the closing net position in words alongside the chart', () => {
+        render(
+            <MemoryRouter>
+                <AnalyticsPage />
+            </MemoryRouter>,
+        );
+
+        expect(screen.getByText(/you had fronted .* more than your share/i)).toBeInTheDocument();
+    });
+
+    it('reserves width so ten groups stay legible instead of compressing', () => {
+        const groups = Array.from({ length: 10 }, (_, index) => ({
+            groupId: `group-${index}`,
+            name: `Group number ${index}`,
+            amount: 100,
+            actualPaid: 60,
+            currentUserShare: 40,
+            currentBalance: 20,
+            memberShares: [],
+            spendingByMonth: [
+                { month: '2026-08', amount: 100, actualPaid: 60, currentUserShare: 40 },
+            ],
+            spendingByDay: [
+                { date: '2026-08-01', amount: 40, actualPaid: 20, currentUserShare: 20 },
+                { date: '2026-08-02', amount: 60, actualPaid: 40, currentUserShare: 20 },
+            ],
+        }));
+        vi.mocked(useDashboard).mockReturnValue({
+            data: { actualPaid: 600, currentUserShare: 400, groupSpend: groups },
+            isLoading: false,
+            isError: false,
+            refetch: vi.fn(),
+        } as unknown as ReturnType<typeof useDashboard>);
+
+        render(
+            <MemoryRouter>
+                <AnalyticsPage />
+            </MemoryRouter>,
+        );
+
+        // Clustered by day: two buckets, each wide enough for ten bars.
+        const byGroup = screen.getByLabelText('Spending by group chart');
+        expect(byGroup).toHaveStyle({ minWidth: '400px' });
+
+        // Also clustered by day, but only two series, so the label sets the width.
+        const paidVsShare = screen.getByLabelText('Paid versus share chart');
+        expect(paidVsShare).toHaveStyle({ minWidth: '112px' });
+
+        for (const plot of [byGroup, paidVsShare]) {
+            // The reserved width has to be absorbed by the scroll container, and
+            // the card around it has to be allowed to shrink — a grid item
+            // defaults to min-width:auto and would otherwise widen the page
+            // instead of letting the plot scroll inside the card.
+            expect(plot.parentElement).toHaveClass('overflow-x-auto');
+            expect(plot.closest('section')).toHaveClass('min-w-0');
+        }
+    });
+
+    it('plots spending by group as one series per group across time buckets', () => {
+        render(
+            <MemoryRouter>
+                <AnalyticsPage />
+            </MemoryRouter>,
+        );
+
+        const table = screen.getByRole('table', { name: /spending by group values/i });
+        const headers = Array.from(table.querySelectorAll('thead th')).map(
+            (cell) => cell.textContent,
+        );
+
+        // A time column, then a column per group.
+        expect(headers).toEqual(['Day', 'Weekend Trip', 'Dinner']);
+    });
+
+    it('buckets spending by month once the range is longer than a month', () => {
+        render(
+            <MemoryRouter>
+                <AnalyticsPage />
+            </MemoryRouter>,
+        );
+
+        fireEvent.click(screen.getByRole('button', { name: /time period.*this month/i }));
+        fireEvent.click(screen.getByRole('button', { name: 'This year' }));
+
+        const table = screen.getByRole('table', { name: /spending by group values/i });
+        expect(table.querySelector('thead th')?.textContent).toBe('Month');
+        expect(table.querySelector('tbody th')?.textContent).toBe('Aug 26');
+    });
+
+    it('keeps the value axis and the series key out of the scrolling area', () => {
+        render(
+            <MemoryRouter>
+                <AnalyticsPage />
+            </MemoryRouter>,
+        );
+
+        const plot = screen.getByLabelText('Spending by group chart');
+        expect(plot.parentElement).toHaveClass('overflow-x-auto');
+
+        // The key names each series; scrolling through buckets must not carry
+        // it off screen.
+        const key = screen.getAllByText('Weekend Trip').find((node) => node.tagName === 'LI');
+        expect(key).toBeDefined();
+        expect(key?.closest('.overflow-x-auto')).toBeNull();
+
+        // Same for the value axis, which is rendered beside the plot rather
+        // than inside it.
+        const axisTick = screen.getAllByText('₹0').find((node) => node.tagName === 'SPAN');
+        expect(axisTick).toBeDefined();
+        expect(axisTick?.closest('.overflow-x-auto')).toBeNull();
+    });
+
+    it('keeps the axis gutter inside the card rather than widening it', () => {
+        render(
+            <MemoryRouter>
+                <AnalyticsPage />
+            </MemoryRouter>,
+        );
+
+        const scroller = screen.getByLabelText('Spending by group chart').parentElement!;
+
+        // A left margin here would sit outside the scroller's own 100% width and
+        // push the card wider than its column, spilling the plot out of the box.
+        expect(scroller.style.marginLeft).toBe('');
+        expect(scroller.className).not.toContain('w-full');
+
+        // The gutter belongs to the wrapper, which reserves it from its own width.
+        expect(scroller.parentElement?.style.paddingLeft).toBe('58px');
+    });
+
+    it('renders one chart per row at every width', () => {
+        const { container } = render(
+            <MemoryRouter>
+                <AnalyticsPage />
+            </MemoryRouter>,
+        );
+
+        for (const grid of container.querySelectorAll('.grid')) {
+            expect(grid.className).not.toMatch(/grid-cols-/);
+        }
     });
 });
