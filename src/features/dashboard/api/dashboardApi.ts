@@ -44,7 +44,7 @@ export interface DashboardDateRange {
     to: string;
 }
 
-export async function getDashboard(range: DashboardDateRange): Promise<DashboardSummary> {
+export async function getDashboard(range?: DashboardDateRange): Promise<DashboardSummary> {
     const { data } = await httpClient.get<DashboardSummary>('/dashboard', { params: range });
     return data;
 }

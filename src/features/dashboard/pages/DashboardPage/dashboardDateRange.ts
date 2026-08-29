@@ -1,5 +1,5 @@
 export type DashboardPeriodPreset =
-    'this-month' | 'previous-month' | 'last-three-months' | 'this-year' | 'custom';
+    'all-time' | 'this-month' | 'previous-month' | 'last-three-months' | 'this-year' | 'custom';
 
 export interface DashboardDateRange {
     from: string;
@@ -9,10 +9,11 @@ export interface DashboardDateRange {
 export interface DashboardPeriod {
     preset: DashboardPeriodPreset;
     label: string;
-    range: DashboardDateRange;
+    range?: DashboardDateRange;
 }
 
 const LABELS: Record<DashboardPeriodPreset, string> = {
+    'all-time': 'Full history',
     'this-month': 'This month',
     'previous-month': 'Previous month',
     'last-three-months': 'Last 3 months',
@@ -28,6 +29,10 @@ export function presetPeriod(
     preset: Exclude<DashboardPeriodPreset, 'custom'>,
     now = new Date(),
 ): DashboardPeriod {
+    if (preset === 'all-time') {
+        return { preset, label: LABELS[preset] };
+    }
+
     const year = now.getFullYear();
     const month = now.getMonth();
     let start: Date;
@@ -93,6 +98,7 @@ export function periodLabel(preset: DashboardPeriodPreset): string {
 export function usesDailyTrend(period: DashboardPeriod): boolean {
     if (period.preset === 'this-month' || period.preset === 'previous-month') return true;
     if (period.preset !== 'custom') return false;
+    if (!period.range) return false;
 
     const start = new Date(period.range.from);
     const inclusiveEnd = new Date(period.range.to);
