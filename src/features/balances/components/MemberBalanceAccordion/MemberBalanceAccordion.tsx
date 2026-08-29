@@ -29,20 +29,20 @@ function objectName(userId: string, names: Map<string, string>): string {
 function titleFor(netAmount: number, subject: string): { text: string; className: string } {
     if (netAmount > 0) {
         return {
-            text: `${subject} gets back ${formatCurrency(netAmount)} in total`,
+            text: `${subject} ${subject === 'You' ? 'get' : 'gets'} back ${formatCurrency(netAmount)} in total`,
             className: 'text-owed',
         };
     }
 
     if (netAmount < 0) {
         return {
-            text: `${subject} owes ${formatCurrency(Math.abs(netAmount))} in total`,
+            text: `${subject} ${subject === 'You' ? 'owe' : 'owes'} ${formatCurrency(Math.abs(netAmount))} in total`,
             className: 'text-owe',
         };
     }
 
     return {
-        text: `${subject} is settled up`,
+        text: `${subject} ${subject === 'You' ? 'are' : 'is'} settled up`,
         className: 'text-settled',
     };
 }
@@ -114,7 +114,10 @@ export function MemberBalanceAccordion({
                                 className="flex items-center justify-between gap-2"
                             >
                                 <span className="text-muted-foreground text-sm">
-                                    {subjectName(transaction.fromUserId, names)} owes{' '}
+                                    {subjectName(transaction.fromUserId, names)}{' '}
+                                    {subjectName(transaction.fromUserId, names) === 'You'
+                                        ? 'owe'
+                                        : 'owes'}{' '}
                                     {formatCurrency(transaction.amount)} to{' '}
                                     {objectName(transaction.toUserId, names)}
                                 </span>

@@ -34,7 +34,7 @@ describe('MemberPicker', () => {
     it('shows "You" on the trigger when the current user is selected', () => {
         renderPicker(CURRENT_USER_ID);
 
-        expect(screen.getByRole('button', { name: 'Paid by' })).toHaveTextContent('Alex (You)');
+        expect(screen.getByRole('button', { name: 'Paid by' })).toHaveTextContent('You');
     });
 
     it("shows the selected member's name on the trigger", () => {
@@ -102,7 +102,7 @@ describe('MemberPicker', () => {
                 .trim();
 
         expect(screen.getAllByRole('menuitemradio').map(optionLabel)).toEqual([
-            'Alex (You)',
+            'You',
             'Arun',
             'Priya',
             'Zoe',

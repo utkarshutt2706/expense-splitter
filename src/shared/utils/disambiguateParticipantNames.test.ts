@@ -10,7 +10,7 @@ describe('disambiguateParticipantNames', () => {
             { name: 'Priya Sharma', isCurrentUser: true },
         ];
 
-        expect(disambiguateParticipantNames(members)).toEqual(['Vijay', 'Alex', 'Priya (You)']);
+        expect(disambiguateParticipantNames(members)).toEqual(['Vijay', 'Alex', 'You']);
     });
 
     it('disambiguates same first names with 1-letter remainder when prefixes differ', () => {
@@ -38,11 +38,7 @@ describe('disambiguateParticipantNames', () => {
             { name: 'Vijay Tiwari', isCurrentUser: true },
         ];
 
-        expect(disambiguateParticipantNames(members)).toEqual([
-            'Vijay Sr',
-            'Vijay Si',
-            'Vijay T (You)',
-        ]);
+        expect(disambiguateParticipantNames(members)).toEqual(['Vijay Sr', 'Vijay Si', 'You']);
     });
 
     it('handles a participant with no last name alongside participants with last names', () => {
@@ -61,7 +57,7 @@ describe('disambiguateParticipantNames', () => {
             { name: 'Madonna', isCurrentUser: false },
         ];
 
-        expect(disambiguateParticipantNames(members)).toEqual(['Cher (You)', 'Madonna']);
+        expect(disambiguateParticipantNames(members)).toEqual(['You', 'Madonna']);
     });
 
     it('handles identical full names gracefully', () => {
@@ -70,10 +66,7 @@ describe('disambiguateParticipantNames', () => {
             { name: 'Vijay Sharma', isCurrentUser: true },
         ];
 
-        expect(disambiguateParticipantNames(members)).toEqual([
-            'Vijay Sharma',
-            'Vijay Sharma (You)',
-        ]);
+        expect(disambiguateParticipantNames(members)).toEqual(['Vijay Sharma', 'You']);
     });
 
     it('handles case-insensitivity in first names while preserving original casing in output', () => {

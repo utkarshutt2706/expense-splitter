@@ -43,7 +43,7 @@ export function disambiguateParticipantNames(
         if (indices.length === 1) {
             const item = parsed[indices[0]!]!;
             const baseName = item.firstName || item.original;
-            result[indices[0]!] = item.isCurrentUser ? `${baseName} (You)` : baseName;
+            result[indices[0]!] = item.isCurrentUser ? 'You' : baseName;
             continue;
         }
 
@@ -51,7 +51,7 @@ export function disambiguateParticipantNames(
             const current = parsed[idx]!;
             if (!current.remainder) {
                 const baseName = current.firstName || current.original;
-                result[idx] = current.isCurrentUser ? `${baseName} (You)` : baseName;
+                result[idx] = current.isCurrentUser ? 'You' : baseName;
                 continue;
             }
 
@@ -74,7 +74,7 @@ export function disambiguateParticipantNames(
             }
 
             const baseName = `${current.firstName} ${current.remainder.slice(0, prefixLength)}`;
-            result[idx] = current.isCurrentUser ? `${baseName} (You)` : baseName;
+            result[idx] = current.isCurrentUser ? 'You' : baseName;
         }
     }
 

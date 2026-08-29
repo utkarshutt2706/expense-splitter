@@ -92,7 +92,8 @@ export function GroupBalanceAccordionList({ groupId, members, netBalances, trans
     const rows = (items: SettlementTransaction[]) => (
         <ul>
             {items.map((item, index) => {
-                const direction = `${nameFor(item.fromUserId)} owes ${nameFor(item.toUserId)}`;
+                const payerName = nameFor(item.fromUserId);
+                const direction = `${payerName} ${payerName === 'You' ? 'owe' : 'owes'} ${nameFor(item.toUserId)}`;
                 const sentence = `${direction} ${formatCurrency(item.amount)}`;
                 const isPaying = item.fromUserId === currentUserId;
                 const isReceiving = item.toUserId === currentUserId;

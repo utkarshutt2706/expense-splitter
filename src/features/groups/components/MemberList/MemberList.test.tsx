@@ -31,7 +31,7 @@ describe('MemberList', () => {
     it('labels the current user as "You" instead of their name', () => {
         render(<MemberList members={members} />);
 
-        expect(screen.getByText('Alex (You)')).toBeInTheDocument();
+        expect(screen.getByText('You')).toBeInTheDocument();
         expect(screen.queryByText('Alex Morgan')).not.toBeInTheDocument();
     });
 
@@ -55,6 +55,6 @@ describe('MemberList', () => {
         const names = screen
             .getAllByRole('listitem')
             .map((item) => item.querySelector('p')?.textContent ?? '');
-        expect(names).toEqual(['Alex (You)', 'Arun', 'Priya', 'Zoe']);
+        expect(names).toEqual(['You', 'Arun', 'Priya', 'Zoe']);
     });
 });

@@ -116,7 +116,7 @@ describe('MemberBalanceAccordion', () => {
 
         expect(
             screen.getByRole('button', {
-                name: /^utkarsh \(you\) gets back ₹50\.00 in total$/i,
+                name: /^you get back ₹50\.00 in total$/i,
             }),
         ).toBeInTheDocument();
     });
@@ -141,7 +141,7 @@ describe('MemberBalanceAccordion', () => {
             [abhinav.id],
         );
 
-        expect(screen.getByText('Utkarsh (You) owes ₹38.00 to Abhinav')).toBeInTheDocument();
+        expect(screen.getByText('You owe ₹38.00 to Abhinav')).toBeInTheDocument();
     });
 
     it('lowercases "you" when the current user is the object of the sentence', () => {
@@ -152,7 +152,7 @@ describe('MemberBalanceAccordion', () => {
             [abhinav.id],
         );
 
-        expect(screen.getByText('Abhinav owes ₹38.00 to Utkarsh (You)')).toBeInTheDocument();
+        expect(screen.getByText('Abhinav owes ₹38.00 to You')).toBeInTheDocument();
     });
 
     it('shows a fallback message when there are no settlement transactions', () => {

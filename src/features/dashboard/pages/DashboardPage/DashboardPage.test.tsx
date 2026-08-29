@@ -182,7 +182,7 @@ describe('DashboardPage', () => {
         const participants = screen.getByRole('heading', { name: 'Participant shares' })
             .parentElement?.parentElement;
         expect(within(participants!).getByText('A')).toBeInTheDocument();
-        expect(screen.getByText(/Utkarsh \(You\)/)).toBeInTheDocument();
+        expect(within(participants!).getByText('You')).toBeInTheDocument();
         expect(screen.getByText('66.7%')).toBeInTheDocument();
     });
 
@@ -296,7 +296,9 @@ describe('DashboardPage', () => {
             '/groups/trip/balance',
         );
         expect(screen.getAllByText('Total group spending').length).toBeGreaterThan(0);
-        expect(screen.getByText(/Utkarsh \(You\)/)).toBeInTheDocument();
+        const participants = screen.getByRole('heading', { name: 'Participant shares' })
+            .parentElement?.parentElement;
+        expect(within(participants!).getByText('You')).toBeInTheDocument();
     });
 });
 
@@ -341,6 +343,6 @@ describe('comparisonScale', () => {
             .getAllByRole('listitem')
             .map((item) => item.querySelector('span[title]')?.textContent)
             .filter(Boolean);
-        expect(names).toEqual(['Utkarsh (You)', 'Arun', 'Priya', 'Zoe']);
+        expect(names).toEqual(['You', 'Arun', 'Priya', 'Zoe']);
     });
 });

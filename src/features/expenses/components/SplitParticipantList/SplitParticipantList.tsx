@@ -115,7 +115,7 @@ export function SplitParticipantList({
                         {isSelected && resolvedAmount !== undefined && (
                             <span
                                 className="text-surface-foreground ml-auto shrink-0 text-sm font-medium"
-                                aria-label={`${name} receives ${formatCurrency(resolvedAmount)}`}
+                                aria-label={`${name} ${name === 'You' ? 'receive' : 'receives'} ${formatCurrency(resolvedAmount)}`}
                             >
                                 {formatCurrency(resolvedAmount)}
                             </span>

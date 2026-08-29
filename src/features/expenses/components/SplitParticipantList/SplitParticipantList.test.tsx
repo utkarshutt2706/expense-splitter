@@ -151,7 +151,7 @@ describe('SplitParticipantList', () => {
             />,
         );
 
-        expect(screen.getByLabelText('Alex (You) receives ₹42.50')).toBeInTheDocument();
+        expect(screen.getByLabelText('You receive ₹42.50')).toBeInTheDocument();
     });
 
     it('calls onToggle when a participant checkbox is clicked', async () => {

@@ -167,7 +167,7 @@ describe('MemberCheckboxList', () => {
                 />,
             );
 
-            expect(labels()).toEqual(['Zoe (You)', 'Arun', 'Jordan', 'Priya']);
+            expect(labels()).toEqual(['You', 'Arun', 'Jordan', 'Priya']);
         });
 
         it('floats priority ids above the other candidates, each band alphabetical', () => {
@@ -194,7 +194,7 @@ describe('MemberCheckboxList', () => {
                 />,
             );
 
-            expect(labels()).toEqual(['Priya (You)', 'Zoe', 'Arun', 'Jordan']);
+            expect(labels()).toEqual(['You', 'Zoe', 'Arun', 'Jordan']);
         });
 
         it('does not reorder while the selection changes, so rows stay put as they are ticked', async () => {

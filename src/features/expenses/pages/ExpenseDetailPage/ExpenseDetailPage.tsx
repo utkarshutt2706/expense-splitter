@@ -26,6 +26,7 @@ function memberLabel(member: User | undefined, names: Map<string, string>): stri
 }
 
 function shareLabel(label: string): string {
+    if (label === 'You') return 'Your share';
     return /s$/i.test(label.replace(/ \(You\)$/, '').trim())
         ? `Share for ${label}`
         : `${label}’s share`;

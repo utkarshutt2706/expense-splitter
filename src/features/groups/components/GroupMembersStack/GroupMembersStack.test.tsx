@@ -79,7 +79,7 @@ describe('GroupMembersStack', () => {
 
             await user.click(screen.getByRole('button', { name: /show all 3 members/i }));
 
-            expect(screen.getByText('Alex (You)')).toBeInTheDocument();
+            expect(screen.getByText('You')).toBeInTheDocument();
             expect(screen.queryByText('Alex Morgan')).not.toBeInTheDocument();
         });
 

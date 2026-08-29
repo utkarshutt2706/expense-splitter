@@ -258,7 +258,7 @@ describe('ExpenseDetailPage', () => {
 
         renderPage();
 
-        expect(screen.getByText('Utkarsh (You) paid ₹90.00')).toBeInTheDocument();
+        expect(screen.getByText('You paid ₹90.00')).toBeInTheDocument();
         expect(screen.getByText('on Jul 23, 2026')).toBeInTheDocument();
     });
 
@@ -279,9 +279,9 @@ describe('ExpenseDetailPage', () => {
 
         renderPage();
 
-        expect(screen.getByText('Utkarsh (You)’s share ₹45.00')).toBeInTheDocument();
+        expect(screen.getByText('Your share ₹45.00')).toBeInTheDocument();
         expect(screen.getByText('Abhinav’s share ₹45.00')).toBeInTheDocument();
-        expect(screen.getByText('Utkarsh (You) covered ₹45.00 for others.')).toBeInTheDocument();
+        expect(screen.getByText('You covered ₹45.00 for others.')).toBeInTheDocument();
         expect(screen.queryByText(/you owe|abhinav owes/i)).not.toBeInTheDocument();
         expect(screen.queryByText(/khem/i)).not.toBeInTheDocument();
     });
@@ -292,7 +292,7 @@ describe('ExpenseDetailPage', () => {
         renderPage();
 
         expect(screen.getByText('Abhinav paid ₹90.00')).toBeInTheDocument();
-        expect(screen.getByText('Utkarsh (You)’s share ₹45.00')).toBeInTheDocument();
+        expect(screen.getByText('Your share ₹45.00')).toBeInTheDocument();
         expect(screen.getByText('Abhinav’s share ₹45.00')).toBeInTheDocument();
         expect(screen.getByText('Abhinav covered ₹45.00 for others.')).toBeInTheDocument();
     });
@@ -306,7 +306,7 @@ describe('ExpenseDetailPage', () => {
 
         renderPage();
 
-        expect(screen.getByText('Utkarsh (You)’s share ₹90.00')).toBeInTheDocument();
+        expect(screen.getByText('Your share ₹90.00')).toBeInTheDocument();
         expect(screen.queryByText(/covered .* for others/i)).not.toBeInTheDocument();
     });
 
@@ -335,10 +335,10 @@ describe('ExpenseDetailPage', () => {
 
         renderPage();
 
-        expect(screen.getAllByText('Utkarsh (You)’s share ₹33.33')).toHaveLength(1);
+        expect(screen.getAllByText('Your share ₹33.33')).toHaveLength(1);
         expect(screen.getAllByText('Abhinav’s share ₹33.33')).toHaveLength(1);
         expect(screen.getAllByText('Khem’s share ₹33.34')).toHaveLength(1);
-        expect(screen.getByText('Utkarsh (You) covered ₹66.67 for others.')).toBeInTheDocument();
+        expect(screen.getByText('You covered ₹66.67 for others.')).toBeInTheDocument();
     });
 
     it.each(['percentage', 'shares'] as const)(
@@ -348,7 +348,7 @@ describe('ExpenseDetailPage', () => {
 
             renderPage();
 
-            expect(screen.getByText('Utkarsh (You)’s share ₹45.00')).toBeInTheDocument();
+            expect(screen.getByText('Your share ₹45.00')).toBeInTheDocument();
             expect(screen.getByText('Abhinav’s share ₹45.00')).toBeInTheDocument();
         },
     );
@@ -368,7 +368,7 @@ describe('ExpenseDetailPage', () => {
         renderPage();
 
         const shareRows = screen.getAllByRole('listitem');
-        expect(shareRows[0]).toHaveTextContent('Utkarsh (You)’s share ₹45.00');
+        expect(shareRows[0]).toHaveTextContent('Your share ₹45.00');
         expect(shareRows[1]).toHaveTextContent('Abhinav’s share ₹45.00');
     });
 
@@ -600,11 +600,6 @@ describe('ExpenseDetailPage', () => {
         const shares = screen
             .getAllByText(/share/i)
             .map((node) => node.textContent?.replace(/\s*₹.*$/, '') ?? '');
-        expect(shares).toEqual([
-            'Utkarsh (You)’s share',
-            'Arun’s share',
-            'Priya’s share',
-            'Zoe’s share',
-        ]);
+        expect(shares).toEqual(['Your share', 'Arun’s share', 'Priya’s share', 'Zoe’s share']);
     });
 });

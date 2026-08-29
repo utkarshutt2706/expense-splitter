@@ -581,7 +581,7 @@ describe('UpsertExpenseForm', () => {
         it('defaults the payer to the current user, labeled "You"', () => {
             render(<UpsertExpenseForm members={members} onSubmit={vi.fn()} onCancel={vi.fn()} />);
 
-            expect(screen.getByRole('button', { name: 'Paid by' })).toHaveTextContent('Alex (You)');
+            expect(screen.getByRole('button', { name: 'Paid by' })).toHaveTextContent('You');
         });
 
         it('submits the selected payer when changed', async () => {
