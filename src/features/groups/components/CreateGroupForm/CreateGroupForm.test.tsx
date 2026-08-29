@@ -119,7 +119,7 @@ describe('CreateGroupForm', () => {
             vi.advanceTimersByTime(400);
         });
 
-        expect(screen.getByText(/jamie fox/i)).toBeInTheDocument();
+        expect(screen.getByText(/^jamie$/i)).toBeInTheDocument();
         fireEvent.click(screen.getByRole('button', { name: /add/i }));
         fireEvent.change(screen.getByLabelText(/group name/i), {
             target: { value: 'Weekend Trip' },

@@ -1,7 +1,7 @@
 import type { User } from '@data/entities';
 import { useCurrentUser } from '@app/hooks';
 import { FormDialog } from '@shared/components';
-import { formatCurrency } from '@shared/utils';
+import { formatCurrency, participantNameMap } from '@shared/utils';
 import { useState } from 'react';
 import {
     RecordPaymentForm,
@@ -35,13 +35,11 @@ export function RecordPaymentDialog({
     const { data: currentUser } = useCurrentUser();
     const [thirdPartyConfirmation, setThirdPartyConfirmation] = useState<RecordPaymentFormValues>();
     const isEditing = mode === 'edit';
-    const memberName = (id: string, lowercaseYou = false) => {
-        if (id === currentUser?.id) return lowercaseYou ? 'you' : 'You';
-        return members.find((member) => member.id === id)?.name ?? 'a group member';
-    };
+    const names = participantNameMap(members, currentUser?.id);
+    const memberName = (id: string) => names.get(id) ?? 'a group member';
     const description =
         settlementMode && initialValues
-            ? `Record a settlement from ${memberName(initialValues.fromUserId, true)} to ${memberName(initialValues.toUserId, true)}.`
+            ? `Record a settlement from ${memberName(initialValues.fromUserId)} to ${memberName(initialValues.toUserId)}.`
             : isEditing
               ? 'Update the payer, recipient, or amount for this payment.'
               : 'Record a direct payment between two group members.';

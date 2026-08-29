@@ -1,7 +1,7 @@
 import { useCurrentUser } from '@app/hooks';
 import type { User } from '@data/entities';
 import { Avatar } from '@shared/components';
-import { cn, sortMembersByName } from '@shared/utils';
+import { cn, participantNameMap, sortMembersByName } from '@shared/utils';
 
 interface MemberListProps {
     readonly members: User[];
@@ -15,6 +15,7 @@ export function MemberList({ members, className }: MemberListProps) {
     const orderedMembers = sortMembersByName(members, {
         isCurrentUser: (member) => member.id === currentUser?.id,
     });
+    const names = participantNameMap(orderedMembers, currentUser?.id);
 
     return (
         <ul className={cn('flex flex-col gap-1', className)}>
@@ -23,7 +24,7 @@ export function MemberList({ members, className }: MemberListProps) {
                     <Avatar name={member.name} />
                     <div>
                         <p className="text-surface-foreground text-sm font-medium">
-                            {member.id === currentUser?.id ? 'You' : member.name}
+                            {names.get(member.id)}
                         </p>
                         {(member.email || member.phone) && (
                             <p className="text-muted-foreground text-xs">

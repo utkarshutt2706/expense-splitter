@@ -11,7 +11,7 @@ import { useDeleteExpense } from '@features/expenses/hooks/useDeleteExpense';
 import { useExpense } from '@features/expenses/hooks/useExpense';
 import { useGroup, useGroupMembers } from '@features/groups';
 import { Avatar, ConfirmationDialog, FetchingIndicator, Skeleton } from '@shared/components';
-import { formatCurrency, sortMembersByName } from '@shared/utils';
+import { formatCurrency, participantNameMap, sortMembersByName } from '@shared/utils';
 
 const dateFormatter = new Intl.DateTimeFormat('en-US', {
     month: 'short',
@@ -20,14 +20,16 @@ const dateFormatter = new Intl.DateTimeFormat('en-US', {
 });
 const DELETE_ERROR_MESSAGE = 'We couldn’t delete this expense. Nothing was changed. Try again.';
 
-function memberLabel(member: User | undefined, currentUserId: string | undefined): string {
+function memberLabel(member: User | undefined, names: Map<string, string>): string {
     if (!member) return 'Someone';
-    return member.id === currentUserId ? 'You' : member.name;
+    return names.get(member.id) ?? member.name;
 }
 
-function shareLabel(member: User, currentUserId: string | undefined): string {
-    if (member.id === currentUserId) return 'Your share';
-    return /s$/i.test(member.name.trim()) ? `Share for ${member.name}` : `${member.name}’s share`;
+function shareLabel(label: string): string {
+    if (label === 'You') return 'Your share';
+    return /s$/i.test(label.replace(/ \(You\)$/, '').trim())
+        ? `Share for ${label}`
+        : `${label}’s share`;
 }
 
 function toCents(amount: number): number {
@@ -89,6 +91,7 @@ export function ExpenseDetailPage() {
         content = <div className="text-red-600">Couldn't load this expense.</div>;
     } else {
         const membersById = new Map((members ?? []).map((member) => [member.id, member]));
+        const names = participantNameMap(members ?? [], currentUser?.id);
         const splitsByUserId = new Map(expense.splits.map((split) => [split.userId, split.amount]));
         const payer = membersById.get(expense.paidByUserId);
         const participants = sortMembersByName(
@@ -111,7 +114,7 @@ export function ExpenseDetailPage() {
                         {formatCurrency(expense.amount)}
                     </p>
                     <p className="text-muted-foreground text-sm">
-                        {`Added by ${memberLabel(addedBy, currentUser?.id).toLocaleLowerCase()} on ${createdDate}`}
+                        {`Added by ${memberLabel(addedBy, names)} on ${createdDate}`}
                     </p>
                 </div>
 
@@ -119,13 +122,13 @@ export function ExpenseDetailPage() {
                     <div className="flex items-center gap-3">
                         <Avatar name={payer?.name ?? '?'} />
                         <p className="text-surface-foreground font-medium">
-                            {`${memberLabel(payer, currentUser?.id)} paid ${formatCurrency(expense.amount)} `}
+                            {`${memberLabel(payer, names)} paid ${formatCurrency(expense.amount)} `}
                             <span className="text-muted-foreground">{`on ${paidDate}`}</span>
                         </p>
                     </div>
                     {coveredForOthersCents > 0 && (
                         <p className="text-muted-foreground mt-2 ml-11 text-sm">
-                            {`${memberLabel(payer, currentUser?.id)} covered ${formatCurrency(coveredForOthersCents / 100)} for others.`}
+                            {`${memberLabel(payer, names)} covered ${formatCurrency(coveredForOthersCents / 100)} for others.`}
                         </p>
                     )}
 
@@ -156,7 +159,7 @@ export function ExpenseDetailPage() {
                                     )}
                                     <Avatar name={member.name} size="sm" />
                                     <span className="text-surface-foreground text-sm">
-                                        {`${shareLabel(member, currentUser?.id)} ${formatCurrency(share)}`}
+                                        {`${shareLabel(names.get(member.id) ?? member.name)} ${formatCurrency(share)}`}
                                     </span>
                                 </li>
                             );

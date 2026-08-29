@@ -60,9 +60,9 @@ describe('GroupMembersStack', () => {
 
         await user.click(screen.getByRole('button', { name: /show all 3 members/i }));
 
-        expect(screen.getByText('Alex Morgan')).toBeInTheDocument();
-        expect(screen.getByText('Priya Sharma')).toBeInTheDocument();
-        expect(screen.getByText('Jordan Lee')).toBeInTheDocument();
+        expect(screen.getByText('Alex')).toBeInTheDocument();
+        expect(screen.getByText('Priya')).toBeInTheDocument();
+        expect(screen.getByText('Jordan')).toBeInTheDocument();
         expect(screen.getByText('5551234567')).toBeInTheDocument();
     });
 

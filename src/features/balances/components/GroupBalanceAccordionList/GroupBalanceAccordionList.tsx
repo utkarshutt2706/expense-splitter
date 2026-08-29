@@ -11,7 +11,7 @@ import { RecordPaymentAction } from '@features/payments';
 import { RecordPaymentDialog } from '@features/payments/components/RecordPaymentDialog';
 import type { RecordPaymentFormValues } from '@features/payments/components/RecordPaymentForm';
 import { useCreatePayment } from '@features/payments/hooks/useCreatePayment';
-import { formatCurrency, sortMembersByName } from '@shared/utils';
+import { formatCurrency, participantNameMap, sortMembersByName } from '@shared/utils';
 
 interface Props {
     readonly groupId: string;
@@ -24,16 +24,12 @@ export function GroupBalanceAccordionList({ groupId, members, netBalances, trans
     const { data: currentUser } = useCurrentUser();
     const currentUserId = currentUser?.id;
     const membersById = new Map(members.map((member) => [member.id, member]));
+    const names = participantNameMap(members, currentUserId);
     const [selected, setSelected] = useState<SettlementTransaction>();
     const [paymentError, setPaymentError] = useState<string>();
     const triggerRef = useRef<HTMLButtonElement | null>(null);
     const createPayment = useCreatePayment();
-    const nameFor = (id: string, lowercaseYou = false) =>
-        id === currentUserId
-            ? lowercaseYou
-                ? 'you'
-                : 'You'
-            : (membersById.get(id)?.name ?? 'Unknown member');
+    const nameFor = (id: string) => names.get(id) ?? membersById.get(id)?.name ?? 'Unknown member';
 
     const personal = transactions
         .filter(({ fromUserId, toUserId }) => [fromUserId, toUserId].includes(currentUserId ?? ''))
@@ -96,7 +92,8 @@ export function GroupBalanceAccordionList({ groupId, members, netBalances, trans
     const rows = (items: SettlementTransaction[]) => (
         <ul>
             {items.map((item, index) => {
-                const direction = `${nameFor(item.fromUserId)} ${item.fromUserId === currentUserId ? 'owe' : 'owes'} ${nameFor(item.toUserId, true)}`;
+                const payerName = nameFor(item.fromUserId);
+                const direction = `${payerName} ${payerName === 'You' ? 'owe' : 'owes'} ${nameFor(item.toUserId)}`;
                 const sentence = `${direction} ${formatCurrency(item.amount)}`;
                 const isPaying = item.fromUserId === currentUserId;
                 const isReceiving = item.toUserId === currentUserId;
@@ -232,7 +229,7 @@ export function GroupBalanceAccordionList({ groupId, members, netBalances, trans
                     <ul className="divide-border divide-y">
                         {settled.map((member) => (
                             <li key={member.id} className="flex justify-between gap-3 py-3 text-sm">
-                                <span className="min-w-0 break-words">{member.name}</span>
+                                <span className="min-w-0 break-words">{nameFor(member.id)}</span>
                                 <span className="text-muted-foreground shrink-0">Settled up</span>
                             </li>
                         ))}

@@ -238,7 +238,7 @@ describe('ExpenseDetailPage', () => {
         renderPage();
 
         expect(screen.getByText('₹90.00')).toBeInTheDocument();
-        expect(screen.getByText('Added by abhinav on Jul 24, 2026')).toBeInTheDocument();
+        expect(screen.getByText('Added by Abhinav on Jul 24, 2026')).toBeInTheDocument();
     });
 
     it('shows who paid, the amount, and the paid date as a heading above the split breakdown', () => {
@@ -600,11 +600,6 @@ describe('ExpenseDetailPage', () => {
         const shares = screen
             .getAllByText(/share/i)
             .map((node) => node.textContent?.replace(/\s*₹.*$/, '') ?? '');
-        expect(shares).toEqual([
-            'Your share',
-            'Arun Nair’s share',
-            'Priya Sharma’s share',
-            'Zoe Tan’s share',
-        ]);
+        expect(shares).toEqual(['Your share', 'Arun’s share', 'Priya’s share', 'Zoe’s share']);
     });
 });

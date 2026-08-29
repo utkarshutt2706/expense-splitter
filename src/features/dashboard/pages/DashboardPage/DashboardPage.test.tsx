@@ -179,8 +179,10 @@ describe('DashboardPage', () => {
         fireEvent.click(screen.getByRole('button', { name: /group:.*all groups/i }));
         fireEvent.click(screen.getByRole('button', { name: 'A very long Goa trip group name' }));
         expect(screen.getAllByText('Total group spending').length).toBeGreaterThan(0);
-        expect(screen.getByText(/A participant with a very long name/)).toBeInTheDocument();
-        expect(screen.getByText(/Utkarsh \(You\)/)).toBeInTheDocument();
+        const participants = screen.getByRole('heading', { name: 'Participant shares' })
+            .parentElement?.parentElement;
+        expect(within(participants!).getByText('A')).toBeInTheDocument();
+        expect(within(participants!).getByText('You')).toBeInTheDocument();
         expect(screen.getByText('66.7%')).toBeInTheDocument();
     });
 
@@ -294,7 +296,9 @@ describe('DashboardPage', () => {
             '/groups/trip/balance',
         );
         expect(screen.getAllByText('Total group spending').length).toBeGreaterThan(0);
-        expect(screen.getByText(/Utkarsh \(You\)/)).toBeInTheDocument();
+        const participants = screen.getByRole('heading', { name: 'Participant shares' })
+            .parentElement?.parentElement;
+        expect(within(participants!).getByText('You')).toBeInTheDocument();
     });
 });
 
@@ -339,6 +343,6 @@ describe('comparisonScale', () => {
             .getAllByRole('listitem')
             .map((item) => item.querySelector('span[title]')?.textContent)
             .filter(Boolean);
-        expect(names).toEqual(['Utkarsh (You)', 'Arun Nair', 'Priya Sharma', 'Zoe Tan']);
+        expect(names).toEqual(['You', 'Arun', 'Priya', 'Zoe']);
     });
 });

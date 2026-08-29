@@ -135,7 +135,7 @@ describe('RecordPaymentForm', () => {
             />,
         );
 
-        expect(screen.getByRole('button', { name: 'From' })).toHaveTextContent('Priya Sharma');
+        expect(screen.getByRole('button', { name: 'From' })).toHaveTextContent('Priya');
         expect(screen.getByRole('button', { name: 'To' })).toHaveTextContent('You');
         expect(screen.getByLabelText(/amount/i)).toHaveValue(40);
         expect(screen.getByLabelText(/paid on/i)).toHaveValue('2026-07-18');
@@ -154,7 +154,7 @@ describe('RecordPaymentForm', () => {
             />,
         );
 
-        expect(screen.getByLabelText('From: Priya Sharma')).toHaveTextContent('Priya Sharma');
+        expect(screen.getByLabelText('From: Priya')).toHaveTextContent('Priya');
         expect(screen.getByLabelText('To: You')).toHaveTextContent('You');
         expect(screen.queryByRole('button', { name: 'From' })).not.toBeInTheDocument();
         expect(screen.getByLabelText(/amount/i)).toHaveFocus();

@@ -132,7 +132,7 @@ describe('AnalyticsPage', () => {
 
         expect(screen.getByRole('button', { name: /group:.*weekend trip/i })).toBeInTheDocument();
         expect(screen.queryByText(/select one group/i)).not.toBeInTheDocument();
-        expect(screen.getByText('Alex (You)')).toBeInTheDocument();
+        expect(screen.getByText('You')).toBeInTheDocument();
     });
 
     it('resets the group filter to all groups when the deep link group does not exist', () => {
@@ -184,7 +184,7 @@ describe('AnalyticsPage', () => {
         fireEvent.click(screen.getByRole('button', { name: 'Weekend Trip' }));
 
         expect(screen.getByRole('button', { name: /group:.*weekend trip/i })).toBeInTheDocument();
-        expect(screen.getByText('Alex (You)')).toBeInTheDocument();
+        expect(screen.getByText('You')).toBeInTheDocument();
         expect(
             screen.queryByText(/select one group to view participant shares/i),
         ).not.toBeInTheDocument();
@@ -395,7 +395,7 @@ describe('AnalyticsPage', () => {
 
         expect(screen.getByText('Vijay Sr')).toBeInTheDocument();
         expect(screen.getByText('Vijay Si')).toBeInTheDocument();
-        expect(screen.getByText('Vijay T (You)')).toBeInTheDocument();
+        expect(screen.getByText('You')).toBeInTheDocument();
     });
 
     it('orders the participant share chart alphabetically with the current user first', () => {
@@ -443,7 +443,7 @@ describe('AnalyticsPage', () => {
         const participants = Array.from(shareTable.querySelectorAll('tbody th')).map(
             (cell) => cell.textContent,
         );
-        expect(participants).toEqual(['Mira (You)', 'Arun', 'Priya', 'Zoe']);
+        expect(participants).toEqual(['You', 'Arun', 'Priya', 'Zoe']);
     });
 
     it('compares paid against share per time bucket, with the resulting balance', () => {

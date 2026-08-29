@@ -624,9 +624,7 @@ describe('UpsertExpenseForm', () => {
             expect(screen.getByLabelText(/description/i)).toHaveValue('Groceries');
             expect(screen.getByLabelText(/^amount$/i)).toHaveValue(42.5);
             expect(screen.getByLabelText(/paid on/i)).toHaveValue('2026-07-18');
-            expect(screen.getByRole('button', { name: 'Paid by' })).toHaveTextContent(
-                /priya sharma/i,
-            );
+            expect(screen.getByRole('button', { name: 'Paid by' })).toHaveTextContent(/priya/i);
             expect(screen.getByRole('checkbox', { name: 'You' })).not.toBeChecked();
             expect(screen.getByRole('checkbox', { name: /priya sharma/i })).toBeChecked();
             expect(screen.getByRole('button', { name: 'Exact' })).toHaveAttribute(

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import type { User } from '@data/entities';
 import { useUserLookup } from '@features/users/hooks';
 import { Avatar } from '@shared/components';
+import { disambiguateParticipantNames } from '@shared/utils';
 
 const LOOKUP_DEBOUNCE_MS = 400;
 
@@ -25,6 +26,7 @@ export function FriendSearchResult({ search, onFound }: FriendSearchResultProps)
 
     const { data: matches, isFetching, isError } = useUserLookup(query);
     const found = matches?.[0];
+    const foundLabel = found ? disambiguateParticipantNames([found])[0] : undefined;
 
     if (!shouldLookup) {
         return null;
@@ -45,7 +47,7 @@ export function FriendSearchResult({ search, onFound }: FriendSearchResultProps)
                 <span className="flex items-center gap-2">
                     <Avatar name={found.name} size="sm" />
                     <span className="text-surface-foreground text-sm">
-                        {found.name}{' '}
+                        {foundLabel}{' '}
                         <span className="text-muted-foreground">
                             ({found.email ?? found.phone})
                         </span>

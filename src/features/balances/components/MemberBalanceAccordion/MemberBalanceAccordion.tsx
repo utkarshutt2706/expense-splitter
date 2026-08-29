@@ -7,58 +7,42 @@ import type { User } from '@data/entities';
 import type { SettlementTransaction } from '@features/balances/api/balancesApi';
 import { RecordPaymentDialog } from '@features/payments/components/RecordPaymentDialog';
 import { useCreatePayment } from '@features/payments/hooks/useCreatePayment';
-import { formatCurrency } from '@shared/utils';
+import { formatCurrency, participantNameMap } from '@shared/utils';
 
 interface MemberBalanceAccordionProps {
     readonly member: User;
     readonly netAmount: number;
     readonly transactions: SettlementTransaction[];
-    readonly membersById: Map<string, User>;
     readonly members: User[];
     readonly groupId: string;
     readonly currentUserId: string | undefined;
 }
 
-function subjectName(
-    userId: string,
-    membersById: Map<string, User>,
-    currentUserId: string | undefined,
-): string {
-    return userId === currentUserId ? 'You' : (membersById.get(userId)?.name ?? 'Someone');
+function subjectName(userId: string, names: Map<string, string>): string {
+    return names.get(userId) ?? 'Someone';
 }
 
-function objectName(
-    userId: string,
-    membersById: Map<string, User>,
-    currentUserId: string | undefined,
-): string {
-    return userId === currentUserId ? 'you' : (membersById.get(userId)?.name ?? 'someone');
+function objectName(userId: string, names: Map<string, string>): string {
+    return names.get(userId) ?? 'someone';
 }
 
-function titleFor(
-    member: User,
-    netAmount: number,
-    currentUserId: string | undefined,
-): { text: string; className: string } {
-    const isCurrentUser = member.id === currentUserId;
-    const subject = isCurrentUser ? 'You' : member.name;
-
+function titleFor(netAmount: number, subject: string): { text: string; className: string } {
     if (netAmount > 0) {
         return {
-            text: `${subject} get${isCurrentUser ? '' : 's'} back ${formatCurrency(netAmount)} in total`,
+            text: `${subject} ${subject === 'You' ? 'get' : 'gets'} back ${formatCurrency(netAmount)} in total`,
             className: 'text-owed',
         };
     }
 
     if (netAmount < 0) {
         return {
-            text: `${subject} owe${isCurrentUser ? '' : 's'} ${formatCurrency(Math.abs(netAmount))} in total`,
+            text: `${subject} ${subject === 'You' ? 'owe' : 'owes'} ${formatCurrency(Math.abs(netAmount))} in total`,
             className: 'text-owe',
         };
     }
 
     return {
-        text: `${subject} ${isCurrentUser ? 'are' : 'is'} settled up`,
+        text: `${subject} ${subject === 'You' ? 'are' : 'is'} settled up`,
         className: 'text-settled',
     };
 }
@@ -67,12 +51,12 @@ export function MemberBalanceAccordion({
     member,
     netAmount,
     transactions,
-    membersById,
     members,
     groupId,
     currentUserId,
 }: MemberBalanceAccordionProps) {
-    const title = titleFor(member, netAmount, currentUserId);
+    const names = participantNameMap(members, currentUserId);
+    const title = titleFor(netAmount, names.get(member.id) ?? member.name);
     const [settlingTransaction, setSettlingTransaction] = useState<SettlementTransaction | null>(
         null,
     );
@@ -130,14 +114,12 @@ export function MemberBalanceAccordion({
                                 className="flex items-center justify-between gap-2"
                             >
                                 <span className="text-muted-foreground text-sm">
-                                    {subjectName(
-                                        transaction.fromUserId,
-                                        membersById,
-                                        currentUserId,
-                                    )}{' '}
-                                    owe{transaction.fromUserId === currentUserId ? '' : 's'}{' '}
+                                    {subjectName(transaction.fromUserId, names)}{' '}
+                                    {subjectName(transaction.fromUserId, names) === 'You'
+                                        ? 'owe'
+                                        : 'owes'}{' '}
                                     {formatCurrency(transaction.amount)} to{' '}
-                                    {objectName(transaction.toUserId, membersById, currentUserId)}
+                                    {objectName(transaction.toUserId, names)}
                                 </span>
                                 <button
                                     type="button"

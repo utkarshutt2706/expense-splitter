@@ -22,9 +22,9 @@ describe('MemberList', () => {
     it('renders every member with their name and contact info', () => {
         render(<MemberList members={members} />);
 
-        expect(screen.getByText('Priya Sharma')).toBeInTheDocument();
+        expect(screen.getByText('Priya')).toBeInTheDocument();
         expect(screen.getByText('priya@example.com')).toBeInTheDocument();
-        expect(screen.getByText('Jordan Lee')).toBeInTheDocument();
+        expect(screen.getByText('Jordan')).toBeInTheDocument();
         expect(screen.getByText('5551234567')).toBeInTheDocument();
     });
 
@@ -55,6 +55,6 @@ describe('MemberList', () => {
         const names = screen
             .getAllByRole('listitem')
             .map((item) => item.querySelector('p')?.textContent ?? '');
-        expect(names).toEqual(['You', 'Arun Nair', 'Priya Sharma', 'Zoe Tan']);
+        expect(names).toEqual(['You', 'Arun', 'Priya', 'Zoe']);
     });
 });

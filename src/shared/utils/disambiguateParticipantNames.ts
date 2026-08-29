@@ -4,12 +4,8 @@ export interface ParticipantNameItem {
 }
 
 /**
- * Disambiguates participant names for display (e.g. pie chart labels):
- * - Uses only the first name when the first name is unique.
- * - When multiple participants share the same first name, appends the shortest
- *   unique prefix of their remaining name (e.g. "Vijay S" vs "Vijay T", or
- *   "Vijay Sr" vs "Vijay Si").
- * - Appends " (You)" for the current user.
+ * Uses the shortest unambiguous participant name, comparing first names and
+ * remainder prefixes case-insensitively while preserving the stored casing.
  */
 export function disambiguateParticipantNames(
     members: ReadonlyArray<ParticipantNameItem>,
@@ -47,7 +43,7 @@ export function disambiguateParticipantNames(
         if (indices.length === 1) {
             const item = parsed[indices[0]!]!;
             const baseName = item.firstName || item.original;
-            result[indices[0]!] = item.isCurrentUser ? `${baseName} (You)` : baseName;
+            result[indices[0]!] = item.isCurrentUser ? 'You' : baseName;
             continue;
         }
 
@@ -55,7 +51,7 @@ export function disambiguateParticipantNames(
             const current = parsed[idx]!;
             if (!current.remainder) {
                 const baseName = current.firstName || current.original;
-                result[idx] = current.isCurrentUser ? `${baseName} (You)` : baseName;
+                result[idx] = current.isCurrentUser ? 'You' : baseName;
                 continue;
             }
 
@@ -64,30 +60,36 @@ export function disambiguateParticipantNames(
 
             while (prefixLength < current.remainder.length) {
                 const currentPrefix = currentRemainderLower.slice(0, prefixLength);
-                let hasCollision = false;
-
-                for (const otherIdx of indices) {
-                    if (otherIdx === idx) continue;
+                const hasCollision = indices.some((otherIdx) => {
+                    if (otherIdx === idx) return false;
                     const other = parsed[otherIdx]!;
-                    if (!other.remainder) continue;
-                    const otherPrefix = other.remainder.toLocaleLowerCase().slice(0, prefixLength);
-                    if (currentPrefix === otherPrefix) {
-                        hasCollision = true;
-                        break;
-                    }
-                }
+                    return (
+                        other.remainder.length > 0 &&
+                        currentPrefix === other.remainder.toLocaleLowerCase().slice(0, prefixLength)
+                    );
+                });
 
-                if (!hasCollision) {
-                    break;
-                }
+                if (!hasCollision) break;
                 prefixLength++;
             }
 
-            const remainderPrefix = current.remainder.slice(0, prefixLength);
-            const baseName = `${current.firstName} ${remainderPrefix}`;
-            result[idx] = current.isCurrentUser ? `${baseName} (You)` : baseName;
+            const baseName = `${current.firstName} ${current.remainder.slice(0, prefixLength)}`;
+            result[idx] = current.isCurrentUser ? 'You' : baseName;
         }
     }
 
     return result;
+}
+
+export function participantNameMap<T extends { id: string; name: string }>(
+    members: ReadonlyArray<T>,
+    currentUserId?: string,
+): Map<string, string> {
+    const labels = disambiguateParticipantNames(
+        members.map((member) => ({
+            name: member.name,
+            isCurrentUser: member.id === currentUserId,
+        })),
+    );
+    return new Map(members.map((member, index) => [member.id, labels[index] ?? member.name]));
 }

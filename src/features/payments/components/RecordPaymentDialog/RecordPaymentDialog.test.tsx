@@ -84,9 +84,7 @@ describe('RecordPaymentDialog', () => {
             />,
         );
 
-        expect(
-            screen.getByText('Record a settlement from Jayant Sachan to Rohan Dwivedi.'),
-        ).toBeInTheDocument();
+        expect(screen.getByText('Record a settlement from Jayant to Rohan.')).toBeInTheDocument();
         expect(screen.getByText('Locked at 9388.09')).toBeInTheDocument();
     });
 
@@ -109,9 +107,7 @@ describe('RecordPaymentDialog', () => {
 
         await user.click(screen.getByRole('button', { name: /fake submit/i }));
         expect(onSubmit).not.toHaveBeenCalled();
-        expect(
-            screen.getByText(/record that jayant sachan paid rohan dwivedi ₹25\.00/i),
-        ).toBeInTheDocument();
+        expect(screen.getByText(/record that jayant paid rohan ₹25\.00/i)).toBeInTheDocument();
 
         await user.click(screen.getByRole('button', { name: 'Record payment' }));
         expect(onSubmit).toHaveBeenCalledTimes(1);

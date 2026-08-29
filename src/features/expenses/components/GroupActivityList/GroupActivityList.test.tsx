@@ -193,7 +193,7 @@ describe('GroupActivityList', () => {
 
         renderList();
 
-        expect(screen.getByText('You paid Priya Sharma')).toBeInTheDocument();
+        expect(screen.getByText('You paid Priya')).toBeInTheDocument();
         expect(screen.getByText('₹25.00')).toBeInTheDocument();
         expect(screen.queryByRole('link')).not.toBeInTheDocument();
     });
@@ -269,8 +269,8 @@ describe('GroupActivityList', () => {
 
         renderList();
 
-        const rows = screen.getAllByText(/groceries|paid priya sharma/i);
-        expect(rows[0]).toHaveTextContent('You paid Priya Sharma');
+        const rows = screen.getAllByText(/groceries|paid priya/i);
+        expect(rows[0]).toHaveTextContent('You paid Priya');
         expect(rows[1]).toHaveTextContent('Groceries');
     });
 
