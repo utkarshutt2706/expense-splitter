@@ -34,13 +34,13 @@ describe('MemberPicker', () => {
     it('shows "You" on the trigger when the current user is selected', () => {
         renderPicker(CURRENT_USER_ID);
 
-        expect(screen.getByRole('button', { name: 'Paid by' })).toHaveTextContent('You');
+        expect(screen.getByRole('button', { name: 'Paid by' })).toHaveTextContent('Alex (You)');
     });
 
     it("shows the selected member's name on the trigger", () => {
         renderPicker('user-2');
 
-        expect(screen.getByRole('button', { name: 'Paid by' })).toHaveTextContent('Priya Sharma');
+        expect(screen.getByRole('button', { name: 'Paid by' })).toHaveTextContent('Priya');
     });
 
     it('shows the placeholder when no member is selected', () => {
@@ -102,10 +102,10 @@ describe('MemberPicker', () => {
                 .trim();
 
         expect(screen.getAllByRole('menuitemradio').map(optionLabel)).toEqual([
-            'You',
-            'Arun Nair',
-            'Priya Sharma',
-            'Zoe Tan',
+            'Alex (You)',
+            'Arun',
+            'Priya',
+            'Zoe',
         ]);
     });
 });

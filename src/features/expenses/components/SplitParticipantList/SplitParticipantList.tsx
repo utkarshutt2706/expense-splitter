@@ -1,7 +1,7 @@
 import { useCurrentUser } from '@app/hooks';
 import type { SplitType, User } from '@data/entities';
 import { Avatar, CurrencyInput } from '@shared/components';
-import { formatCurrency, sortMembersByName } from '@shared/utils';
+import { formatCurrency, participantNameMap, sortMembersByName } from '@shared/utils';
 
 interface SplitParticipantListProps {
     readonly users: User[];
@@ -41,14 +41,15 @@ export function SplitParticipantList({
     const orderedUsers = sortMembersByName(users, {
         isCurrentUser: (user) => user.id === currentUser?.id,
     });
+    const names = participantNameMap(orderedUsers, currentUser?.id);
 
     const inputConfig = inputConfigByType[splitType];
 
     return (
         <ul className="flex flex-col gap-1">
             {orderedUsers.map((user) => {
-                const isCurrentUser = user.id === currentUser?.id;
-                const name = isCurrentUser ? 'You' : user.name;
+                const name = names.get(user.id) ?? user.name;
+                const accessibleName = user.id === currentUser?.id ? 'You' : user.name;
                 const isSelected = selectedIds.includes(user.id);
                 const resolvedAmount = resolvedAmounts[user.id];
 
@@ -60,6 +61,7 @@ export function SplitParticipantList({
                         <label className="flex flex-1 cursor-pointer items-center gap-2">
                             <input
                                 type="checkbox"
+                                aria-label={accessibleName}
                                 checked={isSelected}
                                 onChange={() => onToggle(user.id)}
                                 className="accent-brand-600 size-4 cursor-pointer"
@@ -82,7 +84,7 @@ export function SplitParticipantList({
                                         onChange={(event) =>
                                             onValueChange(user.id, event.target.value)
                                         }
-                                        aria-label={`${name} ${inputConfig.label}`}
+                                        aria-label={`${accessibleName} ${inputConfig.label}`}
                                         aria-describedby={`split-currency-${user.id}`}
                                         containerClassName="min-h-9 w-24"
                                         className="py-1 pr-2 text-right"
@@ -98,7 +100,7 @@ export function SplitParticipantList({
                                         onChange={(event) =>
                                             onValueChange(user.id, event.target.value)
                                         }
-                                        aria-label={`${name} ${inputConfig.label}`}
+                                        aria-label={`${accessibleName} ${inputConfig.label}`}
                                         className="border-border bg-surface text-surface-foreground focus-visible:ring-brand-500 w-16 rounded-md border px-2 py-1 text-right text-sm outline-none focus-visible:ring-2"
                                     />
                                 )}

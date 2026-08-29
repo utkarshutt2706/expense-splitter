@@ -72,7 +72,7 @@ describe('FriendSearchResult', () => {
         render(<FriendSearchResult search="jamie" onFound={onFound} />);
         advanceDebounce();
 
-        expect(screen.getByText(/jamie fox/i)).toBeInTheDocument();
+        expect(screen.getByText(/^jamie$/i)).toBeInTheDocument();
         fireEvent.click(screen.getByRole('button', { name: /add/i }));
 
         expect(onFound).toHaveBeenCalledWith(jamie);

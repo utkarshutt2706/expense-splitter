@@ -28,7 +28,7 @@ describe('RecordPaymentForm', () => {
     it('defaults "From" to the current user', () => {
         render(<RecordPaymentForm members={members} onSubmit={vi.fn()} onCancel={vi.fn()} />);
 
-        expect(screen.getByRole('button', { name: 'From' })).toHaveTextContent('You');
+        expect(screen.getByRole('button', { name: 'From' })).toHaveTextContent('Alex (You)');
     });
 
     it('shows a validation error when submitted without selecting who received it', async () => {
@@ -135,8 +135,8 @@ describe('RecordPaymentForm', () => {
             />,
         );
 
-        expect(screen.getByRole('button', { name: 'From' })).toHaveTextContent('Priya Sharma');
-        expect(screen.getByRole('button', { name: 'To' })).toHaveTextContent('You');
+        expect(screen.getByRole('button', { name: 'From' })).toHaveTextContent('Priya');
+        expect(screen.getByRole('button', { name: 'To' })).toHaveTextContent('Alex (You)');
         expect(screen.getByLabelText(/amount/i)).toHaveValue(40);
         expect(screen.getByLabelText(/paid on/i)).toHaveValue('2026-07-18');
     });
@@ -154,8 +154,8 @@ describe('RecordPaymentForm', () => {
             />,
         );
 
-        expect(screen.getByLabelText('From: Priya Sharma')).toHaveTextContent('Priya Sharma');
-        expect(screen.getByLabelText('To: You')).toHaveTextContent('You');
+        expect(screen.getByLabelText('From: Priya')).toHaveTextContent('Priya');
+        expect(screen.getByLabelText('To: Alex (You)')).toHaveTextContent('Alex (You)');
         expect(screen.queryByRole('button', { name: 'From' })).not.toBeInTheDocument();
         expect(screen.getByLabelText(/amount/i)).toHaveFocus();
         expect(screen.getByText(/settles the suggested balance in full/i)).toBeInTheDocument();

@@ -3,7 +3,7 @@ import { ChevronDown } from 'lucide-react';
 
 import { useCurrentUser } from '@app/hooks';
 import type { User } from '@data/entities';
-import { sortMembersByName } from '@shared/utils';
+import { participantNameMap, sortMembersByName } from '@shared/utils';
 import { Avatar } from '../Avatar';
 
 interface MemberPickerProps {
@@ -12,10 +12,6 @@ interface MemberPickerProps {
     readonly onChange: (id: string) => void;
     readonly ariaLabel: string;
     readonly placeholder: string;
-}
-
-function labelFor(member: User, currentUserId: string | undefined): string {
-    return member.id === currentUserId ? 'You' : member.name;
 }
 
 export function MemberPicker({
@@ -30,6 +26,7 @@ export function MemberPicker({
     const orderedMembers = sortMembersByName(members, {
         isCurrentUser: (member) => member.id === currentUser?.id,
     });
+    const names = participantNameMap(orderedMembers, currentUser?.id);
 
     return (
         <DropdownMenu.Root>
@@ -41,7 +38,7 @@ export function MemberPicker({
                 >
                     <span className="flex items-center gap-2">
                         {selected && <Avatar name={selected.name} size="sm" />}
-                        {selected ? labelFor(selected, currentUser?.id) : placeholder}
+                        {selected ? names.get(selected.id) : placeholder}
                     </span>
                     <ChevronDown className="text-muted-foreground size-4" />
                 </button>
@@ -57,12 +54,13 @@ export function MemberPicker({
                             <DropdownMenu.RadioItem
                                 key={member.id}
                                 value={member.id}
+                                aria-label={member.id === currentUser?.id ? 'You' : member.name}
                                 className="text-surface-foreground data-highlighted:bg-muted flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm outline-none"
                             >
                                 <span aria-hidden="true">
                                     <Avatar name={member.name} />
                                 </span>
-                                {labelFor(member, currentUser?.id)}
+                                {names.get(member.id)}
                             </DropdownMenu.RadioItem>
                         ))}
                     </DropdownMenu.RadioGroup>

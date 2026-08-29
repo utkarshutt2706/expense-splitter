@@ -7,7 +7,7 @@ import { z } from 'zod';
 import { useCurrentUser } from '@app/hooks';
 import type { User } from '@data/entities';
 import { CurrencyInput, MemberPicker } from '@shared/components';
-import { formatCurrency } from '@shared/utils';
+import { formatCurrency, participantNameMap } from '@shared/utils';
 
 const recordPaymentSchema = z
     .object({
@@ -120,10 +120,8 @@ export function RecordPaymentForm({
         }
         onSubmit(values);
     });
-    const memberName = (id: string) => {
-        if (id === currentUser?.id) return 'You';
-        return members.find((member) => member.id === id)?.name ?? 'Unknown member';
-    };
+    const names = participantNameMap(members, currentUser?.id);
+    const memberName = (id: string) => names.get(id) ?? 'Unknown member';
     const amountCents = Number.isFinite(enteredAmount) ? Math.round(enteredAmount * 100) : 0;
     const outstandingCents =
         outstandingAmount === undefined ? undefined : Math.round(outstandingAmount * 100);

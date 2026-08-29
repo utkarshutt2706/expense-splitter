@@ -154,7 +154,7 @@ describe('MemberCheckboxList', () => {
         it('lists members alphabetically', () => {
             render(<MemberCheckboxList users={roster} selectedIds={[]} onToggle={vi.fn()} />);
 
-            expect(labels()).toEqual(['Arun Nair', 'Jordan Lee', 'Priya Sharma', 'Zoe Tan']);
+            expect(labels()).toEqual(['Arun', 'Jordan', 'Priya', 'Zoe']);
         });
 
         it('pins the current user above the alphabetical remainder', () => {
@@ -167,7 +167,7 @@ describe('MemberCheckboxList', () => {
                 />,
             );
 
-            expect(labels()).toEqual(['You', 'Arun Nair', 'Jordan Lee', 'Priya Sharma']);
+            expect(labels()).toEqual(['Zoe (You)', 'Arun', 'Jordan', 'Priya']);
         });
 
         it('floats priority ids above the other candidates, each band alphabetical', () => {
@@ -180,7 +180,7 @@ describe('MemberCheckboxList', () => {
                 />,
             );
 
-            expect(labels()).toEqual(['Jordan Lee', 'Zoe Tan', 'Arun Nair', 'Priya Sharma']);
+            expect(labels()).toEqual(['Jordan', 'Zoe', 'Arun', 'Priya']);
         });
 
         it('keeps the current user above the priority band', () => {
@@ -194,7 +194,7 @@ describe('MemberCheckboxList', () => {
                 />,
             );
 
-            expect(labels()).toEqual(['You', 'Zoe Tan', 'Arun Nair', 'Jordan Lee']);
+            expect(labels()).toEqual(['Priya (You)', 'Zoe', 'Arun', 'Jordan']);
         });
 
         it('does not reorder while the selection changes, so rows stay put as they are ticked', async () => {

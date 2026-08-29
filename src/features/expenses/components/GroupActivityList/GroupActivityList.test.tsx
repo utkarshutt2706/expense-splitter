@@ -173,7 +173,7 @@ describe('GroupActivityList', () => {
 
         const link = screen.getByRole('link', { name: /groceries/i });
         expect(link).toHaveAttribute('href', '/groups/group-1/expenses/expense-1');
-        expect(screen.getByText(/you paid/i)).toBeInTheDocument();
+        expect(screen.getByText(/alex \(you\) paid/i)).toBeInTheDocument();
         expect(link).toHaveTextContent('Jul 1, 2026');
         expect(screen.getByText(/you lent ₹21\.25/i)).toBeInTheDocument();
     });
@@ -193,7 +193,7 @@ describe('GroupActivityList', () => {
 
         renderList();
 
-        expect(screen.getByText('You paid Priya Sharma')).toBeInTheDocument();
+        expect(screen.getByText('Alex (You) paid Priya')).toBeInTheDocument();
         expect(screen.getByText('₹25.00')).toBeInTheDocument();
         expect(screen.queryByRole('link')).not.toBeInTheDocument();
     });
@@ -269,8 +269,8 @@ describe('GroupActivityList', () => {
 
         renderList();
 
-        const rows = screen.getAllByText(/groceries|paid priya sharma/i);
-        expect(rows[0]).toHaveTextContent('You paid Priya Sharma');
+        const rows = screen.getAllByText(/groceries|paid priya/i);
+        expect(rows[0]).toHaveTextContent('Alex (You) paid Priya');
         expect(rows[1]).toHaveTextContent('Groceries');
     });
 

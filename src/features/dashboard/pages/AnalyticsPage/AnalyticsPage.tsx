@@ -20,7 +20,12 @@ import {
 
 import type { DashboardGroupSpend } from '@features/dashboard/api/dashboardApi';
 import { useDashboard } from '@features/dashboard/hooks';
-import { formatCompactCurrency, formatCurrency, sortMembersByName } from '@shared/utils';
+import {
+    disambiguateParticipantNames,
+    formatCompactCurrency,
+    formatCurrency,
+    sortMembersByName,
+} from '@shared/utils';
 import {
     presetPeriod,
     usesDailyTrend,
@@ -37,7 +42,6 @@ import {
     cumulativeNetPosition,
     niceTicks,
 } from './analyticsMetrics';
-import { disambiguateParticipantNames } from './disambiguateParticipantNames';
 
 const COLORS = [
     'var(--color-brand-600)',

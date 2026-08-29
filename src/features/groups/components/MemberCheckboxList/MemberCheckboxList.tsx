@@ -1,6 +1,6 @@
 import type { User } from '@data/entities';
 import { Avatar } from '@shared/components';
-import { sortMembersByName } from '@shared/utils';
+import { participantNameMap, sortMembersByName } from '@shared/utils';
 
 interface MemberCheckboxListProps {
     readonly users: User[];
@@ -35,6 +35,7 @@ export function MemberCheckboxList({
         isCurrentUser: (user) => user.id === currentUserId,
         isPriority: priorityIds && ((user) => priorityIds.includes(user.id)),
     });
+    const names = participantNameMap(orderedUsers, currentUserId);
 
     return (
         <ul className="flex max-h-48 flex-col gap-1 overflow-y-auto">
@@ -47,6 +48,7 @@ export function MemberCheckboxList({
                         <label className="hover:bg-muted flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5">
                             <input
                                 type="checkbox"
+                                aria-label={isCurrentUser ? 'You' : user.name}
                                 checked={isLocked || selectedIds.includes(user.id)}
                                 disabled={isLocked}
                                 onChange={() => onToggle(user.id)}
@@ -56,7 +58,7 @@ export function MemberCheckboxList({
                                 <Avatar name={user.name} />
                             </span>
                             <span className="text-surface-foreground text-sm">
-                                {isCurrentUser ? 'You' : user.name}
+                                {names.get(user.id)}
                             </span>
                         </label>
                     </li>

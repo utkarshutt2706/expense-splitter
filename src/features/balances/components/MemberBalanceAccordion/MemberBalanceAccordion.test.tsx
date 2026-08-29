@@ -62,8 +62,6 @@ const currentUser: User = {
 };
 
 const members = [abhinav, khem, currentUser];
-const membersById = new Map(members.map((member) => [member.id, member]));
-
 function renderAccordion(
     member: User,
     netAmount: number,
@@ -76,7 +74,6 @@ function renderAccordion(
                 member={member}
                 netAmount={netAmount}
                 transactions={transactions}
-                membersById={membersById}
                 members={members}
                 groupId="group-1"
                 currentUserId={CURRENT_USER_ID}
@@ -114,11 +111,13 @@ describe('MemberBalanceAccordion', () => {
         );
     });
 
-    it('uses "You"/"get"/"are" grammar for the current user\'s own row', () => {
+    it('labels the current user with their compact name', () => {
         renderAccordion(currentUser, 50, []);
 
         expect(
-            screen.getByRole('button', { name: /^you get back ₹50\.00 in total$/i }),
+            screen.getByRole('button', {
+                name: /^utkarsh \(you\) gets back ₹50\.00 in total$/i,
+            }),
         ).toBeInTheDocument();
     });
 
@@ -142,7 +141,7 @@ describe('MemberBalanceAccordion', () => {
             [abhinav.id],
         );
 
-        expect(screen.getByText('You owe ₹38.00 to Abhinav')).toBeInTheDocument();
+        expect(screen.getByText('Utkarsh (You) owes ₹38.00 to Abhinav')).toBeInTheDocument();
     });
 
     it('lowercases "you" when the current user is the object of the sentence', () => {
@@ -153,7 +152,7 @@ describe('MemberBalanceAccordion', () => {
             [abhinav.id],
         );
 
-        expect(screen.getByText('Abhinav owes ₹38.00 to you')).toBeInTheDocument();
+        expect(screen.getByText('Abhinav owes ₹38.00 to Utkarsh (You)')).toBeInTheDocument();
     });
 
     it('shows a fallback message when there are no settlement transactions', () => {

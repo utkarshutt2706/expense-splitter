@@ -13,7 +13,7 @@ import { useDeletePayment, usePayments, useUpdatePayment } from '@features/payme
 import { RecordPaymentDialog } from '@features/payments/components/RecordPaymentDialog';
 import type { RecordPaymentFormValues } from '@features/payments/components/RecordPaymentForm';
 import { Avatar, ConfirmationDialog, FetchingIndicator, SwipeableRow } from '@shared/components';
-import { formatCurrency } from '@shared/utils';
+import { formatCurrency, participantNameMap } from '@shared/utils';
 
 interface GroupActivityListProps {
     readonly groupId: string;
@@ -27,9 +27,9 @@ const dateFormatter = new Intl.DateTimeFormat('en-US', {
     year: 'numeric',
 });
 
-function memberLabel(member: User | undefined, currentUserId: string | undefined): string {
+function memberLabel(member: User | undefined, names: Map<string, string>): string {
     if (!member) return 'Someone';
-    return member.id === currentUserId ? 'You' : member.name;
+    return names.get(member.id) ?? member.name;
 }
 
 function involvementLabel(
@@ -53,6 +53,7 @@ interface ExpenseRowProps {
     readonly groupId: string;
     readonly expense: Expense;
     readonly membersById: Map<string, User>;
+    readonly names: Map<string, string>;
     readonly currentUserId: string | undefined;
     readonly onEdit: () => void;
     readonly onDelete: () => void;
@@ -62,6 +63,7 @@ function ExpenseRow({
     groupId,
     expense,
     membersById,
+    names,
     currentUserId,
     onEdit,
     onDelete,
@@ -90,7 +92,7 @@ function ExpenseRow({
                 <div className="min-w-0 flex-1">
                     <p className="text-surface-foreground font-medium">{expense.description}</p>
                     <p className="text-muted-foreground text-sm">
-                        {memberLabel(payer, currentUserId)} paid ·{' '}
+                        {memberLabel(payer, names)} paid ·{' '}
                         {dateFormatter.format(new Date(expense.paidOn ?? expense.createdAt))}
                     </p>
                 </div>
@@ -108,14 +110,14 @@ function ExpenseRow({
 interface PaymentRowProps {
     readonly payment: Payment;
     readonly membersById: Map<string, User>;
-    readonly currentUserId: string | undefined;
+    readonly names: Map<string, string>;
     readonly onEdit: () => void;
     readonly onDelete: () => void;
 }
 
 // No detail page exists for a payment (it's a single atomic record, nothing to
 // drill into), so this renders as a plain div rather than a Link like ExpenseRow.
-function PaymentRow({ payment, membersById, currentUserId, onEdit, onDelete }: PaymentRowProps) {
+function PaymentRow({ payment, membersById, names, onEdit, onDelete }: PaymentRowProps) {
     const from = membersById.get(payment.fromUserId);
     const to = membersById.get(payment.toUserId);
 
@@ -143,7 +145,7 @@ function PaymentRow({ payment, membersById, currentUserId, onEdit, onDelete }: P
                 </span>
                 <div className="min-w-0 flex-1">
                     <p className="text-surface-foreground font-medium">
-                        {memberLabel(from, currentUserId)} paid {memberLabel(to, currentUserId)}
+                        {memberLabel(from, names)} paid {memberLabel(to, names)}
                     </p>
                     <p className="text-muted-foreground text-sm">
                         {dateFormatter.format(new Date(payment.paidOn ?? payment.createdAt))}
@@ -276,6 +278,7 @@ export function GroupActivityList({
     }
 
     const membersById = new Map(members.map((member) => [member.id, member]));
+    const names = participantNameMap(members, currentUser?.id);
 
     return (
         <>
@@ -293,6 +296,7 @@ export function GroupActivityList({
                                 groupId={groupId}
                                 expense={item.expense}
                                 membersById={membersById}
+                                names={names}
                                 currentUserId={currentUser?.id}
                                 onEdit={() =>
                                     navigate(`/groups/${groupId}/expenses/${item.expense.id}/edit`)
@@ -303,7 +307,7 @@ export function GroupActivityList({
                             <PaymentRow
                                 payment={item.payment}
                                 membersById={membersById}
-                                currentUserId={currentUser?.id}
+                                names={names}
                                 onEdit={() => setEditingPayment(item.payment)}
                                 onDelete={() => setDeletingPayment(item.payment)}
                             />

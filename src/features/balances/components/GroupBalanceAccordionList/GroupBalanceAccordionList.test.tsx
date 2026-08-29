@@ -52,7 +52,7 @@ describe('GroupBalanceAccordionList', () => {
 
         expect(screen.getByText('You are owed ₹9,388.09')).toBeInTheDocument();
         expect(screen.getByText('1 payment to receive')).toBeInTheDocument();
-        expect(screen.getByText('Jayant Sachan owes you')).toBeInTheDocument();
+        expect(screen.getByText('Jayant owes Utkarsh (You)')).toBeInTheDocument();
     });
 
     it('shows an owe-only position and correct direction', () => {
@@ -62,13 +62,15 @@ describe('GroupBalanceAccordionList', () => {
         );
 
         expect(screen.getByText('You owe ₹2,500.00')).toBeInTheDocument();
-        const direction = screen.getByText(/You owe Shivam Rajput/);
-        expect(direction).toHaveTextContent('You owe Shivam Rajput ₹2,500.00');
+        const direction = screen.getByText(/Utkarsh \(You\) owes Shivam/);
+        expect(direction).toHaveTextContent('Utkarsh (You) owes Shivam ₹2,500.00');
         expect(direction.querySelector('span')).toHaveClass('text-owe');
         expect(screen.getByText('You need to make this payment.')).toBeInTheDocument();
         expect(direction.closest('ul')?.parentElement).toHaveClass('rounded-xl', 'border');
         expect(
-            screen.getByRole('button', { name: /settle up: you owe shivam rajput/i }).parentElement,
+            screen.getByRole('button', {
+                name: /settle up: utkarsh \(you\) owes shivam/i,
+            }).parentElement,
         ).toHaveClass('shrink-0');
     });
 
@@ -85,8 +87,8 @@ describe('GroupBalanceAccordionList', () => {
         expect(screen.getByText('To pay').nextSibling).toHaveTextContent('₹2,611.91');
         expect(screen.getByText(/₹9,388\.09 to receive/)).toBeInTheDocument();
         const rows = screen.getAllByRole('listitem');
-        expect(rows[0]).toHaveTextContent('You owe Shivam Rajput');
-        expect(rows[1]).toHaveTextContent('Jayant Sachan owes you');
+        expect(rows[0]).toHaveTextContent('Utkarsh (You) owes Shivam');
+        expect(rows[1]).toHaveTextContent('Jayant owes Utkarsh (You)');
     });
 
     it('shows personal settled state while other balances remain collapsed', () => {
@@ -138,9 +140,9 @@ describe('GroupBalanceAccordionList', () => {
         );
 
         await user.click(screen.getByRole('button', { name: /other group balances \(1\)/i }));
-        expect(screen.getAllByText('Jayant Sachan owes you')).toHaveLength(1);
-        const otherBalance = screen.getByText(/Jayant Sachan owes Rohan Dwivedi/);
-        expect(otherBalance).toHaveTextContent('Jayant Sachan owes Rohan Dwivedi ₹14,065.11');
+        expect(screen.getAllByText('Jayant owes Utkarsh (You)')).toHaveLength(1);
+        const otherBalance = screen.getByText(/Jayant owes Rohan/);
+        expect(otherBalance).toHaveTextContent('Jayant owes Rohan ₹14,065.11');
         expect(otherBalance.querySelector('span')).toHaveClass('text-owe');
     });
 
@@ -152,7 +154,7 @@ describe('GroupBalanceAccordionList', () => {
         const disclosure = screen.getByRole('button', { name: /settled participants \(4\)/i });
         expect(disclosure).toHaveAttribute('aria-expanded', 'false');
         await user.click(disclosure);
-        expect(screen.getByText('Sibali Singh')).toBeInTheDocument();
+        expect(screen.getByText('Sibali')).toBeInTheDocument();
         expect(screen.queryByText('No settlements needed.')).not.toBeInTheDocument();
     });
 
@@ -162,7 +164,7 @@ describe('GroupBalanceAccordionList', () => {
         renderList([transaction], new Map([[CURRENT_USER_ID, 9388.09]]));
 
         await user.click(
-            screen.getByRole('button', { name: /settle up: jayant sachan owes you/i }),
+            screen.getByRole('button', { name: /settle up: jayant owes utkarsh \(you\)/i }),
         );
 
         expect(screen.getByTestId('payment-dialog')).toHaveTextContent(JSON.stringify(transaction));
@@ -187,7 +189,7 @@ describe('GroupBalanceAccordionList', () => {
             .getAllByText(/settled up/i)
             .map((node) => node.previousElementSibling?.textContent)
             .filter(Boolean);
-        expect(names).toEqual(['Rohan Dwivedi', 'Shivam Rajput', 'Sibali Singh']);
+        expect(names).toEqual(['Rohan', 'Shivam', 'Sibali']);
     });
 
     it('orders balances between other people by who owes, then by who is owed', async () => {
@@ -207,9 +209,9 @@ describe('GroupBalanceAccordionList', () => {
             .getAllByRole('button', { name: /^settle up:/i })
             .map((button) => button.getAttribute('aria-label'));
         expect(sentences).toEqual([
-            'Settle up: Jayant Sachan owes Rohan Dwivedi ₹300.00',
-            'Settle up: Jayant Sachan owes Shivam Rajput ₹200.00',
-            'Settle up: Shivam Rajput owes Rohan Dwivedi ₹100.00',
+            'Settle up: Jayant owes Rohan ₹300.00',
+            'Settle up: Jayant owes Shivam ₹200.00',
+            'Settle up: Shivam owes Rohan ₹100.00',
         ]);
     });
 

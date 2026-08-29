@@ -5,7 +5,7 @@ import { Link } from 'react-router';
 import type { DashboardGroupSpend } from '@features/dashboard/api/dashboardApi';
 import { useDashboard } from '@features/dashboard/hooks';
 import { Avatar, Skeleton } from '@shared/components';
-import { formatCurrency, sortMembersByName } from '@shared/utils';
+import { disambiguateParticipantNames, formatCurrency, sortMembersByName } from '@shared/utils';
 import { presetPeriod, usesDailyTrend } from './dashboardDateRange';
 import {
     combineDailySpending,
@@ -480,7 +480,10 @@ function Participants({
     const orderedMembers = sortMembersByName(group.memberShares, {
         isCurrentUser: (member) => member.isCurrentUser,
     });
-    const participants = showAll ? orderedMembers : orderedMembers.slice(0, 8);
+    const labels = disambiguateParticipantNames(orderedMembers);
+    const participants = (showAll ? orderedMembers : orderedMembers.slice(0, 8)).map(
+        (member, index) => ({ member, label: labels[index] ?? member.name }),
+    );
 
     const max = Math.max(...group.memberShares.map((member) => member.amount), 1);
 
@@ -501,7 +504,7 @@ function Participants({
             </div>
 
             <ol className="border-border bg-surface mt-4 divide-y rounded-2xl border">
-                {participants.map((member, index) => {
+                {participants.map(({ member, label }, index) => {
                     const percent = group.amount === 0 ? 0 : (member.amount / group.amount) * 100;
 
                     const width = Math.max((member.amount / max) * 100, member.amount > 0 ? 2 : 0);
@@ -520,9 +523,7 @@ function Participants({
                                 <div className="min-w-0 flex-1">
                                     <div className="flex items-baseline justify-between gap-3">
                                         <span className="truncate font-medium" title={member.name}>
-                                            {member.isCurrentUser
-                                                ? `${member.name} (You)`
-                                                : member.name}
+                                            {label}
                                         </span>
 
                                         <span className="shrink-0 font-semibold">
