@@ -161,7 +161,7 @@ function CurrentPosition({
                 </div>
 
                 <p className="text-muted-foreground mt-1 text-sm">
-                    Includes settlement payments recorded in this period.
+                    Includes all recorded expenses and settlement payments.
                 </p>
             </div>
 
@@ -662,7 +662,7 @@ function DashboardError({
 }
 
 export function DashboardPage() {
-    const [period, setPeriod] = useState(() => presetPeriod('this-month'));
+    const [period, setPeriod] = useState(() => presetPeriod('all-time'));
 
     const { data, isLoading, isError, refetch } = useDashboard(period.range);
 
@@ -713,11 +713,13 @@ export function DashboardPage() {
                 <EmptyDashboard />
             ) : selected ? (
                 <>
-                    <CurrentPosition
-                        groups={data.groupSpend}
-                        selected={selected}
-                        periodLabel={period.label}
-                    />
+                    {period.preset === 'all-time' && (
+                        <CurrentPosition
+                            groups={data.groupSpend}
+                            selected={selected}
+                            periodLabel={period.label}
+                        />
+                    )}
 
                     {selected.amount > 0 ? (
                         <>
@@ -746,7 +748,9 @@ export function DashboardPage() {
                 </>
             ) : (
                 <>
-                    <CurrentPosition groups={data.groupSpend} periodLabel={period.label} />
+                    {period.preset === 'all-time' && (
+                        <CurrentPosition groups={data.groupSpend} periodLabel={period.label} />
+                    )}
 
                     <SpendingSummary
                         paid={data.actualPaid}

@@ -5,6 +5,13 @@ import { customPeriod, presetPeriod, usesDailyTrend } from './dashboardDateRange
 describe('dashboardDateRange', () => {
     const now = new Date(2026, 7, 17, 12);
 
+    it('creates an unbounded all-time period', () => {
+        expect(presetPeriod('all-time', now)).toEqual({
+            preset: 'all-time',
+            label: 'Full history',
+        });
+    });
+
     it.each([
         ['this-month', new Date(2026, 7, 1), new Date(2026, 8, 1)],
         ['previous-month', new Date(2026, 6, 1), new Date(2026, 7, 1)],

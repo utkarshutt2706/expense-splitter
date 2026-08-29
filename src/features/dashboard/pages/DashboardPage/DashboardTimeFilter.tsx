@@ -11,7 +11,13 @@ import {
     type DashboardPeriodPreset,
 } from './dashboardDateRange';
 
-const PRESETS = ['this-month', 'previous-month', 'last-three-months', 'this-year'] as const;
+const PRESETS = [
+    'all-time',
+    'this-month',
+    'previous-month',
+    'last-three-months',
+    'this-year',
+] as const;
 
 function openDatePicker(event: MouseEvent<HTMLInputElement>) {
     try {

@@ -100,9 +100,10 @@ describe('DashboardPage', () => {
         expect(refetch).toHaveBeenCalled();
     });
 
-    it('renders the all-groups scope with gross balances and paired metrics', () => {
+    it('defaults to full history and shows the outstanding position', () => {
         renderPage();
         expect(screen.getByRole('heading', { name: 'Spending overview' })).toBeInTheDocument();
+        expect(vi.mocked(useDashboard).mock.calls.at(-1)?.[0]).toBeUndefined();
         expect(screen.getByText(/to receive ₹250.00/i)).toBeInTheDocument();
         expect(screen.getByText(/to pay ₹125.00/i)).toBeInTheDocument();
         expect(screen.getAllByText('Paid by you').length).toBeGreaterThan(0);
@@ -113,8 +114,22 @@ describe('DashboardPage', () => {
         expect(screen.getByRole('heading', { name: /spending over time/i })).toBeInTheDocument();
     });
 
+    it('hides the outstanding position for a limited period', () => {
+        renderPage();
+        fireEvent.click(screen.getByRole('button', { name: /time period.*full history/i }));
+        fireEvent.click(screen.getByRole('button', { name: 'This month' }));
+
+        expect(vi.mocked(useDashboard).mock.calls.at(-1)?.[0]).toEqual(
+            expect.objectContaining({ from: expect.any(String), to: expect.any(String) }),
+        );
+        expect(screen.queryByText(/to receive ₹250.00/i)).not.toBeInTheDocument();
+        expect(screen.queryByText(/to pay ₹125.00/i)).not.toBeInTheDocument();
+    });
+
     it('renders chart values on every device', () => {
         renderPage();
+        fireEvent.click(screen.getByRole('button', { name: /time period.*full history/i }));
+        fireEvent.click(screen.getByRole('button', { name: 'This month' }));
         const trend = screen.getByRole('region', { name: /spending over time/i });
         const selector = within(trend).getByRole('button', { name: '10 Aug 2026' });
         expect(trend).not.toHaveClass('touch-device-only');
@@ -132,6 +147,8 @@ describe('DashboardPage', () => {
 
     it('renders chart values through a responsive period selector', () => {
         renderPage();
+        fireEvent.click(screen.getByRole('button', { name: /time period.*full history/i }));
+        fireEvent.click(screen.getByRole('button', { name: 'This month' }));
         const trend = screen.getByRole('region', { name: /spending over time/i });
         const selector = within(trend).getByRole('button', { name: /10 Aug 2026/ });
         const visibleValues = trend.querySelector('dl')!;
@@ -147,6 +164,8 @@ describe('DashboardPage', () => {
             ({ spendingByDay: _daily, ...group }) => group,
         );
         renderPage({ ...dashboard, groupSpend: legacyGroups });
+        fireEvent.click(screen.getByRole('button', { name: /time period.*full history/i }));
+        fireEvent.click(screen.getByRole('button', { name: 'This month' }));
         expect(
             screen.getByRole('heading', { name: /daily trend unavailable/i }),
         ).toBeInTheDocument();
@@ -188,9 +207,9 @@ describe('DashboardPage', () => {
         expect(screen.queryByRole('searchbox', { name: /search groups/i })).not.toBeInTheDocument();
     });
 
-    it('defaults to this month and supports the preset time filters', () => {
+    it('defaults to full history and supports the preset time filters', () => {
         renderPage();
-        const filter = screen.getByRole('button', { name: /time period.*this month/i });
+        const filter = screen.getByRole('button', { name: /time period.*full history/i });
         fireEvent.click(filter);
         expect(screen.getByRole('dialog', { name: /choose dashboard time period/i })).toHaveClass(
             'rounded-lg',
@@ -207,7 +226,7 @@ describe('DashboardPage', () => {
 
     it('validates that custom ranges do not exceed one year', () => {
         renderPage();
-        fireEvent.click(screen.getByRole('button', { name: /time period.*this month/i }));
+        fireEvent.click(screen.getByRole('button', { name: /time period.*full history/i }));
         fireEvent.click(screen.getByRole('button', { name: /custom date range/i }));
         fireEvent.change(screen.getByLabelText(/custom range start/i), {
             target: { value: '2026-01-01' },
@@ -221,7 +240,7 @@ describe('DashboardPage', () => {
 
     it('constrains custom calendars using today, the start date, and one year', () => {
         renderPage();
-        fireEvent.click(screen.getByRole('button', { name: /time period.*this month/i }));
+        fireEvent.click(screen.getByRole('button', { name: /time period.*full history/i }));
         fireEvent.click(screen.getByRole('button', { name: /custom date range/i }));
         const startInput = screen.getByLabelText(/custom range start/i);
         const endInput = screen.getByLabelText(/custom range end/i);
