@@ -1,4 +1,4 @@
-import type { User } from '@data/entities';
+import type { User } from '@features/users/api/usersApi';
 import { SearchInput } from '@shared/components';
 import { FriendSearchResult } from '../FriendSearchResult';
 import { MemberCheckboxList } from '../MemberCheckboxList';

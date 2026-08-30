@@ -3,7 +3,7 @@ import { renderHook, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
-import type { Expense } from '@data/entities';
+import type { Expense } from '@features/expenses/api/expensesApi';
 import * as expensesApi from '@features/expenses/api/expensesApi';
 import { useCreateExpense } from './useCreateExpense';
 

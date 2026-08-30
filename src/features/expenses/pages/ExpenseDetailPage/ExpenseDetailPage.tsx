@@ -5,7 +5,7 @@ import { Link, useNavigate, useParams } from 'react-router';
 import { toast } from 'sonner';
 
 import { useCurrentUser } from '@app/hooks';
-import type { User } from '@data/entities';
+import type { User } from '@features/users/api/usersApi';
 import { ExpenseDetailSkeleton } from '@features/expenses/components/ExpenseDetailSkeleton';
 import { useDeleteExpense } from '@features/expenses/hooks/useDeleteExpense';
 import { useExpense } from '@features/expenses/hooks/useExpense';

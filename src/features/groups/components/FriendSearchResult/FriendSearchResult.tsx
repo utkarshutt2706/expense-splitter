@@ -1,7 +1,7 @@
 import { Loader2, UserPlus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
-import type { User } from '@data/entities';
+import type { User } from '@features/users/api/usersApi';
 import { useUserLookup } from '@features/users/hooks';
 import { Avatar } from '@shared/components';
 import { disambiguateParticipantNames } from '@shared/utils';

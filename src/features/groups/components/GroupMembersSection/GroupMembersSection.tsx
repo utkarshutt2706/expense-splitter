@@ -1,4 +1,4 @@
-import type { User } from '@data/entities';
+import type { User } from '@features/users/api/usersApi';
 import { GroupMembersStack } from '../GroupMembersStack';
 import { MemberAvatarsSkeleton } from '../MemberAvatarsSkeleton';
 

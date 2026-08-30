@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import type { User } from '@data/entities';
+import type { User } from '@features/users/api/usersApi';
 
 function matchesSearch(user: User, query: string): boolean {
     const target = query.toLowerCase();

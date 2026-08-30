@@ -1,4 +1,4 @@
-import type { User } from '@data/entities';
+import type { User } from '@features/users/api/usersApi';
 import { FormDialog } from '@shared/components';
 import { closeOnSubmit } from '@shared/utils';
 import { EditGroupMembersForm, type EditGroupMembersFormValues } from '../EditGroupMembersForm';

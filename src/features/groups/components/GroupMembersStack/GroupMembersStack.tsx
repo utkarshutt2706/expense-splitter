@@ -1,7 +1,7 @@
 import * as Popover from '@radix-ui/react-popover';
 
 import { useCurrentUser } from '@app/hooks';
-import type { User } from '@data/entities';
+import type { User } from '@features/users/api/usersApi';
 import { Avatar, ResponsivePopoverContent } from '@shared/components';
 import { sortMembersByName } from '@shared/utils';
 import { MemberList } from '../MemberList';

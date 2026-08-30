@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 
-import type { User } from '@data/entities';
+import type { User } from '@features/users/api/usersApi';
 import { getByIds } from '@features/users/api/usersApi';
 
 export function useGroupMembers(memberIds: string[]) {

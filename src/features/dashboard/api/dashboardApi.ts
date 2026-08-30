@@ -1,43 +1,21 @@
 import { httpClient } from '@lib/api/httpClient';
+import type {
+    DashboardContract,
+    DashboardDailySpendContract,
+    DashboardGroupSpendContract,
+    DashboardMemberShareContract,
+    DashboardMonthlySpendContract,
+} from '@lib/api/contracts';
 
-export interface DashboardMemberShare {
-    userId: string;
-    name: string;
-    amount: number;
-    isCurrentUser: boolean;
-}
-
-export interface DashboardMonthlySpend {
-    month: string;
-    amount: number;
-    actualPaid: number;
-    currentUserShare: number;
-}
-
-export interface DashboardDailySpend {
-    date: string;
-    amount: number;
-    actualPaid: number;
-    currentUserShare: number;
-}
-
-export interface DashboardGroupSpend {
-    groupId: string;
-    name: string;
-    amount: number;
-    actualPaid: number;
-    currentUserShare: number;
-    currentBalance: number;
-    memberShares: DashboardMemberShare[];
-    spendingByMonth: DashboardMonthlySpend[];
+export type DashboardMemberShare = DashboardMemberShareContract;
+export type DashboardMonthlySpend = DashboardMonthlySpendContract;
+export type DashboardDailySpend = DashboardDailySpendContract;
+export type DashboardGroupSpend = Omit<DashboardGroupSpendContract, 'spendingByDay'> & {
     spendingByDay?: DashboardDailySpend[];
-}
-
-export interface DashboardSummary {
-    actualPaid: number;
-    currentUserShare: number;
+};
+export type DashboardSummary = Omit<DashboardContract, 'groupSpend'> & {
     groupSpend: DashboardGroupSpend[];
-}
+};
 
 export interface DashboardDateRange {
     from: string;
@@ -45,6 +23,6 @@ export interface DashboardDateRange {
 }
 
 export async function getDashboard(range?: DashboardDateRange): Promise<DashboardSummary> {
-    const { data } = await httpClient.get<DashboardSummary>('/dashboard', { params: range });
+    const { data } = await httpClient.get<DashboardContract>('/dashboard', { params: range });
     return data;
 }

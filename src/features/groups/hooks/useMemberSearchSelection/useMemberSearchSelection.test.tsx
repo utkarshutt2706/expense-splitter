@@ -1,7 +1,7 @@
 import { act, renderHook } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
-import type { User } from '@data/entities';
+import type { User } from '@features/users/api/usersApi';
 import { useMemberSearchSelection } from './useMemberSearchSelection';
 
 const priya: User = { id: 'friend-1', name: 'Priya Sharma', email: 'priya@example.com' };

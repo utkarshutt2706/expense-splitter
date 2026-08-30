@@ -1,33 +1,31 @@
-import type { Expense, ExpenseSplit, SplitType } from '@data/entities';
-import type {
-    PercentageSplitEntry,
-    SharesSplitEntry,
-} from '@features/expenses/utils/splitCalculator';
 import { httpClient } from '@lib/api/httpClient';
+import type {
+    CreateExpenseContract,
+    ExpenseContract,
+    ExpenseSplitContract,
+    SplitTypeContract,
+} from '@lib/api/contracts';
 
-export interface ExpenseWriteInput {
-    description: string;
-    amount: number;
-    paidByUserId: string;
-    paidOn?: string;
-    splitType: SplitType;
-    splits: ExpenseSplit[];
-    percentages?: PercentageSplitEntry[];
-    shares?: SharesSplitEntry[];
-}
+export type ExpenseWriteInput = CreateExpenseContract;
+export type ExpenseSplit = ExpenseSplitContract;
+export type SplitType = SplitTypeContract;
+export type Expense = Omit<ExpenseContract, 'createdByUserId' | 'paidOn'> &
+    Partial<Pick<ExpenseContract, 'createdByUserId' | 'paidOn'>>;
 
 export async function getByGroupId(groupId: string): Promise<Expense[]> {
-    const { data } = await httpClient.get<Expense[]>(`/groups/${groupId}/expenses`);
+    const { data } = await httpClient.get<ExpenseContract[]>(`/groups/${groupId}/expenses`);
     return data;
 }
 
 export async function getById(groupId: string, expenseId: string): Promise<Expense> {
-    const { data } = await httpClient.get<Expense>(`/groups/${groupId}/expenses/${expenseId}`);
+    const { data } = await httpClient.get<ExpenseContract>(
+        `/groups/${groupId}/expenses/${expenseId}`,
+    );
     return data;
 }
 
 export async function create(groupId: string, input: ExpenseWriteInput): Promise<Expense> {
-    const { data } = await httpClient.post<Expense>(`/groups/${groupId}/expenses`, input);
+    const { data } = await httpClient.post<ExpenseContract>(`/groups/${groupId}/expenses`, input);
     return data;
 }
 
@@ -36,7 +34,7 @@ export async function update(
     expenseId: string,
     input: ExpenseWriteInput,
 ): Promise<Expense> {
-    const { data } = await httpClient.patch<Expense>(
+    const { data } = await httpClient.patch<ExpenseContract>(
         `/groups/${groupId}/expenses/${expenseId}`,
         input,
     );

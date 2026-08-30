@@ -1,5 +1,6 @@
 import { useCurrentUser } from '@app/hooks';
-import type { SplitType, User } from '@data/entities';
+import type { SplitType } from '@features/expenses/api/expensesApi';
+import type { User } from '@features/users/api/usersApi';
 import { Avatar, CurrencyInput } from '@shared/components';
 import { formatCurrency, participantNameMap, sortMembersByName } from '@shared/utils';
 

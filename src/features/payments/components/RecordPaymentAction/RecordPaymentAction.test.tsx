@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { toast } from 'sonner';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { User } from '@data/entities';
+import type { User } from '@features/users/api/usersApi';
 import { useCreatePayment } from '@features/payments/hooks/useCreatePayment';
 import { RecordPaymentAction } from './RecordPaymentAction';
 

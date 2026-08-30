@@ -2,8 +2,8 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
-import type { User } from '@data/entities';
-import { CURRENT_USER_ID } from '@data/seed';
+import type { User } from '@features/users/api/usersApi';
+import { CURRENT_USER_ID } from '@test/fixtures/ids';
 import { SplitParticipantList } from './SplitParticipantList';
 
 vi.mock('@app/hooks', async (importOriginal) => ({

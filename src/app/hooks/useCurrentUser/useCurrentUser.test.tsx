@@ -2,7 +2,7 @@ import { renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { useAuthStore } from '@app/stores';
-import type { User } from '@data/entities';
+import type { User } from '@features/users/api/usersApi';
 import { useCurrentUser } from './useCurrentUser';
 
 describe('useCurrentUser', () => {

@@ -3,8 +3,8 @@ import { renderHook, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
-import type { User } from '@data/entities';
-import { CURRENT_USER_ID } from '@data/seed';
+import type { User } from '@features/users/api/usersApi';
+import { CURRENT_USER_ID } from '@test/fixtures/ids';
 import * as friendsApi from '@features/friends/api/friendsApi';
 import { useFriends } from './useFriends';
 

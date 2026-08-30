@@ -3,7 +3,8 @@ import userEvent from '@testing-library/user-event';
 import { toast } from 'sonner';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { Group, User } from '@data/entities';
+import type { Group } from '@features/groups/api/groupsApi';
+import type { User } from '@features/users/api/usersApi';
 import { useFriends } from '@features/friends';
 import { useUpdateGroupMembers } from '@features/groups/hooks/useUpdateGroupMembers';
 import { EditGroupMembersAction } from './EditGroupMembersAction';

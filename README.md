@@ -1,9 +1,7 @@
 # Expense Splitter
 
-A frontend-only expense splitting application inspired by Splitwise, built with React
-and TypeScript. There is no backend yet — data lives locally in the browser (IndexedDB),
-behind a storage abstraction designed so a real API can be swapped in later without
-touching feature code.
+A frontend expense splitting application inspired by Splitwise, built with React and
+TypeScript and backed by the companion Expense Splitter API.
 
 ## Tech stack
 
@@ -32,6 +30,7 @@ pnpm dev
 | -------------------- | ---------------------------------------- |
 | `pnpm dev`           | Start the dev server                     |
 | `pnpm build`         | Type-check and build for production      |
+| `pnpm generate:api`  | Generate API types from the backend spec |
 | `pnpm preview`       | Preview the production build locally     |
 | `pnpm format`        | Format the codebase with Prettier        |
 | `pnpm format:check`  | Check formatting without writing changes |
@@ -40,6 +39,18 @@ pnpm dev
 | `pnpm test`          | Run the test suite once                  |
 | `pnpm test:watch`    | Run the test suite in watch mode         |
 | `pnpm test:coverage` | Run tests with coverage (80% threshold)  |
+
+## API contract
+
+The backend is the source of truth for the HTTP contract. Its committed `openapi.json`
+is generated from the Nest controllers and DTOs, and `pnpm generate:api` converts that
+document into `src/lib/api/generated/schema.ts`. Both generated files are committed so
+each repository can build independently.
+
+After changing an endpoint or DTO, run `pnpm generate:openapi` in the sibling
+`expense-splitter-api` repository, then run `pnpm generate:api` here. Do not edit the
+generated schema by hand. Frontend-only compatibility and view-model types belong in
+`src/data`; request and response transport types belong in `src/lib/api/contracts.ts`.
 
 ## Restoring the removed invitation flow
 

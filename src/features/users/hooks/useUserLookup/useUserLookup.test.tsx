@@ -3,7 +3,7 @@ import { renderHook, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { User } from '@data/entities';
+import type { User } from '@features/users/api/usersApi';
 import * as usersApi from '@features/users/api/usersApi';
 import { ApiError } from '@lib/api/apiError';
 import { useUserLookup } from './useUserLookup';

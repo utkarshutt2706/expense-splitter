@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import type { User } from '@data/entities';
+import type { User } from '@features/users/api/usersApi';
 import { httpClient } from '@lib/api/httpClient';
 import { changePassword, login, logout, refreshSession, register } from './authApi';
 

@@ -1,4 +1,4 @@
-import type { ExpenseSplit } from '@data/entities';
+import type { ExpenseSplit } from '@features/expenses/api/expensesApi';
 
 export class SplitCalculationError extends Error {
     constructor(message: string) {

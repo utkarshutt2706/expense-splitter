@@ -3,7 +3,7 @@ import { ChevronDown, Handshake } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
 
-import type { User } from '@data/entities';
+import type { User } from '@features/users/api/usersApi';
 import type { SettlementTransaction } from '@features/balances/api/balancesApi';
 import { RecordPaymentDialog } from '@features/payments/components/RecordPaymentDialog';
 import { useCreatePayment } from '@features/payments/hooks/useCreatePayment';

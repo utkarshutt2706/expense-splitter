@@ -2,8 +2,9 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
 
-import type { Group, User } from '@data/entities';
-import { CURRENT_USER_ID } from '@data/seed';
+import type { Group } from '@features/groups/api/groupsApi';
+import type { User } from '@features/users/api/usersApi';
+import { CURRENT_USER_ID } from '@test/fixtures/ids';
 import type { GroupBalances } from '@features/balances/api/balancesApi';
 import { useGroupBalances } from '@features/balances/hooks/useGroupBalances';
 import { useGroup, useGroupMembers } from '@features/groups';

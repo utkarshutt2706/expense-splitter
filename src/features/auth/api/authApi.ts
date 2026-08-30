@@ -1,44 +1,33 @@
-import type { User } from '@data/entities';
+import type { User } from '@features/users/api/usersApi';
 import { httpClient } from '@lib/api/httpClient';
+import type {
+    AuthSessionContract,
+    ChangePasswordContract,
+    LoginContract,
+    RegisterContract,
+} from '@lib/api/contracts';
 
-export interface AuthSession {
-    user: User;
-    accessToken: string;
-}
-
-export interface LoginInput {
-    email: string;
-    password: string;
-}
-
-export interface RegisterInput {
-    name: string;
-    email: string;
-    password: string;
-    phone: string;
-}
-
-export interface ChangePasswordInput {
-    currentPassword: string;
-    newPassword: string;
-}
+export type AuthSession = Omit<AuthSessionContract, 'user'> & { user: User };
+export type LoginInput = LoginContract;
+export type RegisterInput = RegisterContract;
+export type ChangePasswordInput = ChangePasswordContract;
 
 const sessionRequestConfig = {
     headers: { 'X-Session-Request': 'ExpenseSplitter' },
 };
 
 export async function login(input: LoginInput): Promise<AuthSession> {
-    const { data } = await httpClient.post<AuthSession>('/auth/login', input);
+    const { data } = await httpClient.post<AuthSessionContract>('/auth/login', input);
     return data;
 }
 
 export async function register(input: RegisterInput): Promise<AuthSession> {
-    const { data } = await httpClient.post<AuthSession>('/auth/register', input);
+    const { data } = await httpClient.post<AuthSessionContract>('/auth/register', input);
     return data;
 }
 
 export async function refreshSession(): Promise<AuthSession | null> {
-    const { data } = await httpClient.post<AuthSession | null>(
+    const { data } = await httpClient.post<AuthSessionContract | null>(
         '/auth/refresh',
         undefined,
         sessionRequestConfig,

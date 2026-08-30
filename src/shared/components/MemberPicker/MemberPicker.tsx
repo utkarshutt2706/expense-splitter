@@ -2,7 +2,7 @@ import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { ChevronDown } from 'lucide-react';
 
 import { useCurrentUser } from '@app/hooks';
-import type { User } from '@data/entities';
+import type { User } from '@features/users/api/usersApi';
 import { participantNameMap, sortMembersByName } from '@shared/utils';
 import { Avatar } from '../Avatar';
 

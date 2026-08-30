@@ -1,4 +1,4 @@
-import type { User } from '@data/entities';
+import type { User } from '@features/users/api/usersApi';
 import { Avatar } from '@shared/components';
 import { participantNameMap, sortMembersByName } from '@shared/utils';
 

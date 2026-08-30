@@ -3,8 +3,8 @@ import userEvent from '@testing-library/user-event';
 import { toast } from 'sonner';
 import { describe, expect, it, vi } from 'vitest';
 
-import type { User } from '@data/entities';
-import { CURRENT_USER_ID } from '@data/seed';
+import type { User } from '@features/users/api/usersApi';
+import { CURRENT_USER_ID } from '@test/fixtures/ids';
 import { UpsertExpenseForm } from './UpsertExpenseForm';
 
 vi.mock('@app/hooks', async (importOriginal) => ({

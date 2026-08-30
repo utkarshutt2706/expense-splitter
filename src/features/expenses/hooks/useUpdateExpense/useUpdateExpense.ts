@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import type { SplitType } from '@data/entities';
+import type { SplitType } from '@features/expenses/api/expensesApi';
 import { update } from '@features/expenses/api/expensesApi';
 import { resolveSplits } from '@features/expenses/utils/resolveSplits';
 import type {

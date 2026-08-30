@@ -2,7 +2,8 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { Group, User } from '@data/entities';
+import type { Group } from '@features/groups/api/groupsApi';
+import type { User } from '@features/users/api/usersApi';
 import { useGroup, useGroupMembers } from '@features/groups';
 import { ApiError } from '@lib/api/apiError';
 import { GroupDetailPage } from './GroupDetailPage';
