@@ -48,4 +48,19 @@ describe('usePayments', () => {
         expect(paymentsApi.getByGroupId).toHaveBeenCalledWith('group-1');
         expect(result.current.data).toEqual([newerPayment, olderPayment]);
     });
+
+    it('uses creation time to order payments recorded for the same paid date', async () => {
+        const paidOn = '2026-07-03T00:00:00.000Z';
+        const earlierRecordedPayment: Payment = { ...olderPayment, paidOn };
+        const laterRecordedPayment: Payment = { ...newerPayment, paidOn };
+        vi.mocked(paymentsApi.getByGroupId).mockResolvedValue([
+            earlierRecordedPayment,
+            laterRecordedPayment,
+        ]);
+
+        const { result } = renderUsePayments('group-1');
+
+        await waitFor(() => expect(result.current.isSuccess).toBe(true));
+        expect(result.current.data).toEqual([laterRecordedPayment, earlierRecordedPayment]);
+    });
 });

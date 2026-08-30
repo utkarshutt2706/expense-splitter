@@ -54,4 +54,18 @@ describe('useExpenses', () => {
         expect(expensesApi.getByGroupId).toHaveBeenCalledWith('group-1');
         expect(result.current.data).toEqual([olderExpense, newerExpense]);
     });
+
+    it('uses creation time to order expenses recorded for the same paid date', async () => {
+        const laterRecordedExpense: Expense = {
+            ...newerExpense,
+            paidOn: olderExpense.paidOn,
+            createdAt: '2026-07-04T12:00:00.000Z',
+        };
+        vi.mocked(expensesApi.getByGroupId).mockResolvedValue([olderExpense, laterRecordedExpense]);
+
+        const { result } = renderUseExpenses('group-1');
+
+        await waitFor(() => expect(result.current.isSuccess).toBe(true));
+        expect(result.current.data).toEqual([laterRecordedExpense, olderExpense]);
+    });
 });

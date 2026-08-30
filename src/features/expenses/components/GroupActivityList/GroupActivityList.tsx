@@ -13,7 +13,11 @@ import { useDeletePayment, usePayments, useUpdatePayment } from '@features/payme
 import { RecordPaymentDialog } from '@features/payments/components/RecordPaymentDialog';
 import type { RecordPaymentFormValues } from '@features/payments/components/RecordPaymentForm';
 import { Avatar, ConfirmationDialog, FetchingIndicator, SwipeableRow } from '@shared/components';
-import { formatCurrency, participantNameMap } from '@shared/utils';
+import {
+    compareFinancialActivityNewestFirst,
+    formatCurrency,
+    participantNameMap,
+} from '@shared/utils';
 
 interface GroupActivityListProps {
     readonly groupId: string;
@@ -158,8 +162,8 @@ function PaymentRow({ payment, membersById, names, onEdit, onDelete }: PaymentRo
 }
 
 type ActivityItem =
-    | { type: 'expense'; id: string; paidOn: string; expense: Expense }
-    | { type: 'payment'; id: string; paidOn: string; payment: Payment };
+    | { type: 'expense'; id: string; paidOn: string; createdAt: string; expense: Expense }
+    | { type: 'payment'; id: string; paidOn: string; createdAt: string; payment: Payment };
 
 export function GroupActivityList({
     groupId,
@@ -258,15 +262,17 @@ export function GroupActivityList({
             type: 'expense',
             id: expense.id,
             paidOn: expense.paidOn ?? expense.createdAt,
+            createdAt: expense.createdAt,
             expense,
         })),
         ...(payments ?? []).map((payment): ActivityItem => ({
             type: 'payment',
             id: payment.id,
             paidOn: payment.paidOn ?? payment.createdAt,
+            createdAt: payment.createdAt,
             payment,
         })),
-    ].sort((a, b) => new Date(b.paidOn).getTime() - new Date(a.paidOn).getTime());
+    ].sort(compareFinancialActivityNewestFirst);
 
     if (items.length === 0) {
         return (
