@@ -1,7 +1,7 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
 
 import { useAuthStore } from '@app/stores';
-import type { User } from '@data/entities';
+import type { User } from '@features/users/api/usersApi';
 import { toApiError } from './apiError';
 
 interface RetryableRequestConfig extends InternalAxiosRequestConfig {

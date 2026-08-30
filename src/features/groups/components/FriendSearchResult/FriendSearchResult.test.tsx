@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { User } from '@data/entities';
+import type { User } from '@features/users/api/usersApi';
 import { useUserLookup } from '@features/users/hooks';
 import { FriendSearchResult } from './FriendSearchResult';
 

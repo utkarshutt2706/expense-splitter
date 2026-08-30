@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import type { Expense } from '@data/entities';
+import type { Expense } from './expensesApi';
 import { httpClient } from '@lib/api/httpClient';
 import { create, getByGroupId, getById, remove, update } from './expensesApi';
 

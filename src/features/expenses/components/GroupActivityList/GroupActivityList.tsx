@@ -4,7 +4,9 @@ import { Link, useNavigate } from 'react-router';
 import { toast } from 'sonner';
 
 import { useCurrentUser } from '@app/hooks';
-import type { Expense, Payment, User } from '@data/entities';
+import type { Expense } from '@features/expenses/api/expensesApi';
+import type { Payment } from '@features/payments/api/paymentsApi';
+import type { User } from '@features/users/api/usersApi';
 import { ActivityRowSkeleton } from '@features/expenses/components/ActivityRowSkeleton';
 import { useDeleteExpense } from '@features/expenses/hooks/useDeleteExpense';
 import { useExpenses } from '@features/expenses/hooks/useExpenses';

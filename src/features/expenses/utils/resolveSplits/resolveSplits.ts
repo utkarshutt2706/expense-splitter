@@ -1,4 +1,4 @@
-import type { ExpenseSplit, SplitType } from '@data/entities';
+import type { ExpenseSplit, SplitType } from '@features/expenses/api/expensesApi';
 import {
     calculateEqualSplit,
     calculateExactSplit,

@@ -3,7 +3,7 @@ import { renderHook, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
-import type { Payment } from '@data/entities';
+import type { Payment } from '@features/payments/api/paymentsApi';
 import * as paymentsApi from '@features/payments/api/paymentsApi';
 import { usePayments } from './usePayments';
 

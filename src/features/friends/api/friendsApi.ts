@@ -1,13 +1,11 @@
-import type { User } from '@data/entities';
+import type { User } from '@features/users/api/usersApi';
 import { httpClient } from '@lib/api/httpClient';
+import type { FriendContract } from '@lib/api/contracts';
 
-export interface Friend extends User {
-    sharedGroupCount?: number;
-    netBalance?: number;
-    groupBalances?: Array<{ groupId: string; groupName: string; balance: number }>;
-}
+export type Friend = User &
+    Partial<Pick<FriendContract, 'sharedGroupCount' | 'netBalance' | 'groupBalances'>>;
 
 export async function getFriends(): Promise<Friend[]> {
-    const { data } = await httpClient.get<Friend[]>('/users/me/friends');
+    const { data } = await httpClient.get<FriendContract[]>('/users/me/friends');
     return data;
 }

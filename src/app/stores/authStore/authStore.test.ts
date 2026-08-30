@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import type { User } from '@data/entities';
+import type { User } from '@features/users/api/usersApi';
 import { useAuthStore } from './authStore';
 
 const user: User = { id: 'current-user', name: 'Alex Morgan', email: 'alex@example.com' };

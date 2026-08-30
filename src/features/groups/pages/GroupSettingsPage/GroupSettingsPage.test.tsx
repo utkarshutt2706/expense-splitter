@@ -3,7 +3,8 @@ import { MemoryRouter } from 'react-router';
 import { toast } from 'sonner';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { Group, User } from '@data/entities';
+import type { Group } from '@features/groups/api/groupsApi';
+import type { User } from '@features/users/api/usersApi';
 import { useCurrentUser } from '@app/hooks';
 import { useGroupBalances } from '@features/balances/hooks/useGroupBalances';
 import { useGroup, useGroupMembers } from '@features/groups';

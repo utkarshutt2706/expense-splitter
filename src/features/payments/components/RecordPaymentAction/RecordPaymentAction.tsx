@@ -2,7 +2,7 @@ import { ArrowRightLeft } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
-import type { User } from '@data/entities';
+import type { User } from '@features/users/api/usersApi';
 import { useCreatePayment } from '@features/payments/hooks/useCreatePayment';
 import { RecordPaymentDialog } from '../RecordPaymentDialog';
 import type { RecordPaymentFormValues } from '../RecordPaymentForm';

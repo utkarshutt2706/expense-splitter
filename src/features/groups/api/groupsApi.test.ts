@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import type { Group } from '@data/entities';
+import type { Group } from './groupsApi';
 import { httpClient } from '@lib/api/httpClient';
 import { create, getAll, getById, remove, update } from './groupsApi';
 

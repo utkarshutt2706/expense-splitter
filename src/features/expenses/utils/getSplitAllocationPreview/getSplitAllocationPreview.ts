@@ -1,4 +1,4 @@
-import type { SplitType } from '@data/entities';
+import type { SplitType } from '@features/expenses/api/expensesApi';
 import { formatCurrency } from '@shared/utils';
 import {
     calculateEqualSplit,

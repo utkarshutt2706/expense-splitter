@@ -4,8 +4,10 @@ import { MemoryRouter } from 'react-router';
 import { toast } from 'sonner';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { Expense, Payment, User } from '@data/entities';
-import { CURRENT_USER_ID } from '@data/seed';
+import type { Expense } from '@features/expenses/api/expensesApi';
+import type { Payment } from '@features/payments/api/paymentsApi';
+import type { User } from '@features/users/api/usersApi';
+import { CURRENT_USER_ID } from '@test/fixtures/ids';
 import { useDeleteExpense } from '@features/expenses/hooks/useDeleteExpense';
 import { useExpenses } from '@features/expenses/hooks/useExpenses';
 import { useDeletePayment, usePayments, useUpdatePayment } from '@features/payments';

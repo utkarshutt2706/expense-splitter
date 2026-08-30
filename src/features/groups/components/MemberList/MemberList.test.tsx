@@ -1,8 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
-import type { User } from '@data/entities';
-import { CURRENT_USER_ID } from '@data/seed';
+import type { User } from '@features/users/api/usersApi';
+import { CURRENT_USER_ID } from '@test/fixtures/ids';
 import { MemberList } from './MemberList';
 
 vi.mock('@app/hooks', async (importOriginal) => ({

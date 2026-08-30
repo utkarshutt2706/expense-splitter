@@ -1,4 +1,4 @@
-import type { Expense } from '@data/entities';
+import type { Expense } from '@features/expenses/api/expensesApi';
 import type { UpsertExpenseFormInitialValues } from '@features/expenses/components/UpsertExpenseForm';
 
 export function buildEditExpenseInitialValues(expense: Expense): UpsertExpenseFormInitialValues {

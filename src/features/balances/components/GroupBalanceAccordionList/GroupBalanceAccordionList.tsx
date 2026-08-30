@@ -5,7 +5,7 @@ import { useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import { useCurrentUser } from '@app/hooks';
-import type { User } from '@data/entities';
+import type { User } from '@features/users/api/usersApi';
 import type { SettlementTransaction } from '@features/balances/api/balancesApi';
 import { RecordPaymentAction } from '@features/payments';
 import { RecordPaymentDialog } from '@features/payments/components/RecordPaymentDialog';

@@ -3,7 +3,7 @@ import { renderHook, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
-import type { Group } from '@data/entities';
+import type { Group } from '@features/groups/api/groupsApi';
 import * as groupsApi from '@features/groups/api/groupsApi';
 import { useRenameGroup } from './useRenameGroup';
 

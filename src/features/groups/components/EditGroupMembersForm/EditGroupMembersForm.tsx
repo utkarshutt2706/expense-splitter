@@ -2,7 +2,7 @@ import { Check } from 'lucide-react';
 import type { SubmitEvent } from 'react';
 
 import { useCurrentUser } from '@app/hooks';
-import type { User } from '@data/entities';
+import type { User } from '@features/users/api/usersApi';
 import { useMemberSearchSelection } from '@features/groups/hooks/useMemberSearchSelection';
 import { MemberSearchSection } from '../MemberSearchSection';
 

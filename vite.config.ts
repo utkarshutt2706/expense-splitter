@@ -41,10 +41,10 @@ export default defineConfig(({ command }) => ({
         alias: {
             '@app': resolvePath('./src/app'),
             '@assets': resolvePath('./src/assets'),
-            '@data': resolvePath('./src/data'),
             '@features': resolvePath('./src/features'),
             '@lib': resolvePath('./src/lib'),
             '@shared': resolvePath('./src/shared'),
+            '@test': resolvePath('./src/test'),
         },
     },
     test: {

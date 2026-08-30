@@ -2,7 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useAuthStore } from '@app/stores';
-import type { User } from '@data/entities';
+import type { User } from '@features/users/api/usersApi';
 import { refreshSession } from '@features/auth/api/authApi';
 import { SessionBootstrap } from './SessionBootstrap';
 

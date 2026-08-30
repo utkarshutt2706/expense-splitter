@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { Expense } from '@data/entities';
+import type { Expense } from '@features/expenses/api/expensesApi';
 import { buildEditExpenseInitialValues } from './buildEditExpenseInitialValues';
 
 function makeExpense(overrides: Partial<Expense>): Expense {

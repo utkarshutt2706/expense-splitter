@@ -1,7 +1,7 @@
 import { ChartNoAxesColumn, Equal, Percent } from 'lucide-react';
 import type { ReactNode } from 'react';
 
-import type { SplitType } from '@data/entities';
+import type { SplitType } from '@features/expenses/api/expensesApi';
 
 type SplitTypeTabsProps = Readonly<{
     value: SplitType;

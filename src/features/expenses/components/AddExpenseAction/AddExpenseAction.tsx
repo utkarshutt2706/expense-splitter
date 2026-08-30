@@ -1,7 +1,7 @@
 import { Plus } from 'lucide-react';
 import { Link } from 'react-router';
 
-import type { User } from '@data/entities';
+import type { User } from '@features/users/api/usersApi';
 
 type AddExpenseActionProps = Readonly<{
     groupId: string;

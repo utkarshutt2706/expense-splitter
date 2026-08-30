@@ -3,7 +3,7 @@ import { useState, type CSSProperties, type ReactNode } from 'react';
 import { Link } from 'react-router';
 
 import { useCurrentUser } from '@app/hooks';
-import type { User } from '@data/entities';
+import type { User } from '@features/users/api/usersApi';
 import { useGroupBalances } from '@features/balances/hooks/useGroupBalances';
 import { FetchingIndicator, Skeleton } from '@shared/components';
 import { formatCurrency } from '@shared/utils';

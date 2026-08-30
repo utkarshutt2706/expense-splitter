@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 
-import type { User } from '@data/entities';
+import type { User } from '@features/users/api/usersApi';
 import { AddExpenseAction } from './AddExpenseAction';
 
 const members: User[] = [{ id: 'current-user', name: 'Alex Morgan', email: 'alex@example.com' }];

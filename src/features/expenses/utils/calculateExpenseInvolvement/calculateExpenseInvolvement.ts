@@ -1,4 +1,4 @@
-import type { Expense } from '@data/entities';
+import type { Expense } from '@features/expenses/api/expensesApi';
 
 export type ExpenseInvolvement =
     { type: 'lent'; amount: number } | { type: 'owed'; amount: number } | { type: 'uninvolved' };

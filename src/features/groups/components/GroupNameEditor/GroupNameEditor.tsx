@@ -2,7 +2,7 @@ import { Check, Pencil, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
-import type { Group } from '@data/entities';
+import type { Group } from '@features/groups/api/groupsApi';
 import { useRenameGroup } from '@features/groups/hooks/useRenameGroup';
 
 type GroupNameEditorProps = Readonly<{

@@ -3,7 +3,7 @@ import { AxiosHeaders } from 'axios';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useAuthStore } from '@app/stores';
-import type { User } from '@data/entities';
+import type { User } from '@features/users/api/usersApi';
 import { attachAuthHeader, handleResponseError, httpClient } from './httpClient';
 
 const refreshedUser: User = {

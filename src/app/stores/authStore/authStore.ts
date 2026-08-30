@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-import type { User } from '@data/entities';
+import type { User } from '@features/users/api/usersApi';
 
 const LEGACY_AUTH_STORAGE_KEY = 'auth';
 

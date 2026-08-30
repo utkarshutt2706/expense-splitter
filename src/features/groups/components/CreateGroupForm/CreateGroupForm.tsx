@@ -3,7 +3,7 @@ import { FolderPlus } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
-import type { User } from '@data/entities';
+import type { User } from '@features/users/api/usersApi';
 import { useMemberSearchSelection } from '@features/groups/hooks/useMemberSearchSelection';
 import { MemberSearchSection } from '../MemberSearchSection';
 

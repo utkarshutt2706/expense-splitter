@@ -6,4 +6,4 @@ export {
     type CreateGroupFormValues,
 } from './components';
 export { useCreateGroup, useGroup, useGroupMembers, useGroups, useGroupSummaries } from './hooks';
-export type { GroupSummary } from './api/groupsApi';
+export type { Group, GroupSummary } from './api/groupsApi';

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import type { User } from '@data/entities';
+import type { User } from './usersApi';
 import { httpClient } from '@lib/api/httpClient';
 import { getByIds, lookup } from './usersApi';
 

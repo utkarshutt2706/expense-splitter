@@ -1,5 +1,5 @@
 import { useCurrentUser } from '@app/hooks';
-import type { User } from '@data/entities';
+import type { User } from '@features/users/api/usersApi';
 import { Avatar } from '@shared/components';
 import { cn, participantNameMap, sortMembersByName } from '@shared/utils';
 

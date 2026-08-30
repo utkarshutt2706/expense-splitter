@@ -1,4 +1,4 @@
-import type { User } from '@data/entities';
+import type { User } from '@features/users/api/usersApi';
 import { useCurrentUser } from '@app/hooks';
 import { FormDialog } from '@shared/components';
 import { formatCurrency, participantNameMap } from '@shared/utils';
