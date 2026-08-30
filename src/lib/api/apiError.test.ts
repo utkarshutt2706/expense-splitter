@@ -46,6 +46,22 @@ describe('toApiError', () => {
         expect(apiError.status).toBe(500);
     });
 
+    it.each([
+        ['a null error', { error: null }],
+        ['a missing code', { error: { message: 'Unauthorized' } }],
+        ['a missing message', { error: { code: 'UNAUTHORIZED' } }],
+        ['a non-string code', { error: { code: 401, message: 'Unauthorized' } }],
+        ['a non-string message', { error: { code: 'UNAUTHORIZED', message: null } }],
+        ['an empty message', { error: { code: 'UNAUTHORIZED', message: '   ' } }],
+        ['an unknown code', { error: { code: 'PROXY_ERROR', message: 'Proxy failure' } }],
+    ])('uses the generic error for malformed API data containing %s', (_, body) => {
+        const apiError = toApiError(axiosErrorWithResponse(502, body));
+
+        expect(apiError.code).toBe('ERROR');
+        expect(apiError.message).toBe('Request failed');
+        expect(apiError.status).toBe(502);
+    });
+
     it('falls back to an ERROR code with no status when there is no response at all', () => {
         const error = axiosErrorWithoutResponse('Network Error');
 

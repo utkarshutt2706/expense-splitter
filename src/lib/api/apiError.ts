@@ -9,6 +9,16 @@ export type ApiErrorCode =
     | 'ERROR'
     | 'INTERNAL_ERROR';
 
+const API_ERROR_CODES = new Set<ApiErrorCode>([
+    'VALIDATION_ERROR',
+    'UNAUTHORIZED',
+    'FORBIDDEN',
+    'NOT_FOUND',
+    'CONFLICT',
+    'ERROR',
+    'INTERNAL_ERROR',
+]);
+
 interface ApiErrorBody {
     error: {
         code: ApiErrorCode;
@@ -29,11 +39,17 @@ export class ApiError extends Error {
 }
 
 function isApiErrorBody(data: unknown): data is ApiErrorBody {
+    if (typeof data !== 'object' || data === null || !('error' in data)) return false;
+
+    const error = data.error;
+    if (typeof error !== 'object' || error === null) return false;
+    if (!('code' in error) || !('message' in error)) return false;
+
     return (
-        typeof data === 'object' &&
-        data !== null &&
-        'error' in data &&
-        typeof (data as ApiErrorBody).error === 'object'
+        typeof error.code === 'string' &&
+        API_ERROR_CODES.has(error.code as ApiErrorCode) &&
+        typeof error.message === 'string' &&
+        error.message.trim().length > 0
     );
 }
 
