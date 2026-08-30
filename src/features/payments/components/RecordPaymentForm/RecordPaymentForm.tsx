@@ -1,13 +1,19 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ArrowRightLeft } from 'lucide-react';
-import { useEffect, useRef, type MouseEvent } from 'react';
+import { useEffect, useRef } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
 
 import { useCurrentUser } from '@app/hooks';
 import type { User } from '@data/entities';
 import { CurrencyInput, MemberPicker } from '@shared/components';
-import { formatCurrency, participantNameMap } from '@shared/utils';
+import {
+    formatCurrency,
+    localDateInputValue,
+    normalizeDateInputValue,
+    openDatePicker,
+    participantNameMap,
+} from '@shared/utils';
 
 const recordPaymentSchema = z
     .object({
@@ -17,7 +23,7 @@ const recordPaymentSchema = z
             .string()
             .min(1, 'Paid date is required')
             .refine(
-                (value) => value <= formatDateInputValue(new Date()),
+                (value) => value <= localDateInputValue(new Date()),
                 'Paid date cannot be in the future',
             ),
         amount: z
@@ -34,22 +40,6 @@ const recordPaymentSchema = z
         message: 'Choose two different people',
         path: ['toUserId'],
     });
-
-function formatDateInputValue(date: Date): string {
-    return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
-}
-
-function normalizeDateInputValue(value?: string): string | undefined {
-    return value?.slice(0, 10);
-}
-
-function openDatePicker(event: MouseEvent<HTMLInputElement>) {
-    try {
-        event.currentTarget.showPicker?.();
-    } catch {
-        // Fall back to the browser's normal date-input behavior when restricted.
-    }
-}
 
 export interface RecordPaymentFormValues {
     fromUserId: string;
@@ -103,7 +93,7 @@ export function RecordPaymentForm({
             toUserId: initialValues?.toUserId ?? '',
             amount: initialValues?.amount,
             paidOn:
-                normalizeDateInputValue(initialValues?.paidOn) ?? formatDateInputValue(new Date()),
+                normalizeDateInputValue(initialValues?.paidOn) ?? localDateInputValue(new Date()),
         },
     });
     const enteredAmount = useWatch({ control, name: 'amount' });
@@ -201,8 +191,8 @@ export function RecordPaymentForm({
                 <input
                     id="payment-paid-on"
                     type="date"
-                    max={formatDateInputValue(new Date())}
-                    onClick={openDatePicker}
+                    max={localDateInputValue(new Date())}
+                    onClick={(event) => openDatePicker(event.currentTarget)}
                     {...register('paidOn')}
                     className="border-border bg-surface text-surface-foreground focus-visible:ring-brand-500 rounded-md border px-3 py-2 text-sm outline-none focus-visible:ring-2"
                 />

@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Check, Receipt } from 'lucide-react';
-import { useMemo, useState, type MouseEvent } from 'react';
+import { useMemo, useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
@@ -14,6 +14,7 @@ import type {
 } from '@features/expenses/utils/splitCalculator';
 import { getSplitAllocationPreview } from '@features/expenses/utils';
 import { CurrencyInput, MemberPicker } from '@shared/components';
+import { localDateInputValue, normalizeDateInputValue, openDatePicker } from '@shared/utils';
 import { SplitParticipantList } from '../SplitParticipantList';
 import { SplitTypeTabs } from '../SplitTypeTabs';
 
@@ -28,27 +29,11 @@ const upsertExpenseSchema = z.object({
         .string()
         .min(1, 'Paid date is required')
         .refine(
-            (value) => value <= formatDateInputValue(new Date()),
+            (value) => value <= localDateInputValue(new Date()),
             'Paid date cannot be in the future',
         ),
     paidByUserId: z.string().min(1, 'Select who paid'),
 });
-
-function formatDateInputValue(date: Date): string {
-    return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
-}
-
-function normalizeDateInputValue(value?: string): string | undefined {
-    return value?.slice(0, 10);
-}
-
-function openDatePicker(event: MouseEvent<HTMLInputElement>) {
-    try {
-        event.currentTarget.showPicker?.();
-    } catch {
-        // Fall back to the browser's normal date-input behavior when restricted.
-    }
-}
 
 type UpsertExpenseInput = z.infer<typeof upsertExpenseSchema>;
 
@@ -93,10 +78,6 @@ export function UpsertExpenseForm({
 }: UpsertExpenseFormProps) {
     const { data: currentUser } = useCurrentUser();
     const defaultPaidOn = useMemo(() => new Date(), []);
-    const formatDefaultDateInputValue = (value?: Date) => {
-        const date = value ?? defaultPaidOn;
-        return formatDateInputValue(date);
-    };
     const {
         register,
         handleSubmit,
@@ -109,7 +90,7 @@ export function UpsertExpenseForm({
             amount: initialValues?.amount,
             paidOn:
                 normalizeDateInputValue(initialValues?.paidOn) ??
-                formatDefaultDateInputValue(defaultPaidOn),
+                localDateInputValue(defaultPaidOn),
             paidByUserId: initialValues?.paidByUserId ?? currentUser?.id ?? '',
         },
     });
@@ -345,8 +326,8 @@ export function UpsertExpenseForm({
                 <input
                     id="expense-paid-on"
                     type="date"
-                    max={formatDateInputValue(defaultPaidOn)}
-                    onClick={openDatePicker}
+                    max={localDateInputValue(defaultPaidOn)}
+                    onClick={(event) => openDatePicker(event.currentTarget)}
                     {...register('paidOn')}
                     className="border-border bg-surface text-surface-foreground focus-visible:ring-brand-500 rounded-md border px-3 py-2 text-sm outline-none focus-visible:ring-2"
                 />
