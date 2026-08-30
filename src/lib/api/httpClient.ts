@@ -1,7 +1,25 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
 
 import { useAuthStore } from '@app/stores';
+import type { User } from '@data/entities';
 import { toApiError } from './apiError';
+
+interface RetryableRequestConfig extends InternalAxiosRequestConfig {
+    _sessionRefreshAttempted?: boolean;
+}
+
+interface RefreshedSession {
+    user: User;
+    accessToken: string;
+}
+
+let sessionRefresh: Promise<RefreshedSession | null> | null = null;
+const NON_REFRESHABLE_AUTH_ENDPOINTS = [
+    '/auth/login',
+    '/auth/register',
+    '/auth/refresh',
+    '/auth/logout',
+];
 
 export function attachAuthHeader(config: InternalAxiosRequestConfig): InternalAxiosRequestConfig {
     const { accessToken } = useAuthStore.getState();
@@ -13,16 +31,47 @@ export function attachAuthHeader(config: InternalAxiosRequestConfig): InternalAx
 
 // A 401 means the token is missing/expired — clear the session so AppLayout's
 // existing currentUserId guard redirects to /login.
-export function handleResponseError(error: AxiosError): Promise<never> {
+export async function handleResponseError(error: AxiosError): Promise<unknown> {
     const apiError = toApiError(error);
-    if (apiError.code === 'UNAUTHORIZED') {
-        useAuthStore.getState().logout();
+    const config = error.config as RetryableRequestConfig | undefined;
+    const isSessionEndpoint = config?.url
+        ? NON_REFRESHABLE_AUTH_ENDPOINTS.includes(config.url)
+        : false;
+
+    if (apiError.code !== 'UNAUTHORIZED' || !config || isSessionEndpoint) {
+        if (apiError.code === 'UNAUTHORIZED') useAuthStore.getState().logout();
+        return Promise.reject(apiError);
     }
-    return Promise.reject(apiError);
+
+    if (config._sessionRefreshAttempted) {
+        useAuthStore.getState().logout();
+        return Promise.reject(apiError);
+    }
+    config._sessionRefreshAttempted = true;
+
+    sessionRefresh ??= httpClient
+        .post<RefreshedSession | null>('/auth/refresh', undefined, {
+            headers: { 'X-Session-Request': 'ExpenseSplitter' },
+        })
+        .then(({ data }) => data)
+        .finally(() => {
+            sessionRefresh = null;
+        });
+
+    const session = await sessionRefresh;
+    if (!session) {
+        useAuthStore.getState().logout();
+        return Promise.reject(apiError);
+    }
+
+    useAuthStore.getState().login(session.user, session.accessToken);
+    config.headers.set('Authorization', `Bearer ${session.accessToken}`);
+    return httpClient(config);
 }
 
 export const httpClient = axios.create({
     baseURL: import.meta.env.VITE_API_BASE_URL,
+    withCredentials: true,
 });
 
 httpClient.interceptors.request.use(attachAuthHeader);
