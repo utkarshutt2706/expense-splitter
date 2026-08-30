@@ -1,0 +1,1 @@
+export { compareFinancialActivityNewestFirst } from './financialActivityDate';

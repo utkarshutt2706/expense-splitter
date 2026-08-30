@@ -24,7 +24,21 @@ function contributionBalanceLabel(owed: number, owe: number): string {
 }
 
 import type { DashboardGroupSpend } from '@features/dashboard/api/dashboardApi';
+import {
+    DashboardTimeFilter,
+    GroupScopeSelector,
+    SpendingTrendGraph,
+} from '@features/dashboard/components';
 import { useDashboard } from '@features/dashboard/hooks';
+import {
+    combineDailySpending,
+    combineMonthlySpending,
+    monthLabel,
+    presetPeriod,
+    shortDayLabel,
+    usesDailyTrend,
+    type DashboardPeriod,
+} from '@features/dashboard/utils';
 import {
     disambiguateParticipantNames,
     formatCompactCurrency,
@@ -32,21 +46,11 @@ import {
     sortMembersByName,
 } from '@shared/utils';
 import {
-    presetPeriod,
-    usesDailyTrend,
-    type DashboardPeriod,
-} from '../DashboardPage/dashboardDateRange';
-import { combineDailySpending, combineMonthlySpending } from '../DashboardPage/dashboardMetrics';
-import { DashboardTimeFilter } from '../DashboardPage/DashboardTimeFilter';
-import { GroupScopeSelector } from '../DashboardPage/GroupScopeSelector';
-import { monthLabel, shortDayLabel } from '../DashboardPage/periodLabels';
-import { SpendingTrendGraph } from '../DashboardPage/SpendingTrendGraph';
-import {
     bucketGroupSpending,
     contributionBalance,
     cumulativeNetPosition,
     niceTicks,
-} from './analyticsMetrics';
+} from '@features/analytics/utils/analyticsMetrics';
 
 const COLORS = [
     'var(--color-brand-600)',

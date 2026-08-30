@@ -8,7 +8,7 @@ import { useDashboard } from '@features/dashboard/hooks';
 import { AnalyticsPage } from './AnalyticsPage';
 
 vi.mock('@features/dashboard/hooks', () => ({ useDashboard: vi.fn() }));
-vi.mock('../DashboardPage/SpendingTrendGraph', () => ({
+vi.mock('@features/dashboard/components/SpendingTrendGraph', () => ({
     SpendingTrendGraph: () => <div aria-label="spending trend chart" />,
 }));
 vi.mock('recharts', () => {

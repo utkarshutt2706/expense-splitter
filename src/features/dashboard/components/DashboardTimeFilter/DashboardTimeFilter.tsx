@@ -3,7 +3,6 @@ import { ArrowLeft, Check, ChevronDown } from 'lucide-react';
 import { useState, type MouseEvent } from 'react';
 
 import { ResponsivePopoverContent } from '@shared/components';
-
 import {
     customPeriod,
     dateInputValue,
@@ -11,7 +10,7 @@ import {
     presetPeriod,
     type DashboardPeriod,
     type DashboardPeriodPreset,
-} from './dashboardDateRange';
+} from '@features/dashboard/utils/dashboardDateRange';
 
 const PRESETS = [
     'all-time',

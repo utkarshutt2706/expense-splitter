@@ -15,8 +15,8 @@ import type {
     DashboardMonthlySpend,
 } from '@features/dashboard/api/dashboardApi';
 import { formatCompactCurrency, formatCurrency } from '@shared/utils';
-import { dayLabel, monthLabel } from './periodLabels';
-import { addSingletonEndpoints } from './spendingTrendChartData';
+import { dayLabel, monthLabel } from '@features/dashboard/utils/periodLabels';
+import { addSingletonEndpoints } from '@features/dashboard/utils/spendingTrendChartData';
 
 type SpendingTrendGraphProps = Readonly<
     | { data?: DashboardDailySpend[]; granularity: 'day' }

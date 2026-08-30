@@ -1,0 +1,1 @@
+export { SpendingTrendGraph } from './SpendingTrendGraph';
