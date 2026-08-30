@@ -58,6 +58,14 @@ describe('FriendSearchResult', () => {
         expect(useUserLookup).toHaveBeenLastCalledWith({ query: 'jamie' });
     });
 
+    it('does not look up queries shorter than three characters', () => {
+        mockLookup();
+        render(<FriendSearchResult search="ja" onFound={vi.fn()} />);
+        advanceDebounce();
+
+        expect(useUserLookup).toHaveBeenLastCalledWith(null);
+    });
+
     it('shows a loading indicator while searching', () => {
         mockLookup({ isFetching: true });
         render(<FriendSearchResult search="jamie" onFound={vi.fn()} />);
@@ -76,6 +84,16 @@ describe('FriendSearchResult', () => {
         fireEvent.click(screen.getByRole('button', { name: /add/i }));
 
         expect(onFound).toHaveBeenCalledWith(jamie);
+    });
+
+    it('renders name matches without an undefined contact label', () => {
+        const nameMatch: User = { id: 'user-10', name: 'Jamie Lee' };
+        mockLookup({ data: [nameMatch] });
+        render(<FriendSearchResult search="jamie" onFound={vi.fn()} />);
+        advanceDebounce();
+
+        expect(screen.getByText(/^jamie$/i)).toBeInTheDocument();
+        expect(screen.queryByText(/undefined/i)).not.toBeInTheDocument();
     });
 
     it('shows a generic error for a non-NOT_FOUND failure', () => {
