@@ -764,7 +764,7 @@ function AnalyticsSkeleton() {
 export function AnalyticsPage() {
     const [searchParams] = useSearchParams();
 
-    const [period, setPeriod] = useState<DashboardPeriod>(() => presetPeriod('this-month'));
+    const [period, setPeriod] = useState<DashboardPeriod>(() => presetPeriod('all-time'));
 
     const [scopeGroupId, setScopeGroupId] = useState<string | null>(() =>
         searchParams.get('groupId'),

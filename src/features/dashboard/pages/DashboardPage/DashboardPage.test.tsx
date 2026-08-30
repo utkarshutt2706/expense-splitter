@@ -100,7 +100,7 @@ describe('DashboardPage', () => {
         expect(refetch).toHaveBeenCalled();
     });
 
-    it('defaults to full history and shows the outstanding position', () => {
+    it('defaults to overall and shows the outstanding position', () => {
         renderPage();
         expect(screen.getByRole('heading', { name: 'Spending overview' })).toBeInTheDocument();
         expect(vi.mocked(useDashboard).mock.calls.at(-1)?.[0]).toBeUndefined();
@@ -116,7 +116,7 @@ describe('DashboardPage', () => {
 
     it('hides the outstanding position for a limited period', () => {
         renderPage();
-        fireEvent.click(screen.getByRole('button', { name: /time period.*full history/i }));
+        fireEvent.click(screen.getByRole('button', { name: /time period.*overall/i }));
         fireEvent.click(screen.getByRole('button', { name: 'This month' }));
 
         expect(vi.mocked(useDashboard).mock.calls.at(-1)?.[0]).toEqual(
@@ -128,7 +128,7 @@ describe('DashboardPage', () => {
 
     it('renders chart values on every device', () => {
         renderPage();
-        fireEvent.click(screen.getByRole('button', { name: /time period.*full history/i }));
+        fireEvent.click(screen.getByRole('button', { name: /time period.*overall/i }));
         fireEvent.click(screen.getByRole('button', { name: 'This month' }));
         const trend = screen.getByRole('region', { name: /spending over time/i });
         const selector = within(trend).getByRole('button', { name: '10 Aug 2026' });
@@ -147,7 +147,7 @@ describe('DashboardPage', () => {
 
     it('renders chart values through a responsive period selector', () => {
         renderPage();
-        fireEvent.click(screen.getByRole('button', { name: /time period.*full history/i }));
+        fireEvent.click(screen.getByRole('button', { name: /time period.*overall/i }));
         fireEvent.click(screen.getByRole('button', { name: 'This month' }));
         const trend = screen.getByRole('region', { name: /spending over time/i });
         const selector = within(trend).getByRole('button', { name: /10 Aug 2026/ });
@@ -164,7 +164,7 @@ describe('DashboardPage', () => {
             ({ spendingByDay: _daily, ...group }) => group,
         );
         renderPage({ ...dashboard, groupSpend: legacyGroups });
-        fireEvent.click(screen.getByRole('button', { name: /time period.*full history/i }));
+        fireEvent.click(screen.getByRole('button', { name: /time period.*overall/i }));
         fireEvent.click(screen.getByRole('button', { name: 'This month' }));
         expect(
             screen.getByRole('heading', { name: /daily trend unavailable/i }),
@@ -209,9 +209,9 @@ describe('DashboardPage', () => {
         expect(screen.queryByRole('searchbox', { name: /search groups/i })).not.toBeInTheDocument();
     });
 
-    it('defaults to full history and supports the preset time filters', () => {
+    it('defaults to overall and supports the preset time filters', () => {
         renderPage();
-        const filter = screen.getByRole('button', { name: /time period.*full history/i });
+        const filter = screen.getByRole('button', { name: /time period.*overall/i });
         fireEvent.click(filter);
         expect(screen.getByRole('dialog', { name: /choose dashboard time period/i })).toHaveClass(
             'rounded-lg',
@@ -228,7 +228,7 @@ describe('DashboardPage', () => {
 
     it('validates that custom ranges do not exceed one year', () => {
         renderPage();
-        fireEvent.click(screen.getByRole('button', { name: /time period.*full history/i }));
+        fireEvent.click(screen.getByRole('button', { name: /time period.*overall/i }));
         fireEvent.click(screen.getByRole('button', { name: /custom date range/i }));
         fireEvent.change(screen.getByLabelText(/custom range start/i), {
             target: { value: '2026-01-01' },
@@ -242,7 +242,7 @@ describe('DashboardPage', () => {
 
     it('constrains custom calendars using today, the start date, and one year', () => {
         renderPage();
-        fireEvent.click(screen.getByRole('button', { name: /time period.*full history/i }));
+        fireEvent.click(screen.getByRole('button', { name: /time period.*overall/i }));
         fireEvent.click(screen.getByRole('button', { name: /custom date range/i }));
         const startInput = screen.getByLabelText(/custom range start/i);
         const endInput = screen.getByLabelText(/custom range end/i);

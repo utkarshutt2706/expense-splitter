@@ -116,6 +116,8 @@ describe('AnalyticsPage', () => {
         expect(screen.getByRole('heading', { name: 'Spending by group' })).toBeInTheDocument();
         expect(screen.getByRole('heading', { name: 'Paid versus your share' })).toBeInTheDocument();
         expect(screen.getByRole('heading', { name: 'Participant share' })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /time period.*overall/i })).toBeInTheDocument();
+        expect(vi.mocked(useDashboard).mock.calls.at(-1)?.[0]).toBeUndefined();
 
         expect(screen.getByRole('button', { name: /group:.*all groups/i })).toBeInTheDocument();
         expect(
@@ -453,6 +455,9 @@ describe('AnalyticsPage', () => {
             </MemoryRouter>,
         );
 
+        fireEvent.click(screen.getByRole('button', { name: /time period.*overall/i }));
+        fireEvent.click(screen.getByRole('button', { name: 'This month' }));
+
         const table = screen.getByRole('table', { name: /paid versus share values/i });
         const headers = Array.from(table.querySelectorAll('thead th')).map(
             (cell) => cell.textContent,
@@ -512,6 +517,9 @@ describe('AnalyticsPage', () => {
             </MemoryRouter>,
         );
 
+        fireEvent.click(screen.getByRole('button', { name: /time period.*overall/i }));
+        fireEvent.click(screen.getByRole('button', { name: 'This month' }));
+
         // Clustered by day: two buckets, each wide enough for ten bars.
         const byGroup = screen.getByLabelText('Spending by group chart');
         expect(byGroup).toHaveStyle({ minWidth: '400px' });
@@ -543,7 +551,7 @@ describe('AnalyticsPage', () => {
         );
 
         // A time column, then a column per group.
-        expect(headers).toEqual(['Day', 'Weekend Trip', 'Dinner']);
+        expect(headers).toEqual(['Month', 'Weekend Trip', 'Dinner']);
     });
 
     it('buckets spending by month once the range is longer than a month', () => {
@@ -553,7 +561,7 @@ describe('AnalyticsPage', () => {
             </MemoryRouter>,
         );
 
-        fireEvent.click(screen.getByRole('button', { name: /time period.*this month/i }));
+        fireEvent.click(screen.getByRole('button', { name: /time period.*overall/i }));
         fireEvent.click(screen.getByRole('button', { name: 'This year' }));
 
         const table = screen.getByRole('table', { name: /spending by group values/i });

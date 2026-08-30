@@ -8,7 +8,7 @@ describe('dashboardDateRange', () => {
     it('creates an unbounded all-time period', () => {
         expect(presetPeriod('all-time', now)).toEqual({
             preset: 'all-time',
-            label: 'Full history',
+            label: 'Overall',
         });
     });
 
