@@ -6,7 +6,6 @@ import {
     Bar,
     BarChart,
     CartesianGrid,
-    Cell,
     Pie,
     PieChart as RechartsPieChart,
     ReferenceLine,
@@ -17,6 +16,12 @@ import {
     YAxis,
     type PieSectorShapeProps,
 } from 'recharts';
+
+function contributionBalanceLabel(owed: number, owe: number): string {
+    if (owed > 0) return `You are owed ${formatCurrency(owed)}`;
+    if (owe > 0) return `You owe ${formatCurrency(owe)}`;
+    return 'Level with your share';
+}
 
 import type { DashboardGroupSpend } from '@features/dashboard/api/dashboardApi';
 import { useDashboard } from '@features/dashboard/hooks';
@@ -245,11 +250,7 @@ function PinnedValueAxis({ ticks }: Readonly<{ ticks: number[] }>) {
     );
 }
 
-function ChartTooltip({
-    showLabel = false,
-}: Readonly<{
-    showLabel?: boolean;
-}>) {
+function ChartTooltip({ showLabel = false }: Readonly<{ showLabel?: boolean }>) {
     return (
         <Tooltip
             formatter={(value) => formatCurrency(Number(value))}
@@ -427,12 +428,7 @@ function ContributionTooltip({
     if (!active || !datum) return null;
 
     const { owed, owe } = contributionBalance(datum.paid, datum.share);
-    const balanceLabel =
-        owed > 0
-            ? `You are owed ${formatCurrency(owed)}`
-            : owe > 0
-              ? `You owe ${formatCurrency(owe)}`
-              : 'Level with your share';
+    const balanceLabel = contributionBalanceLabel(owed, owe);
 
     return (
         <div className="border-border bg-surface text-surface-foreground min-w-44 rounded-xl border px-3 py-2 text-xs shadow-lg">
@@ -526,13 +522,7 @@ function ContributionChart({
                             <th>{entry.name}</th>
                             <td>{formatCurrency(entry.paid)}</td>
                             <td>{formatCurrency(entry.share)}</td>
-                            <td>
-                                {owed > 0
-                                    ? `You are owed ${formatCurrency(owed)}`
-                                    : owe > 0
-                                      ? `You owe ${formatCurrency(owe)}`
-                                      : 'Level with your share'}
-                            </td>
+                            <td>{contributionBalanceLabel(owed, owe)}</td>
                         </tr>
                     );
                 })}
@@ -541,11 +531,7 @@ function ContributionChart({
     );
 }
 
-function ShareDistributionChart({
-    group,
-}: Readonly<{
-    group?: DashboardGroupSpend;
-}>) {
+function ShareDistributionChart({ group }: Readonly<{ group?: DashboardGroupSpend }>) {
     const activeMembers = sortMembersByName(
         (group?.memberShares ?? []).filter((member) => member.amount > 0),
         { isCurrentUser: (member) => member.isCurrentUser },
@@ -592,14 +578,7 @@ function ShareDistributionChart({
                                 `${name}: ${((percent ?? 0) * 100).toFixed(0)}%`
                             }
                             isAnimationActive
-                            shape={(props: PieSectorShapeProps) => (
-                                <Sector
-                                    {...props}
-                                    fill={
-                                        props.payload?.fill ?? COLORS[props.index % COLORS.length]
-                                    }
-                                />
-                            )}
+                            shape={ColoredPieSector}
                         />
 
                         <ChartTooltip />
@@ -621,6 +600,10 @@ function ShareDistributionChart({
     );
 }
 
+function ColoredPieSector(props: PieSectorShapeProps) {
+    return <Sector {...props} fill={props.payload?.fill ?? COLORS[props.index % COLORS.length]} />;
+}
+
 /**
  * The running answer to "am I the one fronting money?": each bar is what you
  * had paid beyond your share by the end of that bucket, so the series crossing
@@ -640,6 +623,7 @@ function NetPositionChart({
         name: entry.label,
         net,
         cumulative,
+        fill: cumulative < 0 ? 'var(--color-owe)' : 'var(--color-owed)',
     }));
 
     if (chartData.length === 0) {
@@ -647,16 +631,16 @@ function NetPositionChart({
     }
 
     const closing = chartData.at(-1)?.cumulative ?? 0;
+    let closingDescription = 'You ended this period level with your share.';
+    if (closing > 0) {
+        closingDescription = `By the end of this period you had fronted ${formatCurrency(closing)} more than your share.`;
+    } else if (closing < 0) {
+        closingDescription = `By the end of this period others had covered ${formatCurrency(Math.abs(closing))} of your share.`;
+    }
 
     return (
         <>
-            <p className="text-muted-foreground mt-4 text-sm">
-                {closing > 0
-                    ? `By the end of this period you had fronted ${formatCurrency(closing)} more than your share.`
-                    : closing < 0
-                      ? `By the end of this period others had covered ${formatCurrency(Math.abs(closing))} of your share.`
-                      : 'You ended this period level with your share.'}
-            </p>
+            <p className="text-muted-foreground mt-4 text-sm">{closingDescription}</p>
 
             <div className="mt-4 h-72 w-full min-w-0" aria-label="Net position over time chart">
                 <ResponsiveContainer width="100%" height="100%">
@@ -691,18 +675,7 @@ function NetPositionChart({
                             contentStyle={CHART_TOOLTIP_STYLE}
                         />
 
-                        <Bar dataKey="cumulative" name="Running position" isAnimationActive>
-                            {chartData.map((entry) => (
-                                <Cell
-                                    key={entry.name}
-                                    fill={
-                                        entry.cumulative < 0
-                                            ? 'var(--color-owe)'
-                                            : 'var(--color-owed)'
-                                    }
-                                />
-                            ))}
-                        </Bar>
+                        <Bar dataKey="cumulative" name="Running position" isAnimationActive />
                     </BarChart>
                 </ResponsiveContainer>
             </div>
@@ -732,11 +705,10 @@ function TrendChart({
     dailyTrend: boolean;
 }>) {
     if (dailyTrend) {
-        const data = selected
-            ? selected.spendingByDay
-            : groups.every((group) => group.spendingByDay !== undefined)
-              ? combineDailySpending(groups)
-              : undefined;
+        let data = selected?.spendingByDay;
+        if (!selected && groups.every((group) => group.spendingByDay !== undefined)) {
+            data = combineDailySpending(groups);
+        }
 
         return <SpendingTrendGraph data={data} granularity="day" />;
     }
@@ -748,7 +720,7 @@ function TrendChart({
 
 function AnalyticsSkeleton() {
     return (
-        <div role="status" aria-label="Loading analytics" className="mx-auto max-w-7xl space-y-6">
+        <output aria-label="Loading analytics" className="mx-auto block max-w-7xl space-y-6">
             <div className="bg-muted h-12 w-72 animate-pulse rounded-lg" />
 
             <div className="bg-muted h-28 animate-pulse rounded-2xl" />
@@ -757,7 +729,7 @@ function AnalyticsSkeleton() {
                 <div className="bg-muted h-96 animate-pulse rounded-2xl" />
                 <div className="bg-muted h-96 animate-pulse rounded-2xl" />
             </div>
-        </div>
+        </output>
     );
 }
 

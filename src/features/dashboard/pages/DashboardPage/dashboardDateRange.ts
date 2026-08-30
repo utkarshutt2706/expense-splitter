@@ -72,7 +72,7 @@ export function customPeriod(
     const start = new Date(`${startValue}T00:00:00`);
     const inclusiveEnd = new Date(`${endValue}T00:00:00`);
     if (Number.isNaN(start.getTime()) || Number.isNaN(inclusiveEnd.getTime())) {
-        throw new Error('Choose a start and end date.');
+        throw new TypeError('Choose a start and end date.');
     }
     if (start > inclusiveEnd) throw new Error('Start date must be on or before end date.');
     const end = new Date(inclusiveEnd);

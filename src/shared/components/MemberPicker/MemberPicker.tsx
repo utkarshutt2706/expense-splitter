@@ -6,13 +6,13 @@ import type { User } from '@data/entities';
 import { participantNameMap, sortMembersByName } from '@shared/utils';
 import { Avatar } from '../Avatar';
 
-interface MemberPickerProps {
-    readonly members: User[];
-    readonly value: string;
-    readonly onChange: (id: string) => void;
-    readonly ariaLabel: string;
-    readonly placeholder: string;
-}
+type MemberPickerProps = Readonly<{
+    members: User[];
+    value: string;
+    onChange: (id: string) => void;
+    ariaLabel: string;
+    placeholder: string;
+}>;
 
 export function MemberPicker({
     members,

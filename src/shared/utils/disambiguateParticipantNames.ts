@@ -3,6 +3,58 @@ export interface ParticipantNameItem {
     isCurrentUser?: boolean;
 }
 
+interface ParsedParticipantName {
+    original: string;
+    firstName: string;
+    remainder: string;
+    isCurrentUser: boolean;
+}
+
+function parseParticipantName(member: ParticipantNameItem): ParsedParticipantName {
+    const trimmed = member.name.trim();
+    const spaceIndex = trimmed.indexOf(' ');
+    if (spaceIndex === -1) {
+        return {
+            original: member.name,
+            firstName: trimmed,
+            remainder: '',
+            isCurrentUser: Boolean(member.isCurrentUser),
+        };
+    }
+    return {
+        original: member.name,
+        firstName: trimmed.slice(0, spaceIndex),
+        remainder: trimmed.slice(spaceIndex + 1).trim(),
+        isCurrentUser: Boolean(member.isCurrentUser),
+    };
+}
+
+function displayName(item: ParsedParticipantName, prefixLength?: number): string {
+    const baseName = prefixLength
+        ? `${item.firstName} ${item.remainder.slice(0, prefixLength)}`
+        : item.firstName || item.original;
+    return item.isCurrentUser ? 'You' : baseName;
+}
+
+function uniqueRemainderPrefixLength(
+    currentIndex: number,
+    indices: number[],
+    parsed: ParsedParticipantName[],
+): number {
+    const current = parsed[currentIndex]!;
+    const currentRemainder = current.remainder.toLocaleLowerCase();
+    for (let length = 1; length < current.remainder.length; length++) {
+        const prefix = currentRemainder.slice(0, length);
+        const collides = indices.some((otherIndex) => {
+            if (otherIndex === currentIndex) return false;
+            const otherRemainder = parsed[otherIndex]!.remainder.toLocaleLowerCase();
+            return otherRemainder.length > 0 && prefix === otherRemainder.slice(0, length);
+        });
+        if (!collides) return length;
+    }
+    return current.remainder.length;
+}
+
 /**
  * Uses the shortest unambiguous participant name, comparing first names and
  * remainder prefixes case-insensitively while preserving the stored casing.
@@ -10,24 +62,7 @@ export interface ParticipantNameItem {
 export function disambiguateParticipantNames(
     members: ReadonlyArray<ParticipantNameItem>,
 ): string[] {
-    const parsed = members.map((member) => {
-        const trimmed = member.name.trim();
-        const spaceIndex = trimmed.indexOf(' ');
-        if (spaceIndex === -1) {
-            return {
-                original: member.name,
-                firstName: trimmed,
-                remainder: '',
-                isCurrentUser: Boolean(member.isCurrentUser),
-            };
-        }
-        return {
-            original: member.name,
-            firstName: trimmed.slice(0, spaceIndex),
-            remainder: trimmed.slice(spaceIndex + 1).trim(),
-            isCurrentUser: Boolean(member.isCurrentUser),
-        };
-    });
+    const parsed = members.map(parseParticipantName);
 
     const groups = new Map<string, number[]>();
     parsed.forEach((item, index) => {
@@ -41,40 +76,17 @@ export function disambiguateParticipantNames(
 
     for (const indices of groups.values()) {
         if (indices.length === 1) {
-            const item = parsed[indices[0]!]!;
-            const baseName = item.firstName || item.original;
-            result[indices[0]!] = item.isCurrentUser ? 'You' : baseName;
+            result[indices[0]!] = displayName(parsed[indices[0]!]!);
             continue;
         }
 
         for (const idx of indices) {
             const current = parsed[idx]!;
             if (!current.remainder) {
-                const baseName = current.firstName || current.original;
-                result[idx] = current.isCurrentUser ? 'You' : baseName;
+                result[idx] = displayName(current);
                 continue;
             }
-
-            let prefixLength = 1;
-            const currentRemainderLower = current.remainder.toLocaleLowerCase();
-
-            while (prefixLength < current.remainder.length) {
-                const currentPrefix = currentRemainderLower.slice(0, prefixLength);
-                const hasCollision = indices.some((otherIdx) => {
-                    if (otherIdx === idx) return false;
-                    const other = parsed[otherIdx]!;
-                    return (
-                        other.remainder.length > 0 &&
-                        currentPrefix === other.remainder.toLocaleLowerCase().slice(0, prefixLength)
-                    );
-                });
-
-                if (!hasCollision) break;
-                prefixLength++;
-            }
-
-            const baseName = `${current.firstName} ${current.remainder.slice(0, prefixLength)}`;
-            result[idx] = current.isCurrentUser ? 'You' : baseName;
+            result[idx] = displayName(current, uniqueRemainderPrefixLength(idx, indices, parsed));
         }
     }
 

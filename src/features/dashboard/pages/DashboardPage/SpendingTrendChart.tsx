@@ -162,11 +162,7 @@ function PeriodSelector({
     );
 }
 
-function TrendSummary({
-    selected,
-}: Readonly<{
-    selected: TrendEntry;
-}>) {
+function TrendSummary({ selected }: Readonly<{ selected: TrendEntry }>) {
     return (
         <dl className="w-full space-y-2 text-sm" aria-live="polite">
             {SUMMARY_LABELS.map(([label, key]) => (

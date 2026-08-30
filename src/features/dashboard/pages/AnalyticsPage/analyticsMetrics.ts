@@ -15,7 +15,7 @@ export function contributionBalance(paid: number, share: number): ContributionBa
     const difference = round(Math.max(paid, 0) - Math.max(share, 0));
 
     return {
-        owed: difference > 0 ? difference : 0,
+        owed: Math.max(difference, 0),
         owe: difference < 0 ? Math.abs(difference) : 0,
     };
 }

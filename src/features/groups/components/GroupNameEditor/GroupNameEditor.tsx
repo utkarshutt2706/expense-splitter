@@ -5,11 +5,11 @@ import { toast } from 'sonner';
 import type { Group } from '@data/entities';
 import { useRenameGroup } from '@features/groups/hooks/useRenameGroup';
 
-interface GroupNameEditorProps {
-    readonly group: Group;
-    readonly isEditing: boolean;
-    readonly onEditingChange: (isEditing: boolean) => void;
-}
+type GroupNameEditorProps = Readonly<{
+    group: Group;
+    isEditing: boolean;
+    onEditingChange: (isEditing: boolean) => void;
+}>;
 
 export function GroupNameEditor({ group, isEditing, onEditingChange }: GroupNameEditorProps) {
     const renameGroup = useRenameGroup();

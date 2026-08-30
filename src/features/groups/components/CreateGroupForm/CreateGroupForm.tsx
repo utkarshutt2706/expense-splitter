@@ -18,11 +18,11 @@ export interface CreateGroupFormValues {
     memberIds: string[];
 }
 
-interface CreateGroupFormProps {
-    readonly friends: User[];
-    readonly onSubmit: (values: CreateGroupFormValues) => void;
-    readonly onCancel: () => void;
-}
+type CreateGroupFormProps = Readonly<{
+    friends: User[];
+    onSubmit: (values: CreateGroupFormValues) => void;
+    onCancel: () => void;
+}>;
 
 export function CreateGroupForm({ friends, onSubmit, onCancel }: CreateGroupFormProps) {
     const {

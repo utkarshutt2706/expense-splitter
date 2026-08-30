@@ -9,10 +9,10 @@ import { disambiguateParticipantNames } from '@shared/utils';
 const LOOKUP_DEBOUNCE_MS = 400;
 const MIN_LOOKUP_LENGTH = 3;
 
-interface FriendSearchResultProps {
-    readonly search: string;
-    readonly onFound: (user: User) => void;
-}
+type FriendSearchResultProps = Readonly<{
+    search: string;
+    onFound: (user: User) => void;
+}>;
 
 export function FriendSearchResult({ search, onFound }: FriendSearchResultProps) {
     const [debounced, setDebounced] = useState(search.trim());

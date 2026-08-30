@@ -124,27 +124,33 @@ function FriendsListSkeleton() {
     );
 }
 
-function FriendRow({ friend }: { readonly friend: Friend }) {
+function friendNetStatus(friend: Friend): { label: string; className: string } {
+    const netBalance = friend.netBalance ?? 0;
+    if (netBalance > 0) {
+        return {
+            label: `Owes you ${formatCurrency(netBalance)}`,
+            className: 'text-green-700 dark:text-green-400',
+        };
+    }
+    if (netBalance < 0) {
+        return {
+            label: `You owe ${formatCurrency(Math.abs(netBalance))}`,
+            className: 'text-red-600 dark:text-red-400',
+        };
+    }
+    return {
+        label: (friend.groupBalances?.length ?? 0) > 0 ? 'Net settled' : 'Settled up',
+        className: 'text-muted-foreground',
+    };
+}
+
+function FriendRow({ friend }: Readonly<{ friend: Friend }>) {
     const sharedGroupText =
         friend.sharedGroupCount === undefined
             ? 'Shared-group details unavailable'
             : `${friend.sharedGroupCount} shared ${friend.sharedGroupCount === 1 ? 'group' : 'groups'}`;
-    const netBalance = friend.netBalance ?? 0;
     const groupBalances = friend.groupBalances ?? [];
-    const netStatus =
-        netBalance > 0
-            ? `Owes you ${formatCurrency(netBalance)}`
-            : netBalance < 0
-              ? `You owe ${formatCurrency(Math.abs(netBalance))}`
-              : groupBalances.length > 0
-                ? 'Net settled'
-                : 'Settled up';
-    const netStatusClass =
-        netBalance > 0
-            ? 'text-green-700 dark:text-green-400'
-            : netBalance < 0
-              ? 'text-red-600 dark:text-red-400'
-              : 'text-muted-foreground';
+    const { label: netStatus, className: netStatusClass } = friendNetStatus(friend);
 
     return (
         <li className="border-border flex min-h-20 min-w-0 items-start gap-3 rounded-xl border p-3 sm:items-center sm:gap-4 sm:p-4">

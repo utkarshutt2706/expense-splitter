@@ -3,12 +3,12 @@ import { FormDialog } from '@shared/components';
 import { closeOnSubmit } from '@shared/utils';
 import { CreateGroupForm, type CreateGroupFormValues } from '../CreateGroupForm';
 
-interface CreateGroupDialogProps {
-    readonly open: boolean;
-    readonly onOpenChange: (open: boolean) => void;
-    readonly friends: User[];
-    readonly onSubmit: (values: CreateGroupFormValues) => void;
-}
+type CreateGroupDialogProps = Readonly<{
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    friends: User[];
+    onSubmit: (values: CreateGroupFormValues) => void;
+}>;
 
 export function CreateGroupDialog({
     open,

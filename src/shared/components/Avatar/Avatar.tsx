@@ -2,10 +2,10 @@ import { CircleUserRound } from 'lucide-react';
 
 import { getInitials } from '@shared/utils';
 
-interface AvatarProps {
-    readonly name: string;
-    readonly size?: 'sm' | 'md';
-}
+type AvatarProps = Readonly<{
+    name: string;
+    size?: 'sm' | 'md';
+}>;
 
 const sizeClasses: Record<NonNullable<AvatarProps['size']>, string> = {
     sm: 'size-6 text-xs',

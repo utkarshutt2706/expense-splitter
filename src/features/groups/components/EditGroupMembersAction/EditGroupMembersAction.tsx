@@ -8,10 +8,10 @@ import { useUpdateGroupMembers } from '@features/groups/hooks/useUpdateGroupMemb
 import { EditGroupMembersDialog } from '../EditGroupMembersDialog';
 import type { EditGroupMembersFormValues } from '../EditGroupMembersForm';
 
-interface EditGroupMembersActionProps {
-    readonly group: Group;
-    readonly members: User[];
-}
+type EditGroupMembersActionProps = Readonly<{
+    group: Group;
+    members: User[];
+}>;
 
 export function EditGroupMembersAction({ group, members }: EditGroupMembersActionProps) {
     const { data: friends } = useFriends();

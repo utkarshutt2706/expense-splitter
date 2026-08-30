@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 import { Loader2, Phone } from 'lucide-react';
-import { type FormEvent, useState } from 'react';
+import { type SubmitEvent, useState } from 'react';
 import { z } from 'zod';
 
 import { useAuthStore } from '@app/stores';
@@ -15,7 +15,7 @@ const phoneGateSchema = z
         message: 'Enter a valid 10-digit number starting with 6, 7, 8, or 9',
     });
 
-export function PhoneRequiredGate({ currentUserId }: { currentUserId: string }) {
+export function PhoneRequiredGate({ currentUserId }: Readonly<{ currentUserId: string }>) {
     const [phone, setPhone] = useState('');
     const [formError, setFormError] = useState<string | null>(null);
     const updateCachedUser = useAuthStore((state) => state.updateCachedUser);
@@ -26,7 +26,7 @@ export function PhoneRequiredGate({ currentUserId }: { currentUserId: string }) 
         },
     });
 
-    const submit = async (event: FormEvent<HTMLFormElement>) => {
+    const submit = async (event: SubmitEvent<HTMLFormElement>) => {
         event.preventDefault();
         const sanitized = sanitizePhoneInput(phone);
         const result = phoneGateSchema.safeParse(sanitized);

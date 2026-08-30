@@ -4,9 +4,9 @@ import { useAuthStore } from '@app/stores';
 import { refreshSession } from '@features/auth/api/authApi';
 import { TopProgressBar } from '@shared/components';
 
-interface SessionBootstrapProps {
-    readonly children: ReactNode;
-}
+type SessionBootstrapProps = Readonly<{
+    children: ReactNode;
+}>;
 
 export function SessionBootstrap({ children }: SessionBootstrapProps) {
     const [isRestoring, setIsRestoring] = useState(true);

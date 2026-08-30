@@ -3,10 +3,10 @@ import { Link } from 'react-router';
 
 import type { User } from '@data/entities';
 
-interface AddExpenseActionProps {
-    readonly groupId: string;
-    readonly members: User[];
-}
+type AddExpenseActionProps = Readonly<{
+    groupId: string;
+    members: User[];
+}>;
 
 // The group's one floating action, carrying its label rather than an icon alone:
 // a bare glyph left readers guessing which of several circles did what, and the

@@ -11,9 +11,9 @@ const AUTO_RETRY_DELAY_MS = 10_000;
 
 type ReadinessState = 'checking' | 'waking' | 'unavailable' | 'ready';
 
-interface ServerWakeGateProps {
-    readonly children: ReactNode;
-}
+type ServerWakeGateProps = Readonly<{
+    children: ReactNode;
+}>;
 
 function InjuredServerIllustration() {
     return (
@@ -128,6 +128,13 @@ export function ServerWakeGate({ children }: ServerWakeGateProps) {
     if (state === 'ready') return children;
 
     const isUnavailable = state === 'unavailable';
+    let statusMessage = 'Checking that the server is ready…';
+    if (isUnavailable) {
+        statusMessage = "We haven't been able to reach it yet. We'll keep trying automatically.";
+    } else if (state === 'waking') {
+        statusMessage =
+            'Our free server is waking up. This can take about a minute, and the app will open automatically.';
+    }
 
     return (
         <main className="bg-surface text-surface-foreground relative flex min-h-svh items-center justify-center overflow-hidden px-6">
@@ -172,11 +179,7 @@ export function ServerWakeGate({ children }: ServerWakeGateProps) {
                     {isUnavailable ? 'The server is taking a break' : 'Getting things ready'}
                 </h1>
                 <p className="text-muted-foreground mt-3 max-w-sm text-sm leading-relaxed">
-                    {isUnavailable
-                        ? "We haven't been able to reach it yet. We'll keep trying automatically."
-                        : state === 'waking'
-                          ? 'Our free server is waking up. This can take about a minute, and the app will open automatically.'
-                          : 'Checking that the server is ready…'}
+                    {statusMessage}
                 </p>
 
                 {isUnavailable ? (

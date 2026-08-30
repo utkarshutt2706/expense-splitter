@@ -9,11 +9,11 @@ import { ChangePasswordDialog } from '@features/auth';
 import { logout as revokeSession } from '@features/auth/api/authApi';
 import { Avatar, ResponsivePopoverContent } from '@shared/components';
 
-interface MenuItemProps {
-    readonly icon: typeof UserRound;
-    readonly label: string;
-    readonly onClick?: () => void;
-}
+type MenuItemProps = Readonly<{
+    icon: typeof UserRound;
+    label: string;
+    onClick?: () => void;
+}>;
 
 function MenuItem({ icon: Icon, label, onClick }: MenuItemProps) {
     return (
@@ -83,13 +83,13 @@ function ThemeToggleRow() {
     );
 }
 
-interface UserMenuProps {
-    readonly expanded: boolean;
+type UserMenuProps = Readonly<{
+    expanded: boolean;
     /** Defaults suit the sidebar, where the trigger sits at the bottom-left.
      *  The mobile header flips these, since its trigger is top-right. */
-    readonly side?: 'top' | 'bottom';
-    readonly align?: 'start' | 'end';
-}
+    side?: 'top' | 'bottom';
+    align?: 'start' | 'end';
+}>;
 
 export function UserMenu({ expanded, side = 'top', align = 'start' }: UserMenuProps) {
     const { data: currentUser } = useCurrentUser();

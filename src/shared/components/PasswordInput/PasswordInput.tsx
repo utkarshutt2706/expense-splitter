@@ -1,9 +1,11 @@
 import { Eye, EyeOff } from 'lucide-react';
 import { useState, type InputHTMLAttributes, type Ref } from 'react';
 
-interface PasswordInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> {
-    readonly ref?: Ref<HTMLInputElement>;
-}
+type PasswordInputProps = Readonly<
+    Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> & {
+        ref?: Ref<HTMLInputElement>;
+    }
+>;
 
 export function PasswordInput({ ref, className, ...props }: PasswordInputProps) {
     const [isVisible, setIsVisible] = useState(false);

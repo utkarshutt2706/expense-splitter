@@ -2,9 +2,11 @@ import { forwardRef, type ComponentPropsWithoutRef } from 'react';
 
 import { cn } from '@shared/utils';
 
-interface CurrencyInputProps extends ComponentPropsWithoutRef<'input'> {
-    readonly containerClassName?: string;
-}
+type CurrencyInputProps = Readonly<
+    ComponentPropsWithoutRef<'input'> & {
+        containerClassName?: string;
+    }
+>;
 
 export const CurrencyInput = forwardRef<HTMLInputElement, CurrencyInputProps>(
     function CurrencyInput({ className, containerClassName, disabled, readOnly, ...props }, ref) {

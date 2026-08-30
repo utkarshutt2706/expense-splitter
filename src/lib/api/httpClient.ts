@@ -14,12 +14,12 @@ interface RefreshedSession {
 }
 
 let sessionRefresh: Promise<RefreshedSession | null> | null = null;
-const NON_REFRESHABLE_AUTH_ENDPOINTS = [
+const NON_REFRESHABLE_AUTH_ENDPOINTS = new Set([
     '/auth/login',
     '/auth/register',
     '/auth/refresh',
     '/auth/logout',
-];
+]);
 
 export function attachAuthHeader(config: InternalAxiosRequestConfig): InternalAxiosRequestConfig {
     const { accessToken } = useAuthStore.getState();
@@ -34,18 +34,16 @@ export function attachAuthHeader(config: InternalAxiosRequestConfig): InternalAx
 export async function handleResponseError(error: AxiosError): Promise<unknown> {
     const apiError = toApiError(error);
     const config = error.config as RetryableRequestConfig | undefined;
-    const isSessionEndpoint = config?.url
-        ? NON_REFRESHABLE_AUTH_ENDPOINTS.includes(config.url)
-        : false;
+    const isSessionEndpoint = config?.url ? NON_REFRESHABLE_AUTH_ENDPOINTS.has(config.url) : false;
 
     if (apiError.code !== 'UNAUTHORIZED' || !config || isSessionEndpoint) {
         if (apiError.code === 'UNAUTHORIZED') useAuthStore.getState().logout();
-        return Promise.reject(apiError);
+        throw apiError;
     }
 
     if (config._sessionRefreshAttempted) {
         useAuthStore.getState().logout();
-        return Promise.reject(apiError);
+        throw apiError;
     }
     config._sessionRefreshAttempted = true;
 
@@ -61,7 +59,7 @@ export async function handleResponseError(error: AxiosError): Promise<unknown> {
     const session = await sessionRefresh;
     if (!session) {
         useAuthStore.getState().logout();
-        return Promise.reject(apiError);
+        throw apiError;
     }
 
     useAuthStore.getState().login(session.user, session.accessToken);

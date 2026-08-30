@@ -2,12 +2,12 @@ import type { User } from '@data/entities';
 import { GroupMembersStack } from '../GroupMembersStack';
 import { MemberAvatarsSkeleton } from '../MemberAvatarsSkeleton';
 
-interface GroupMembersSectionProps {
-    readonly members: User[];
-    readonly isMembersLoading: boolean;
-    readonly isMembersFetching: boolean;
-    readonly isGroupFetching: boolean;
-}
+type GroupMembersSectionProps = Readonly<{
+    members: User[];
+    isMembersLoading: boolean;
+    isMembersFetching: boolean;
+    isGroupFetching: boolean;
+}>;
 
 // Purely a read-only display — editing membership lives on the group settings
 // page (EditGroupMembersAction) now, not here.

@@ -3,18 +3,18 @@ import { SearchInput } from '@shared/components';
 import { FriendSearchResult } from '../FriendSearchResult';
 import { MemberCheckboxList } from '../MemberCheckboxList';
 
-interface MemberSearchSectionProps {
-    readonly search: string;
-    readonly onSearchChange: (value: string) => void;
-    readonly visibleUsers: User[];
-    readonly selectedIds: string[];
-    readonly onToggle: (id: string) => void;
-    readonly onFound: (user: User) => void;
-    readonly emptyMessage?: string;
-    readonly currentUserId?: string;
-    readonly lockCurrentUser?: boolean;
-    readonly priorityIds?: readonly string[];
-}
+type MemberSearchSectionProps = Readonly<{
+    search: string;
+    onSearchChange: (value: string) => void;
+    visibleUsers: User[];
+    selectedIds: string[];
+    onToggle: (id: string) => void;
+    onFound: (user: User) => void;
+    emptyMessage?: string;
+    currentUserId?: string;
+    lockCurrentUser?: boolean;
+    priorityIds?: readonly string[];
+}>;
 
 // Shared behind CreateGroupForm and EditGroupMembersForm: the search box, the
 // non-friend lookup panel below it, and the member checklist.

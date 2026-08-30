@@ -32,7 +32,10 @@ function openDatePicker(event: MouseEvent<HTMLInputElement>) {
 export function DashboardTimeFilter({
     period,
     onChange,
-}: Readonly<{ period: DashboardPeriod; onChange: (period: DashboardPeriod) => void }>) {
+}: Readonly<{
+    period: DashboardPeriod;
+    onChange: (period: DashboardPeriod) => void;
+}>) {
     const now = new Date();
     const [open, setOpen] = useState(false);
     const [showCustom, setShowCustom] = useState(false);
@@ -132,7 +135,7 @@ export function DashboardTimeFilter({
                                     </p>
                                     <div className="mt-3 grid gap-3">
                                         <label className="cursor-pointer text-xs font-medium">
-                                            From
+                                            <span className="block">From</span>
                                             <input
                                                 aria-label="Custom range start"
                                                 type="date"
@@ -146,7 +149,7 @@ export function DashboardTimeFilter({
                                             />
                                         </label>
                                         <label className="cursor-pointer text-xs font-medium">
-                                            To
+                                            <span className="block">To</span>
                                             <input
                                                 aria-label="Custom range end"
                                                 type="date"

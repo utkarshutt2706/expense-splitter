@@ -1,8 +1,8 @@
 import { cn } from '@shared/utils';
 
-interface SkeletonProps {
-    readonly className?: string;
-}
+type SkeletonProps = Readonly<{
+    className?: string;
+}>;
 
 export function Skeleton({ className }: SkeletonProps) {
     return (

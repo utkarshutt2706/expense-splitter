@@ -14,6 +14,38 @@ import { buildEditExpenseInitialValues } from '@features/expenses/utils/buildEdi
 import { useGroup, useGroupMembers } from '@features/groups';
 import { Skeleton } from '@shared/components';
 
+function upsertExpenseContent({
+    isLoading,
+    isEditMode,
+    hasExpense,
+    isExpenseError,
+    form,
+}: Readonly<{
+    isLoading: boolean;
+    isEditMode: boolean;
+    hasExpense: boolean;
+    isExpenseError: boolean;
+    form: ReactNode;
+}>): ReactNode {
+    if (isLoading) {
+        return (
+            <output
+                aria-label={isEditMode ? 'Loading expense…' : 'Loading group…'}
+                className="flex flex-col gap-4"
+            >
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-24 w-full" />
+            </output>
+        );
+    }
+    if (isEditMode && (isExpenseError || !hasExpense)) {
+        return <div className="text-red-600">Couldn't load this expense.</div>;
+    }
+    return form;
+}
+
 export function UpsertExpensePage() {
     const { groupId, expenseId } = useParams<{ groupId: string; expenseId?: string }>();
     const navigate = useNavigate();
@@ -63,23 +95,12 @@ export function UpsertExpensePage() {
         );
     };
 
-    let content: ReactNode;
-    if (isLoading) {
-        content = (
-            <output
-                aria-label={isEditMode ? 'Loading expense…' : 'Loading group…'}
-                className="flex flex-col gap-4"
-            >
-                <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-24 w-full" />
-            </output>
-        );
-    } else if (isEditMode && (isExpenseError || !expense)) {
-        content = <div className="text-red-600">Couldn't load this expense.</div>;
-    } else {
-        content = (
+    const content = upsertExpenseContent({
+        isLoading,
+        isEditMode,
+        hasExpense: expense !== undefined,
+        isExpenseError,
+        form: (
             <UpsertExpenseForm
                 mode={isEditMode ? 'edit' : 'add'}
                 members={members ?? []}
@@ -89,8 +110,8 @@ export function UpsertExpensePage() {
                 onSubmit={handleSubmit}
                 onCancel={() => navigate(backTo)}
             />
-        );
-    }
+        ),
+    });
 
     return (
         <div>

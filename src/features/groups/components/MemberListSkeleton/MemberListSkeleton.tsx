@@ -1,8 +1,8 @@
 import { Skeleton } from '@shared/components';
 
-interface MemberListSkeletonProps {
-    readonly count?: number;
-}
+type MemberListSkeletonProps = Readonly<{
+    count?: number;
+}>;
 
 // Mirrors MemberList's row shape (avatar circle + name line + subtext line)
 // so the settings page skeleton doesn't collapse/shift once real members load.

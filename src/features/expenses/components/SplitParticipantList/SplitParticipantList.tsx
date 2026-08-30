@@ -3,16 +3,16 @@ import type { SplitType, User } from '@data/entities';
 import { Avatar, CurrencyInput } from '@shared/components';
 import { formatCurrency, participantNameMap, sortMembersByName } from '@shared/utils';
 
-interface SplitParticipantListProps {
-    readonly users: User[];
-    readonly splitType: SplitType;
-    readonly selectedIds: string[];
-    readonly onToggle: (id: string) => void;
-    readonly values: Record<string, string>;
-    readonly onValueChange: (id: string, value: string) => void;
-    readonly resolvedAmounts?: Record<string, number>;
-    readonly emptyMessage?: string;
-}
+type SplitParticipantListProps = Readonly<{
+    users: User[];
+    splitType: SplitType;
+    selectedIds: string[];
+    onToggle: (id: string) => void;
+    values: Record<string, string>;
+    onValueChange: (id: string, value: string) => void;
+    resolvedAmounts?: Record<string, number>;
+    emptyMessage?: string;
+}>;
 
 const inputConfigByType: Partial<
     Record<SplitType, { label: string; suffix?: string; step: string }>

@@ -13,12 +13,12 @@ import type { RecordPaymentFormValues } from '@features/payments/components/Reco
 import { useCreatePayment } from '@features/payments/hooks/useCreatePayment';
 import { formatCurrency, participantNameMap, sortMembersByName } from '@shared/utils';
 
-interface Props {
-    readonly groupId: string;
-    readonly members: User[];
-    readonly netBalances: Map<string, number>;
-    readonly transactions: SettlementTransaction[];
-}
+type Props = Readonly<{
+    groupId: string;
+    members: User[];
+    netBalances: Map<string, number>;
+    transactions: SettlementTransaction[];
+}>;
 
 export function GroupBalanceAccordionList({ groupId, members, netBalances, transactions }: Props) {
     const { data: currentUser } = useCurrentUser();
@@ -36,7 +36,8 @@ export function GroupBalanceAccordionList({ groupId, members, netBalances, trans
         .sort((a, b) => {
             const aPay = a.fromUserId === currentUserId;
             const bPay = b.fromUserId === currentUserId;
-            return aPay !== bPay ? (aPay ? -1 : 1) : b.amount - a.amount;
+            if (aPay !== bPay) return aPay ? -1 : 1;
+            return b.amount - a.amount;
         });
     // Rows between other people had no defined order; sort them by who owes,
     // then by who is owed. `personal` keeps its own ordering (payments to make
@@ -67,6 +68,46 @@ export function GroupBalanceAccordionList({ groupId, members, netBalances, trans
         .reduce((sum, item) => sum + item.amount, 0);
     const net = netBalances.get(currentUserId ?? '') ?? toReceive - toPay;
     const everyoneSettled = transactions.length === 0 && netBalances.size > 0;
+    let positionContent: ReactNode = (
+        <SinglePosition
+            text={`You owe ${formatCurrency(toPay)}`}
+            count={personal.length}
+            suffix="to make"
+            tone="pay"
+        />
+    );
+    if (toPay === 0 && toReceive === 0) {
+        positionContent = (
+            <>
+                <p className="font-semibold">You are settled up</p>
+                <p className="text-muted-foreground mt-1 text-sm">
+                    You have no outstanding payments in this group.
+                </p>
+            </>
+        );
+    } else if (toPay > 0 && toReceive > 0) {
+        positionContent = (
+            <div className="grid gap-3 sm:grid-cols-3">
+                <PositionValue label="To receive" amount={toReceive} tone="receive" />
+                <PositionValue label="To pay" amount={toPay} tone="pay" />
+                <div>
+                    <p className="text-muted-foreground text-sm">Net position</p>
+                    <p className="font-semibold">
+                        {formatCurrency(Math.abs(net))} {net >= 0 ? 'to receive' : 'to pay'}
+                    </p>
+                </div>
+            </div>
+        );
+    } else if (toReceive > 0) {
+        positionContent = (
+            <SinglePosition
+                text={`You are owed ${formatCurrency(toReceive)}`}
+                count={personal.length}
+                suffix="to receive"
+                tone="receive"
+            />
+        );
+    }
 
     const recordPayment = (values: RecordPaymentFormValues) => {
         if (createPayment.isPending) return;
@@ -162,40 +203,7 @@ export function GroupBalanceAccordionList({ groupId, members, netBalances, trans
                     <RecordPaymentAction groupId={groupId} members={members} />
                 </div>
                 <div className="border-border bg-surface mt-2 rounded-xl border p-3 sm:mt-3 sm:p-4">
-                    {toPay === 0 && toReceive === 0 ? (
-                        <>
-                            <p className="font-semibold">You are settled up</p>
-                            <p className="text-muted-foreground mt-1 text-sm">
-                                You have no outstanding payments in this group.
-                            </p>
-                        </>
-                    ) : toPay > 0 && toReceive > 0 ? (
-                        <div className="grid gap-3 sm:grid-cols-3">
-                            <PositionValue label="To receive" amount={toReceive} tone="receive" />
-                            <PositionValue label="To pay" amount={toPay} tone="pay" />
-                            <div>
-                                <p className="text-muted-foreground text-sm">Net position</p>
-                                <p className="font-semibold">
-                                    {formatCurrency(Math.abs(net))}{' '}
-                                    {net >= 0 ? 'to receive' : 'to pay'}
-                                </p>
-                            </div>
-                        </div>
-                    ) : toReceive > 0 ? (
-                        <SinglePosition
-                            text={`You are owed ${formatCurrency(toReceive)}`}
-                            count={personal.length}
-                            suffix="to receive"
-                            tone="receive"
-                        />
-                    ) : (
-                        <SinglePosition
-                            text={`You owe ${formatCurrency(toPay)}`}
-                            count={personal.length}
-                            suffix="to make"
-                            tone="pay"
-                        />
-                    )}
+                    {positionContent}
                 </div>
             </section>
 
@@ -257,7 +265,15 @@ export function GroupBalanceAccordionList({ groupId, members, netBalances, trans
     );
 }
 
-function PositionValue({ label, amount, tone }: { label: string; amount: number; tone: string }) {
+function PositionValue({
+    label,
+    amount,
+    tone,
+}: Readonly<{
+    label: string;
+    amount: number;
+    tone: string;
+}>) {
     return (
         <div>
             <p className="text-muted-foreground text-sm">{label}</p>
@@ -277,12 +293,12 @@ function SinglePosition({
     count,
     suffix,
     tone,
-}: {
+}: Readonly<{
     text: string;
     count: number;
     suffix: string;
     tone: string;
-}) {
+}>) {
     return (
         <>
             <p
@@ -306,12 +322,12 @@ function Disclosure({
     label,
     description,
     children,
-}: {
+}: Readonly<{
     value: string;
     label: string;
     description?: string;
     children: ReactNode;
-}) {
+}>) {
     return (
         <Accordion.Root type="single" collapsible>
             <Accordion.Item value={value} className="border-border rounded-xl border">

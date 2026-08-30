@@ -61,13 +61,13 @@ export interface UpsertExpenseFormInitialValues {
     splitValues: Record<string, string>;
 }
 
-interface UpsertExpenseFormProps {
-    readonly mode?: 'add' | 'edit';
-    readonly members: User[];
-    readonly initialValues?: UpsertExpenseFormInitialValues;
-    readonly onSubmit: (values: UpsertExpenseFormValues) => void;
-    readonly onCancel: () => void;
-}
+type UpsertExpenseFormProps = Readonly<{
+    mode?: 'add' | 'edit';
+    members: User[];
+    initialValues?: UpsertExpenseFormInitialValues;
+    onSubmit: (values: UpsertExpenseFormValues) => void;
+    onCancel: () => void;
+}>;
 
 export function UpsertExpenseForm({
     mode = 'add',
@@ -112,6 +112,11 @@ export function UpsertExpenseForm({
         splitType,
         splitValues,
     });
+    let allocationSummaryClass = 'text-muted-foreground text-sm';
+    if (allocationPreview.status === 'invalid') allocationSummaryClass = 'text-sm text-red-600';
+    if (allocationPreview.status === 'valid') {
+        allocationSummaryClass = 'text-sm text-green-700 dark:text-green-400';
+    }
 
     const toggleParticipant = (id: string) => {
         setParticipantUserIds((current) =>
@@ -375,13 +380,7 @@ export function UpsertExpenseForm({
                 <p
                     id="split-allocation-summary"
                     aria-live="polite"
-                    className={
-                        allocationPreview.status === 'invalid'
-                            ? 'text-sm text-red-600'
-                            : allocationPreview.status === 'valid'
-                              ? 'text-sm text-green-700 dark:text-green-400'
-                              : 'text-muted-foreground text-sm'
-                    }
+                    className={allocationSummaryClass}
                 >
                     {allocationPreview.summary}
                 </p>
