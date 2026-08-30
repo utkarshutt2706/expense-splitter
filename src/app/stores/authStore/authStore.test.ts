@@ -35,15 +35,11 @@ describe('useAuthStore', () => {
         expect(useAuthStore.getState().accessToken).toBeNull();
     });
 
-    it('persists the logged-in user and access token to local storage', () => {
+    it('keeps the logged-in user and access token out of browser storage', () => {
         useAuthStore.getState().login(user, accessToken);
 
-        const stored = JSON.parse(localStorage.getItem('auth')!) as {
-            state: { currentUserId: string; cachedUser: User; accessToken: string };
-        };
-        expect(stored.state.currentUserId).toBe(user.id);
-        expect(stored.state.cachedUser).toEqual(user);
-        expect(stored.state.accessToken).toBe(accessToken);
+        expect(localStorage.getItem('auth')).toBeNull();
+        expect(sessionStorage.getItem('auth')).toBeNull();
     });
 
     it('updates the cached user with partial field patches', () => {

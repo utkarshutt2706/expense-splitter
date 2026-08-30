@@ -4,6 +4,7 @@ import { MemoryRouter, Route, Routes } from 'react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useAuthStore, useThemeStore, useThemeTransitionStore } from '@app/stores';
+import { logout as revokeSession } from '@features/auth/api/authApi';
 import { UserMenu } from './UserMenu';
 
 vi.mock('@app/hooks', async (importOriginal) => ({
@@ -16,6 +17,10 @@ vi.mock('@app/hooks', async (importOriginal) => ({
 vi.mock('@features/auth', () => ({
     ChangePasswordDialog: ({ open }: { open: boolean }) =>
         open ? <div data-testid="change-password-dialog" /> : null,
+}));
+
+vi.mock('@features/auth/api/authApi', () => ({
+    logout: vi.fn().mockResolvedValue(undefined),
 }));
 
 function renderMenu(expanded = false) {
@@ -31,6 +36,7 @@ function renderMenu(expanded = false) {
 
 describe('UserMenu', () => {
     beforeEach(() => {
+        vi.clearAllMocks();
         localStorage.clear();
         useAuthStore.setState({ currentUserId: 'current-user' });
         useThemeStore.setState({ theme: 'light' });
@@ -113,6 +119,7 @@ describe('UserMenu', () => {
         await user.click(screen.getByRole('button', { name: /logout/i }));
 
         expect(useAuthStore.getState().currentUserId).toBeNull();
+        expect(revokeSession).toHaveBeenCalledOnce();
         expect(await screen.findByText(/login page/i)).toBeInTheDocument();
     });
 

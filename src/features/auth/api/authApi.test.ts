@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type { User } from '@data/entities';
 import { httpClient } from '@lib/api/httpClient';
-import { changePassword, login, register } from './authApi';
+import { changePassword, login, logout, refreshSession, register } from './authApi';
 
 vi.mock('@lib/api/httpClient', () => ({
     httpClient: {
@@ -57,6 +57,30 @@ describe('authApi', () => {
         expect(httpClient.patch).toHaveBeenCalledWith('/auth/password', {
             currentPassword: 'old-password',
             newPassword: 'new-password',
+        });
+    });
+
+    it('restores a session from /auth/refresh', async () => {
+        vi.mocked(httpClient.post).mockResolvedValue({
+            data: { user, accessToken: 'refreshed-token' },
+        });
+
+        await expect(refreshSession()).resolves.toEqual({
+            user,
+            accessToken: 'refreshed-token',
+        });
+        expect(httpClient.post).toHaveBeenCalledWith('/auth/refresh', undefined, {
+            headers: { 'X-Session-Request': 'ExpenseSplitter' },
+        });
+    });
+
+    it('posts to /auth/logout to revoke the refresh session', async () => {
+        vi.mocked(httpClient.post).mockResolvedValue({ data: undefined });
+
+        await logout();
+
+        expect(httpClient.post).toHaveBeenCalledWith('/auth/logout', undefined, {
+            headers: { 'X-Session-Request': 'ExpenseSplitter' },
         });
     });
 });

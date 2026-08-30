@@ -2,6 +2,7 @@ export { BottomNav } from './BottomNav';
 export { Header } from './Header';
 export { PwaInstallPrompt } from './PwaInstallPrompt';
 export { ServerWakeGate } from './ServerWakeGate';
+export { SessionBootstrap } from './SessionBootstrap';
 export { Sidebar } from './Sidebar';
 export { ThemeTransitionOverlay } from './ThemeTransitionOverlay';
 export { UserMenu } from './UserMenu';

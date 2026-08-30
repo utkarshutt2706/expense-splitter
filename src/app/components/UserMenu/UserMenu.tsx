@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router';
 import { useCurrentUser, useIsDarkTheme } from '@app/hooks';
 import { useAuthStore, useThemeStore, useThemeTransitionStore } from '@app/stores';
 import { ChangePasswordDialog } from '@features/auth';
+import { logout as revokeSession } from '@features/auth/api/authApi';
 import { Avatar, ResponsivePopoverContent } from '@shared/components';
 
 interface MenuItemProps {
@@ -97,9 +98,15 @@ export function UserMenu({ expanded, side = 'top', align = 'start' }: UserMenuPr
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isChangingPassword, setIsChangingPassword] = useState(false);
 
-    const handleLogout = () => {
-        logout();
-        navigate('/login', { replace: true });
+    const handleLogout = async () => {
+        try {
+            await revokeSession();
+        } catch {
+            // Clear the local session even when the server is temporarily unreachable.
+        } finally {
+            logout();
+            navigate('/login', { replace: true });
+        }
     };
 
     return (

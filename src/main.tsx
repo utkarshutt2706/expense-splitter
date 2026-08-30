@@ -3,7 +3,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { RouterProvider } from 'react-router';
 
-import { PwaInstallPrompt, ServerWakeGate } from '@app/components';
+import { PwaInstallPrompt, ServerWakeGate, SessionBootstrap } from '@app/components';
 import { AppProviders } from '@app/providers';
 import { router } from '@app/router.tsx';
 import { registerStaleChunkRecovery } from '@app/staleChunkRecovery';
@@ -15,7 +15,9 @@ createRoot(document.getElementById('root')!).render(
     <StrictMode>
         <AppProviders>
             <ServerWakeGate>
-                <RouterProvider router={router} />
+                <SessionBootstrap>
+                    <RouterProvider router={router} />
+                </SessionBootstrap>
             </ServerWakeGate>
             <PwaInstallPrompt />
         </AppProviders>

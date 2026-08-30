@@ -23,6 +23,10 @@ export interface ChangePasswordInput {
     newPassword: string;
 }
 
+const sessionRequestConfig = {
+    headers: { 'X-Session-Request': 'ExpenseSplitter' },
+};
+
 export async function login(input: LoginInput): Promise<AuthSession> {
     const { data } = await httpClient.post<AuthSession>('/auth/login', input);
     return data;
@@ -31,6 +35,19 @@ export async function login(input: LoginInput): Promise<AuthSession> {
 export async function register(input: RegisterInput): Promise<AuthSession> {
     const { data } = await httpClient.post<AuthSession>('/auth/register', input);
     return data;
+}
+
+export async function refreshSession(): Promise<AuthSession | null> {
+    const { data } = await httpClient.post<AuthSession | null>(
+        '/auth/refresh',
+        undefined,
+        sessionRequestConfig,
+    );
+    return data;
+}
+
+export async function logout(): Promise<void> {
+    await httpClient.post('/auth/logout', undefined, sessionRequestConfig);
 }
 
 export async function changePassword(input: ChangePasswordInput): Promise<void> {
