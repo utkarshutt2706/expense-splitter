@@ -6,18 +6,18 @@ import { Avatar, ResponsivePopoverContent } from '@shared/components';
 import { sortMembersByName } from '@shared/utils';
 import { MemberList } from '../MemberList';
 
-interface GroupMembersStackProps {
-    readonly members: User[];
-    readonly maxVisible?: number;
-    readonly maxVisibleMobile?: number;
-}
+type GroupMembersStackProps = Readonly<{
+    members: User[];
+    maxVisible?: number;
+    maxVisibleMobile?: number;
+}>;
 
-interface AvatarRowProps {
-    readonly members: User[];
-    readonly maxVisible: number;
-    readonly className: string;
-    readonly testId: string;
-}
+type AvatarRowProps = Readonly<{
+    members: User[];
+    maxVisible: number;
+    className: string;
+    testId: string;
+}>;
 
 function AvatarRow({ members, maxVisible, className, testId }: AvatarRowProps) {
     const visible = members.slice(0, maxVisible);

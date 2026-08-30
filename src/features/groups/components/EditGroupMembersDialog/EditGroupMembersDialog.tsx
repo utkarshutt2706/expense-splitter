@@ -3,13 +3,13 @@ import { FormDialog } from '@shared/components';
 import { closeOnSubmit } from '@shared/utils';
 import { EditGroupMembersForm, type EditGroupMembersFormValues } from '../EditGroupMembersForm';
 
-interface EditGroupMembersDialogProps {
-    readonly open: boolean;
-    readonly onOpenChange: (open: boolean) => void;
-    readonly users: User[];
-    readonly initialMemberIds: string[];
-    readonly onSubmit: (values: EditGroupMembersFormValues) => void;
-}
+type EditGroupMembersDialogProps = Readonly<{
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    users: User[];
+    initialMemberIds: string[];
+    onSubmit: (values: EditGroupMembersFormValues) => void;
+}>;
 
 export function EditGroupMembersDialog({
     open,

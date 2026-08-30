@@ -9,14 +9,14 @@ import { RecordPaymentDialog } from '@features/payments/components/RecordPayment
 import { useCreatePayment } from '@features/payments/hooks/useCreatePayment';
 import { formatCurrency, participantNameMap } from '@shared/utils';
 
-interface MemberBalanceAccordionProps {
-    readonly member: User;
-    readonly netAmount: number;
-    readonly transactions: SettlementTransaction[];
-    readonly members: User[];
-    readonly groupId: string;
-    readonly currentUserId: string | undefined;
-}
+type MemberBalanceAccordionProps = Readonly<{
+    member: User;
+    netAmount: number;
+    transactions: SettlementTransaction[];
+    members: User[];
+    groupId: string;
+    currentUserId: string | undefined;
+}>;
 
 function subjectName(userId: string, names: Map<string, string>): string {
     return names.get(userId) ?? 'Someone';

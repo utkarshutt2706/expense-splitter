@@ -3,10 +3,10 @@ import type { User } from '@data/entities';
 import { Avatar } from '@shared/components';
 import { cn, participantNameMap, sortMembersByName } from '@shared/utils';
 
-interface MemberListProps {
-    readonly members: User[];
-    readonly className?: string;
-}
+type MemberListProps = Readonly<{
+    members: User[];
+    className?: string;
+}>;
 
 // The current user always leads the list — same convention as GroupMembersStack's
 // avatar rows and GroupBalanceAccordionList.

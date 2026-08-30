@@ -2,15 +2,15 @@ import * as Dialog from '@radix-ui/react-dialog';
 import { X } from 'lucide-react';
 import type { ReactNode } from 'react';
 
-interface FormDialogProps {
-    readonly open: boolean;
-    readonly onOpenChange: (open: boolean) => void;
-    readonly title: string;
-    readonly description: ReactNode;
-    readonly children: ReactNode;
-    readonly showDescription?: boolean;
-    readonly isPending?: boolean;
-}
+type FormDialogProps = Readonly<{
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    title: string;
+    description: ReactNode;
+    children: ReactNode;
+    showDescription?: boolean;
+    isPending?: boolean;
+}>;
 
 export function FormDialog({
     open,

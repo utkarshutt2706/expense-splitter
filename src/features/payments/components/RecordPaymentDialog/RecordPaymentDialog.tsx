@@ -9,17 +9,17 @@ import {
     type RecordPaymentFormValues,
 } from '../RecordPaymentForm';
 
-interface RecordPaymentDialogProps {
-    readonly open: boolean;
-    readonly onOpenChange: (open: boolean) => void;
-    readonly members: User[];
-    readonly initialValues?: RecordPaymentFormInitialValues;
-    readonly onSubmit: (values: RecordPaymentFormValues) => void;
-    readonly mode?: 'create' | 'edit';
-    readonly settlementMode?: boolean;
-    readonly isPending?: boolean;
-    readonly errorMessage?: string;
-}
+type RecordPaymentDialogProps = Readonly<{
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    members: User[];
+    initialValues?: RecordPaymentFormInitialValues;
+    onSubmit: (values: RecordPaymentFormValues) => void;
+    mode?: 'create' | 'edit';
+    settlementMode?: boolean;
+    isPending?: boolean;
+    errorMessage?: string;
+}>;
 
 export function RecordPaymentDialog({
     open,
@@ -37,12 +37,12 @@ export function RecordPaymentDialog({
     const isEditing = mode === 'edit';
     const names = participantNameMap(members, currentUser?.id);
     const memberName = (id: string) => names.get(id) ?? 'a group member';
-    const description =
-        settlementMode && initialValues
-            ? `Record a settlement from ${memberName(initialValues.fromUserId)} to ${memberName(initialValues.toUserId)}.`
-            : isEditing
-              ? 'Update the payer, recipient, or amount for this payment.'
-              : 'Record a direct payment between two group members.';
+    let description = 'Record a direct payment between two group members.';
+    if (settlementMode && initialValues) {
+        description = `Record a settlement from ${memberName(initialValues.fromUserId)} to ${memberName(initialValues.toUserId)}.`;
+    } else if (isEditing) {
+        description = 'Update the payer, recipient, or amount for this payment.';
+    }
 
     const handleSubmit = (values: RecordPaymentFormValues) => {
         if (isEditing) {

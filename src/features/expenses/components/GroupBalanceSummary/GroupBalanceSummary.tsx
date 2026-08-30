@@ -8,10 +8,10 @@ import { useGroupBalances } from '@features/balances/hooks/useGroupBalances';
 import { FetchingIndicator, Skeleton } from '@shared/components';
 import { formatCurrency } from '@shared/utils';
 
-interface GroupBalanceSummaryProps {
-    readonly groupId: string;
-    readonly members: User[];
-}
+type GroupBalanceSummaryProps = Readonly<{
+    groupId: string;
+    members: User[];
+}>;
 
 type Celebration = 'personal' | 'group';
 
@@ -38,10 +38,10 @@ function shouldCelebrate(groupId: string, celebration: Celebration): boolean {
 function SettlementConfetti({
     groupId,
     celebration,
-}: {
+}: Readonly<{
     groupId: string;
     celebration: Celebration;
-}) {
+}>) {
     const [visible, setVisible] = useState(() => shouldCelebrate(groupId, celebration));
     if (!visible) return null;
 

@@ -1,5 +1,5 @@
 import { Download, Share, SquarePlus, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { type ReactNode, useEffect, useState } from 'react';
 
 import logo from '@assets/logo.svg';
 
@@ -86,6 +86,36 @@ export function PwaInstallPrompt() {
         if (outcome === 'accepted') setMethod(null);
     };
 
+    let installAction: ReactNode = (
+        <p className="bg-muted mt-4 rounded-xl px-3 py-2.5 text-sm leading-relaxed">
+            Open your browser menu and choose <span className="font-medium">Install app</span> or{' '}
+            <span className="font-medium">Add to Home screen</span>.
+        </p>
+    );
+    if (method === 'ios') {
+        installAction = (
+            <div className="bg-muted mt-4 flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm">
+                <Share aria-hidden="true" className="text-brand-600 size-4 shrink-0" />
+                <span>Tap Share, then</span>
+                <SquarePlus aria-hidden="true" className="text-brand-600 size-4 shrink-0" />
+                <span className="font-medium">Add to Home Screen</span>
+            </div>
+        );
+    } else if (installPrompt) {
+        installAction = (
+            <button
+                type="button"
+                onClick={() => void installOnAndroid()}
+                className="bg-brand-600 hover:bg-brand-700 relative mt-4 flex w-full cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-xl px-4 py-2.5 text-sm font-semibold text-white"
+            >
+                <span className={styles.installCountdown} aria-hidden="true" />
+                <span className="relative flex items-center gap-2">
+                    <Download className="size-4" /> Install app
+                </span>
+            </button>
+        );
+    }
+
     return (
         <aside
             aria-label="Install Expense Splitter"
@@ -115,31 +145,7 @@ export function PwaInstallPrompt() {
                 </div>
             </div>
 
-            {method === 'ios' ? (
-                <div className="bg-muted mt-4 flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm">
-                    <Share aria-hidden="true" className="text-brand-600 size-4 shrink-0" />
-                    <span>Tap Share, then</span>
-                    <SquarePlus aria-hidden="true" className="text-brand-600 size-4 shrink-0" />
-                    <span className="font-medium">Add to Home Screen</span>
-                </div>
-            ) : installPrompt ? (
-                <button
-                    type="button"
-                    onClick={() => void installOnAndroid()}
-                    className="bg-brand-600 hover:bg-brand-700 relative mt-4 flex w-full cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-xl px-4 py-2.5 text-sm font-semibold text-white"
-                >
-                    <span className={styles.installCountdown} aria-hidden="true" />
-                    <span className="relative flex items-center gap-2">
-                        <Download className="size-4" /> Install app
-                    </span>
-                </button>
-            ) : (
-                <p className="bg-muted mt-4 rounded-xl px-3 py-2.5 text-sm leading-relaxed">
-                    Open your browser menu and choose{' '}
-                    <span className="font-medium">Install app</span> or{' '}
-                    <span className="font-medium">Add to Home screen</span>.
-                </p>
-            )}
+            {installAction}
         </aside>
     );
 }

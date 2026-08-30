@@ -2,10 +2,10 @@ import { Loader2 } from 'lucide-react';
 
 import { cn } from '@shared/utils';
 
-interface FetchingIndicatorProps {
-    readonly label?: string;
-    readonly className?: string;
-}
+type FetchingIndicatorProps = Readonly<{
+    label?: string;
+    className?: string;
+}>;
 
 // For a background refetch (query already has data, just revalidating — e.g. after
 // a mutation invalidates it) — distinct from Skeleton, which stands in for content

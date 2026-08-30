@@ -2,11 +2,11 @@ import { ArrowRight, BarChart3, Plus, RefreshCw } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router';
 
-import type { DashboardGroupSpend } from '@features/dashboard/api/dashboardApi';
+import type { DashboardGroupSpend, DashboardSummary } from '@features/dashboard/api/dashboardApi';
 import { useDashboard } from '@features/dashboard/hooks';
 import { Avatar, Skeleton } from '@shared/components';
 import { disambiguateParticipantNames, formatCurrency, sortMembersByName } from '@shared/utils';
-import { presetPeriod, usesDailyTrend } from './dashboardDateRange';
+import { presetPeriod, usesDailyTrend, type DashboardPeriod } from './dashboardDateRange';
 import {
     combineDailySpending,
     combineMonthlySpending,
@@ -44,12 +44,12 @@ function BalanceText({
 }
 
 function DashboardSkeleton() {
-    const filterSkeletons = Array.from({ length: 2 });
-    const metricSkeletons = Array.from({ length: 3 });
-    const groupSkeletons = Array.from({ length: 2 });
+    const filterSkeletons = ['period', 'group'];
+    const metricSkeletons = ['paid', 'share', 'total'];
+    const groupSkeletons = ['first', 'second'];
 
     return (
-        <div role="status" aria-label="Loading dashboard" className="mx-auto max-w-7xl space-y-6">
+        <output aria-label="Loading dashboard" className="mx-auto block max-w-7xl space-y-6">
             <header className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
                     <Skeleton className="h-9 w-64 max-w-full" />
@@ -57,8 +57,8 @@ function DashboardSkeleton() {
                 </div>
 
                 <div className="flex w-full flex-col gap-3 sm:flex-row lg:w-auto">
-                    {filterSkeletons.map((_, index) => (
-                        <div key={index} className="w-full sm:w-72">
+                    {filterSkeletons.map((key) => (
+                        <div key={key} className="w-full sm:w-72">
                             <Skeleton className="h-4 w-20" />
                             <Skeleton className="mt-2 h-11 w-full rounded-lg" />
                         </div>
@@ -83,8 +83,8 @@ function DashboardSkeleton() {
                 </div>
 
                 <div className="mt-5 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-                    {metricSkeletons.map((_, index) => (
-                        <div key={index}>
+                    {metricSkeletons.map((key) => (
+                        <div key={key}>
                             <Skeleton className="h-4 w-32" />
                             <Skeleton className="mt-2 h-9 w-44 max-w-full" />
                             <Skeleton className="mt-2 h-4 w-52 max-w-full" />
@@ -105,9 +105,9 @@ function DashboardSkeleton() {
                 </div>
 
                 <div className="space-y-3">
-                    {groupSkeletons.map((_, index) => (
+                    {groupSkeletons.map((key) => (
                         <div
-                            key={index}
+                            key={key}
                             className="border-border rounded-2xl border p-4 xl:grid xl:grid-cols-[minmax(12rem,1fr)_minmax(16rem,1.3fr)_10rem] xl:items-center xl:gap-6"
                         >
                             <div>
@@ -127,7 +127,7 @@ function DashboardSkeleton() {
             </section>
 
             <span className="sr-only">Loading financial summary</span>
-        </div>
+        </output>
     );
 }
 
@@ -307,11 +307,7 @@ function Metric({
     );
 }
 
-function GroupBreakdown({
-    groups,
-}: Readonly<{
-    groups: DashboardGroupSpend[];
-}>) {
+function GroupBreakdown({ groups }: Readonly<{ groups: DashboardGroupSpend[] }>) {
     const [showAll, setShowAll] = useState(false);
 
     const visible = showAll ? groups : groups.slice(0, 6);
@@ -383,7 +379,7 @@ function GroupContribution({
     return (
         <div
             className="mt-4 space-y-2 xl:mt-0"
-            role={compareWithBars ? 'img' : undefined}
+            role={compareWithBars ? 'group' : undefined}
             aria-label={`${group.name}: paid by you ${formatCurrency(
                 group.actualPaid,
             )}; your share ${formatCurrency(group.currentUserShare)}`}
@@ -401,11 +397,7 @@ function GroupContribution({
     );
 }
 
-function ContributionValues({
-    group,
-}: Readonly<{
-    group: DashboardGroupSpend;
-}>) {
+function ContributionValues({ group }: Readonly<{ group: DashboardGroupSpend }>) {
     const values = [
         ['Paid by you', group.actualPaid],
         ['Your share', group.currentUserShare],
@@ -470,11 +462,7 @@ function Bar({
     );
 }
 
-function Participants({
-    group,
-}: Readonly<{
-    group: DashboardGroupSpend;
-}>) {
+function Participants({ group }: Readonly<{ group: DashboardGroupSpend }>) {
     const [showAll, setShowAll] = useState(false);
 
     const orderedMembers = sortMembersByName(group.memberShares, {
@@ -637,11 +625,7 @@ function EmptyDashboard() {
     );
 }
 
-function DashboardError({
-    onRetry,
-}: Readonly<{
-    onRetry: () => void;
-}>) {
+function DashboardError({ onRetry }: Readonly<{ onRetry: () => void }>) {
     return (
         <div className="border-border mx-auto max-w-xl rounded-2xl border p-8 text-center">
             <h1 className="text-2xl font-semibold">We couldn't load your dashboard</h1>
@@ -662,6 +646,89 @@ function DashboardError({
     );
 }
 
+function selectDashboardGroup(
+    groups: DashboardGroupSpend[],
+    scopeGroupId: string | null,
+): DashboardGroupSpend | undefined {
+    const scopedGroup = groups.find((group) => group.groupId === scopeGroupId);
+    if (scopedGroup) return scopedGroup;
+    if (groups.length === 1) return groups[0];
+    return undefined;
+}
+
+function DashboardResults({
+    data,
+    selected,
+    period,
+}: Readonly<{
+    data: DashboardSummary;
+    selected?: DashboardGroupSpend;
+    period: DashboardPeriod;
+}>) {
+    if (data.groupSpend.length === 0) return <EmptyDashboard />;
+
+    const dailyTrend = usesDailyTrend(period);
+    if (selected) {
+        return (
+            <>
+                {period.preset === 'all-time' && (
+                    <CurrentPosition
+                        groups={data.groupSpend}
+                        selected={selected}
+                        periodLabel={period.label}
+                    />
+                )}
+                {selected.amount > 0 ? (
+                    <>
+                        <SpendingSummary
+                            paid={selected.actualPaid}
+                            share={selected.currentUserShare}
+                            total={selected.amount}
+                            periodLabel={period.label}
+                        />
+                        <TrendChart
+                            groups={data.groupSpend}
+                            selected={selected}
+                            dailyTrend={dailyTrend}
+                        />
+                    </>
+                ) : (
+                    <NoSpendingState
+                        description="Try another time period or add an expense to this group."
+                        link={`/groups/${selected.groupId}/expenses/new`}
+                        linkLabel="Add expense"
+                    />
+                )}
+                <Participants group={selected} />
+            </>
+        );
+    }
+
+    const hasExpenses = data.groupSpend.some((group) => group.amount > 0);
+    return (
+        <>
+            {period.preset === 'all-time' && (
+                <CurrentPosition groups={data.groupSpend} periodLabel={period.label} />
+            )}
+            <SpendingSummary
+                paid={data.actualPaid}
+                share={data.currentUserShare}
+                periodLabel={period.label}
+            />
+            <TrendChart groups={data.groupSpend} dailyTrend={dailyTrend} />
+            {hasExpenses ? (
+                <GroupBreakdown groups={data.groupSpend} />
+            ) : (
+                <NoSpendingState
+                    description="Try another time period or add an expense to a group."
+                    link={data.groupSpend[0] ? `/groups/${data.groupSpend[0].groupId}` : undefined}
+                    linkLabel="Open group"
+                />
+            )}
+        </>
+    );
+}
+
 export function DashboardPage() {
     const [period, setPeriod] = useState(() => presetPeriod('all-time'));
 
@@ -677,13 +744,7 @@ export function DashboardPage() {
         return <DashboardError onRetry={() => void refetch()} />;
     }
 
-    const selected =
-        data.groupSpend.find((group) => group.groupId === scopeGroupId) ??
-        (data.groupSpend.length === 1 ? data.groupSpend[0] : undefined);
-
-    const hasExpenses = data.groupSpend.some((group) => group.amount > 0);
-
-    const dailyTrend = usesDailyTrend(period);
+    const selected = selectDashboardGroup(data.groupSpend, scopeGroupId);
 
     return (
         <div className="mx-auto max-w-7xl space-y-6">
@@ -710,72 +771,7 @@ export function DashboardPage() {
                 </div>
             </header>
 
-            {data.groupSpend.length === 0 ? (
-                <EmptyDashboard />
-            ) : selected ? (
-                <>
-                    {period.preset === 'all-time' && (
-                        <CurrentPosition
-                            groups={data.groupSpend}
-                            selected={selected}
-                            periodLabel={period.label}
-                        />
-                    )}
-
-                    {selected.amount > 0 ? (
-                        <>
-                            <SpendingSummary
-                                paid={selected.actualPaid}
-                                share={selected.currentUserShare}
-                                total={selected.amount}
-                                periodLabel={period.label}
-                            />
-
-                            <TrendChart
-                                groups={data.groupSpend}
-                                selected={selected}
-                                dailyTrend={dailyTrend}
-                            />
-                        </>
-                    ) : (
-                        <NoSpendingState
-                            description="Try another time period or add an expense to this group."
-                            link={`/groups/${selected.groupId}/expenses/new`}
-                            linkLabel="Add expense"
-                        />
-                    )}
-
-                    <Participants group={selected} />
-                </>
-            ) : (
-                <>
-                    {period.preset === 'all-time' && (
-                        <CurrentPosition groups={data.groupSpend} periodLabel={period.label} />
-                    )}
-
-                    <SpendingSummary
-                        paid={data.actualPaid}
-                        share={data.currentUserShare}
-                        periodLabel={period.label}
-                    />
-
-                    <TrendChart groups={data.groupSpend} dailyTrend={dailyTrend} />
-
-                    {hasExpenses ? (
-                        <GroupBreakdown groups={data.groupSpend} />
-                    ) : (
-                        <NoSpendingState
-                            description="Try another time period or add an expense to a group."
-                            link={
-                                data.groupSpend[0]
-                                    ? `/groups/${data.groupSpend[0].groupId}`
-                                    : undefined
-                            }
-                            linkLabel="Open group"
-                        />
-                    )}
-                </>
-            )}
+            <DashboardResults data={data} selected={selected} period={period} />
         </div>
     );
 }

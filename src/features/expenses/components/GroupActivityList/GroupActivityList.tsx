@@ -19,11 +19,11 @@ import {
     participantNameMap,
 } from '@shared/utils';
 
-interface GroupActivityListProps {
-    readonly groupId: string;
-    readonly members: User[];
-    readonly isMembersLoading?: boolean;
-}
+type GroupActivityListProps = Readonly<{
+    groupId: string;
+    members: User[];
+    isMembersLoading?: boolean;
+}>;
 
 const dateFormatter = new Intl.DateTimeFormat('en-US', {
     month: 'short',
@@ -53,15 +53,15 @@ function involvementLabel(
     return { text: 'You were not involved', className: 'text-muted-foreground' };
 }
 
-interface ExpenseRowProps {
-    readonly groupId: string;
-    readonly expense: Expense;
-    readonly membersById: Map<string, User>;
-    readonly names: Map<string, string>;
-    readonly currentUserId: string | undefined;
-    readonly onEdit: () => void;
-    readonly onDelete: () => void;
-}
+type ExpenseRowProps = Readonly<{
+    groupId: string;
+    expense: Expense;
+    membersById: Map<string, User>;
+    names: Map<string, string>;
+    currentUserId: string | undefined;
+    onEdit: () => void;
+    onDelete: () => void;
+}>;
 
 function ExpenseRow({
     groupId,
@@ -111,13 +111,13 @@ function ExpenseRow({
     );
 }
 
-interface PaymentRowProps {
-    readonly payment: Payment;
-    readonly membersById: Map<string, User>;
-    readonly names: Map<string, string>;
-    readonly onEdit: () => void;
-    readonly onDelete: () => void;
-}
+type PaymentRowProps = Readonly<{
+    payment: Payment;
+    membersById: Map<string, User>;
+    names: Map<string, string>;
+    onEdit: () => void;
+    onDelete: () => void;
+}>;
 
 // No detail page exists for a payment (it's a single atomic record, nothing to
 // drill into), so this renders as a plain div rather than a Link like ExpenseRow.

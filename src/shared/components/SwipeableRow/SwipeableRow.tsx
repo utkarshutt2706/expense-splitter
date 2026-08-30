@@ -20,11 +20,11 @@ export interface SwipeAction {
     readonly title?: string;
 }
 
-interface SwipeableRowProps {
-    readonly actions: SwipeAction[];
-    readonly children: ReactNode;
-    readonly className?: string;
-}
+type SwipeableRowProps = Readonly<{
+    actions: SwipeAction[];
+    children: ReactNode;
+    className?: string;
+}>;
 
 const ACTION_WIDTH = 64;
 // A press must move at least this far horizontally before it's treated as the

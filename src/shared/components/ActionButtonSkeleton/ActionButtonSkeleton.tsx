@@ -1,9 +1,9 @@
 import { Skeleton } from '@shared/components/Skeleton';
 import { cn } from '@shared/utils';
 
-interface ActionButtonSkeletonProps {
-    readonly className?: string;
-}
+type ActionButtonSkeletonProps = Readonly<{
+    className?: string;
+}>;
 
 // Matches a header action button's rendered height — used in place of it while
 // a list page's first fetch is still in flight. Width varies by button label

@@ -2,18 +2,18 @@ import * as AlertDialog from '@radix-ui/react-alert-dialog';
 import type { ReactNode } from 'react';
 import { useRef } from 'react';
 
-interface ConfirmationDialogProps {
-    readonly open: boolean;
-    readonly onOpenChange: (open: boolean) => void;
-    readonly title: string;
-    readonly description: ReactNode;
-    readonly confirmLabel: string;
-    readonly onConfirm: () => void;
-    readonly destructive?: boolean;
-    readonly isPending?: boolean;
-    readonly pendingLabel?: string;
-    readonly errorMessage?: string;
-}
+type ConfirmationDialogProps = Readonly<{
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    title: string;
+    description: ReactNode;
+    confirmLabel: string;
+    onConfirm: () => void;
+    destructive?: boolean;
+    isPending?: boolean;
+    pendingLabel?: string;
+    errorMessage?: string;
+}>;
 
 export function ConfirmationDialog({
     open,

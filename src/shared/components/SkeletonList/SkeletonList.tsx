@@ -2,10 +2,10 @@ import { useMemo } from 'react';
 
 import { Skeleton } from '@shared/components/Skeleton';
 
-interface SkeletonListProps {
-    readonly label: string;
-    readonly count?: number;
-}
+type SkeletonListProps = Readonly<{
+    label: string;
+    count?: number;
+}>;
 
 export function SkeletonList({ label, count = 6 }: SkeletonListProps) {
     const rowIds = useMemo(() => Array.from({ length: count }, () => crypto.randomUUID()), [count]);

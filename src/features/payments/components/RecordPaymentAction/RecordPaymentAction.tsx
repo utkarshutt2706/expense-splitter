@@ -7,10 +7,10 @@ import { useCreatePayment } from '@features/payments/hooks/useCreatePayment';
 import { RecordPaymentDialog } from '../RecordPaymentDialog';
 import type { RecordPaymentFormValues } from '../RecordPaymentForm';
 
-interface RecordPaymentActionProps {
-    readonly groupId: string;
-    readonly members: User[];
-}
+type RecordPaymentActionProps = Readonly<{
+    groupId: string;
+    members: User[];
+}>;
 
 // Sits beside the balance summary rather than in a floating menu, where "record
 // a payment" and "settle up" read as the same thing. Here the balance it acts on

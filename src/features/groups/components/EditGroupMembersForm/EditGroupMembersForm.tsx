@@ -10,12 +10,12 @@ export interface EditGroupMembersFormValues {
     memberIds: string[];
 }
 
-interface EditGroupMembersFormProps {
-    readonly users: User[];
-    readonly initialMemberIds: string[];
-    readonly onSubmit: (values: EditGroupMembersFormValues) => void;
-    readonly onCancel: () => void;
-}
+type EditGroupMembersFormProps = Readonly<{
+    users: User[];
+    initialMemberIds: string[];
+    onSubmit: (values: EditGroupMembersFormValues) => void;
+    onCancel: () => void;
+}>;
 
 export function EditGroupMembersForm({
     users,

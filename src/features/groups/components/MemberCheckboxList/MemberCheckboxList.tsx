@@ -2,21 +2,21 @@ import type { User } from '@data/entities';
 import { Avatar } from '@shared/components';
 import { participantNameMap, sortMembersByName } from '@shared/utils';
 
-interface MemberCheckboxListProps {
-    readonly users: User[];
-    readonly selectedIds: string[];
-    readonly onToggle: (id: string) => void;
-    readonly emptyMessage?: string;
-    readonly currentUserId?: string;
-    readonly lockCurrentUser?: boolean;
+type MemberCheckboxListProps = Readonly<{
+    users: User[];
+    selectedIds: string[];
+    onToggle: (id: string) => void;
+    emptyMessage?: string;
+    currentUserId?: string;
+    lockCurrentUser?: boolean;
     /**
      * Ids that sort above the other candidates, below the current user. The
      * group settings editor passes the group's membership as it was loaded —
      * not the live selection, so that ticking a checkbox does not make the row
      * jump out from under the pointer.
      */
-    readonly priorityIds?: readonly string[];
-}
+    priorityIds?: readonly string[];
+}>;
 
 export function MemberCheckboxList({
     users,

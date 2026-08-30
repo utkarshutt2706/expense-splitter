@@ -3,10 +3,10 @@ import type { ReactNode } from 'react';
 
 import type { SplitType } from '@data/entities';
 
-interface SplitTypeTabsProps {
-    readonly value: SplitType;
-    readonly onChange: (value: SplitType) => void;
-}
+type SplitTypeTabsProps = Readonly<{
+    value: SplitType;
+    onChange: (value: SplitType) => void;
+}>;
 
 const options: { value: SplitType; label: string; glyph: ReactNode }[] = [
     { value: 'equal', label: 'Equal', glyph: <Equal className="size-4" /> },

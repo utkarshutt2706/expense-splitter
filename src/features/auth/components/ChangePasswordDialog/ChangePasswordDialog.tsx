@@ -21,10 +21,10 @@ const changePasswordSchema = z
 
 type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
 
-interface ChangePasswordDialogProps {
-    readonly open: boolean;
-    readonly onOpenChange: (open: boolean) => void;
-}
+type ChangePasswordDialogProps = Readonly<{
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+}>;
 
 export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialogProps) {
     const { mutateAsync: changePassword } = useChangePassword();

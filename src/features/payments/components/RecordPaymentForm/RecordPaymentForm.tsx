@@ -55,17 +55,17 @@ export interface RecordPaymentFormInitialValues {
     paidOn?: string;
 }
 
-interface RecordPaymentFormProps {
-    readonly members: User[];
-    readonly initialValues?: RecordPaymentFormInitialValues;
-    readonly onSubmit: (values: RecordPaymentFormValues) => void;
-    readonly onCancel: () => void;
-    readonly submitLabel?: string;
-    readonly lockParticipants?: boolean;
-    readonly outstandingAmount?: number;
-    readonly isPending?: boolean;
-    readonly errorMessage?: string;
-}
+type RecordPaymentFormProps = Readonly<{
+    members: User[];
+    initialValues?: RecordPaymentFormInitialValues;
+    onSubmit: (values: RecordPaymentFormValues) => void;
+    onCancel: () => void;
+    submitLabel?: string;
+    lockParticipants?: boolean;
+    outstandingAmount?: number;
+    isPending?: boolean;
+    errorMessage?: string;
+}>;
 
 export function RecordPaymentForm({
     members,
@@ -116,6 +116,16 @@ export function RecordPaymentForm({
     const outstandingCents =
         outstandingAmount === undefined ? undefined : Math.round(outstandingAmount * 100);
     const amountRegistration = register('amount', { valueAsNumber: true });
+    let amountDescriptionId: string | undefined;
+    if (errors.amount) amountDescriptionId = 'payment-amount-error';
+    else if (outstandingAmount !== undefined) amountDescriptionId = 'payment-impact';
+
+    let paymentImpact = `Amount cannot exceed the outstanding balance of ${formatCurrency(outstandingAmount ?? 0)}.`;
+    if (amountCents === outstandingCents) {
+        paymentImpact = 'This settles the suggested balance in full.';
+    } else if (outstandingCents !== undefined && amountCents < outstandingCents) {
+        paymentImpact = `${formatCurrency((outstandingCents - amountCents) / 100)} will remain after this payment.`;
+    }
 
     useEffect(() => {
         if (lockParticipants) amountInputRef.current?.focus();
@@ -216,14 +226,7 @@ export function RecordPaymentForm({
                     max={outstandingAmount}
                     placeholder="0.00"
                     aria-invalid={errors.amount ? 'true' : undefined}
-                    aria-describedby={[
-                        'payment-currency-description',
-                        errors.amount
-                            ? 'payment-amount-error'
-                            : outstandingAmount !== undefined
-                              ? 'payment-impact'
-                              : undefined,
-                    ]
+                    aria-describedby={['payment-currency-description', amountDescriptionId]
                         .filter(Boolean)
                         .join(' ')}
                     {...amountRegistration}
@@ -243,11 +246,7 @@ export function RecordPaymentForm({
                         aria-live="polite"
                         className="text-muted-foreground text-sm"
                     >
-                        {amountCents === outstandingCents
-                            ? 'This settles the suggested balance in full.'
-                            : amountCents < outstandingCents
-                              ? `${formatCurrency((outstandingCents - amountCents) / 100)} will remain after this payment.`
-                              : `Amount cannot exceed the outstanding balance of ${formatCurrency(outstandingAmount!)}.`}
+                        {paymentImpact}
                     </p>
                 )}
             </div>
