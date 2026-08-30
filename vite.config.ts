@@ -58,7 +58,12 @@ export default defineConfig(({ command }) => ({
             reporter: ['text', 'lcov', 'html', 'json-summary', 'json'],
             reportOnFailure: true,
             include: ['src/**/*.{ts,tsx}'],
-            exclude: ['src/main.tsx', 'src/test/**', 'src/**/*.test.{ts,tsx}'],
+            exclude: [
+                'src/main.tsx',
+                'src/test/**',
+                'src/**/*.test.{ts,tsx}',
+                'src/lib/api/generated/**',
+            ],
             thresholds: {
                 lines: 80,
                 functions: 80,

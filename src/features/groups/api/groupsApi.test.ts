@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type { Group } from './groupsApi';
 import { httpClient } from '@lib/api/httpClient';
-import { create, getAll, getById, remove, update } from './groupsApi';
+import { create, getAll, getAllSummaries, getById, remove, update } from './groupsApi';
 
 vi.mock('@lib/api/httpClient', () => ({
     httpClient: {
@@ -37,6 +37,22 @@ describe('groupsApi', () => {
 
         expect(httpClient.get).toHaveBeenCalledWith('/groups/group-1');
         expect(result).toEqual(group);
+    });
+
+    it('getAllSummaries fetches the group summary list', async () => {
+        const summary = {
+            ...group,
+            memberCount: 2,
+            currentUserBalance: 45,
+            hasFinancialActivity: true,
+            lastActivityAt: '2026-08-30T12:00:00.000Z',
+        };
+        vi.mocked(httpClient.get).mockResolvedValue({ data: [summary] });
+
+        const result = await getAllSummaries();
+
+        expect(httpClient.get).toHaveBeenCalledWith('/groups/summaries');
+        expect(result).toEqual([summary]);
     });
 
     it('create posts a new group to /groups', async () => {

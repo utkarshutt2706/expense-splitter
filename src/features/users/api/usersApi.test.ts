@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type { User } from './usersApi';
 import { httpClient } from '@lib/api/httpClient';
-import { getByIds, lookup } from './usersApi';
+import { getByIds, lookup, updateUser } from './usersApi';
 
 vi.mock('@lib/api/httpClient', () => ({
     httpClient: {
@@ -37,5 +37,17 @@ describe('usersApi', () => {
             params: { query: 'priya' },
         });
         expect(result).toEqual(users);
+    });
+
+    it('updateUser patches the user and returns the updated profile', async () => {
+        const updatedUser = { ...users[0]!, phone: '9876543210' };
+        vi.mocked(httpClient.patch).mockResolvedValue({ data: updatedUser });
+
+        const result = await updateUser('user-1', { phone: '9876543210' });
+
+        expect(httpClient.patch).toHaveBeenCalledWith('/users/user-1', {
+            phone: '9876543210',
+        });
+        expect(result).toEqual(updatedUser);
     });
 });
