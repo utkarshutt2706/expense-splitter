@@ -2,6 +2,8 @@ import * as Popover from '@radix-ui/react-popover';
 import { ArrowLeft, Check, ChevronDown } from 'lucide-react';
 import { useState, type MouseEvent } from 'react';
 
+import { ResponsivePopoverContent } from '@shared/components';
+
 import {
     customPeriod,
     dateInputValue,
@@ -105,7 +107,7 @@ export function DashboardTimeFilter({
                     </button>
                 </Popover.Trigger>
                 <Popover.Portal>
-                    <Popover.Content
+                    <ResponsivePopoverContent
                         align="start"
                         sideOffset={8}
                         aria-label="Choose dashboard time period"
@@ -201,7 +203,7 @@ export function DashboardTimeFilter({
                                 </div>
                             </div>
                         )}
-                    </Popover.Content>
+                    </ResponsivePopoverContent>
                 </Popover.Portal>
             </Popover.Root>
         </div>

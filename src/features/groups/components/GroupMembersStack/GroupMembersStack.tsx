@@ -2,7 +2,7 @@ import * as Popover from '@radix-ui/react-popover';
 
 import { useCurrentUser } from '@app/hooks';
 import type { User } from '@data/entities';
-import { Avatar } from '@shared/components';
+import { Avatar, ResponsivePopoverContent } from '@shared/components';
 import { sortMembersByName } from '@shared/utils';
 import { MemberList } from '../MemberList';
 
@@ -73,13 +73,13 @@ export function GroupMembersStack({
                 </button>
             </Popover.Trigger>
             <Popover.Portal>
-                <Popover.Content
+                <ResponsivePopoverContent
                     align="start"
                     sideOffset={8}
                     className="border-border bg-surface z-50 w-64 rounded-lg border p-2 shadow-lg"
                 >
                     <MemberList members={members} className="max-h-64 overflow-y-auto" />
-                </Popover.Content>
+                </ResponsivePopoverContent>
             </Popover.Portal>
         </Popover.Root>
     );

@@ -6,6 +6,7 @@ import type {
     DashboardDailySpend,
     DashboardMonthlySpend,
 } from '@features/dashboard/api/dashboardApi';
+import { ResponsivePopoverContent } from '@shared/components';
 import { formatCurrency } from '@shared/utils';
 
 function monthLabel(month: string): string {
@@ -120,7 +121,7 @@ function PeriodSelector({
             </Popover.Trigger>
 
             <Popover.Portal>
-                <Popover.Content
+                <ResponsivePopoverContent
                     align="start"
                     sideOffset={8}
                     role="listbox"
@@ -155,7 +156,7 @@ function PeriodSelector({
                             );
                         })}
                     </div>
-                </Popover.Content>
+                </ResponsivePopoverContent>
             </Popover.Portal>
         </Popover.Root>
     );
