@@ -377,9 +377,8 @@ function GroupContribution({
     const scale = comparisonScale(group.actualPaid, group.currentUserShare);
 
     return (
-        <div
+        <figure
             className="mt-4 space-y-2 xl:mt-0"
-            role={compareWithBars ? 'group' : undefined}
             aria-label={`${group.name}: paid by you ${formatCurrency(
                 group.actualPaid,
             )}; your share ${formatCurrency(group.currentUserShare)}`}
@@ -393,7 +392,7 @@ function GroupContribution({
             ) : (
                 <ContributionValues group={group} />
             )}
-        </div>
+        </figure>
     );
 }
 
