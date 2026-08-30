@@ -13,7 +13,7 @@ export interface DashboardPeriod {
 }
 
 const LABELS: Record<DashboardPeriodPreset, string> = {
-    'all-time': 'Full history',
+    'all-time': 'Overall',
     'this-month': 'This month',
     'previous-month': 'Previous month',
     'last-three-months': 'Last 3 months',
