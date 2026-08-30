@@ -7,6 +7,7 @@ import { Avatar } from '@shared/components';
 import { disambiguateParticipantNames } from '@shared/utils';
 
 const LOOKUP_DEBOUNCE_MS = 400;
+const MIN_LOOKUP_LENGTH = 3;
 
 interface FriendSearchResultProps {
     readonly search: string;
@@ -21,12 +22,13 @@ export function FriendSearchResult({ search, onFound }: FriendSearchResultProps)
         return () => clearTimeout(timer);
     }, [search]);
 
-    const shouldLookup = debounced.length > 0;
+    const shouldLookup = debounced.length >= MIN_LOOKUP_LENGTH;
     const query = shouldLookup ? { query: debounced } : null;
 
     const { data: matches, isFetching, isError } = useUserLookup(query);
     const found = matches?.[0];
     const foundLabel = found ? disambiguateParticipantNames([found])[0] : undefined;
+    const matchedContact = found?.email ?? found?.phone;
 
     if (!shouldLookup) {
         return null;
@@ -47,10 +49,10 @@ export function FriendSearchResult({ search, onFound }: FriendSearchResultProps)
                 <span className="flex items-center gap-2">
                     <Avatar name={found.name} size="sm" />
                     <span className="text-surface-foreground text-sm">
-                        {foundLabel}{' '}
-                        <span className="text-muted-foreground">
-                            ({found.email ?? found.phone})
-                        </span>
+                        {foundLabel}
+                        {matchedContact && (
+                            <span className="text-muted-foreground"> ({matchedContact})</span>
+                        )}
                     </span>
                 </span>
                 <button

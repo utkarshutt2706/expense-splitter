@@ -37,7 +37,7 @@ export function MemberSearchSection({
             <SearchInput
                 value={search}
                 onChange={onSearchChange}
-                placeholder="Search friends, or find by email/phone"
+                placeholder="Search names, or enter an exact email/phone"
                 ariaLabel="Search members"
             />
 
