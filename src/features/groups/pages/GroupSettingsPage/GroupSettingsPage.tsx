@@ -153,7 +153,7 @@ export function GroupSettingsPage() {
                 open={isConfirmingLeave}
                 onOpenChange={setIsConfirmingLeave}
                 title="Leave this group?"
-                description="You'll need a new invite or to be added back by another member to rejoin."
+                description="Another member will need to add you back before you can rejoin."
                 confirmLabel="Leave"
                 destructive
                 onConfirm={() => {
