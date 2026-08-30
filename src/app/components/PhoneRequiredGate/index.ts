@@ -1,0 +1,1 @@
+export { PhoneRequiredGate } from './PhoneRequiredGate';

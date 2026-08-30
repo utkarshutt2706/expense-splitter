@@ -4,9 +4,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { DashboardSummary } from '@features/dashboard/api/dashboardApi';
 import { useDashboard } from '@features/dashboard/hooks';
+import { comparisonScale, contributionCopy, dateInputValue } from '@features/dashboard/utils';
 import { DashboardPage } from './DashboardPage';
-import { dateInputValue } from './dashboardDateRange';
-import { comparisonScale, contributionCopy } from './dashboardMetrics';
 
 vi.mock('@features/dashboard/hooks', () => ({ useDashboard: vi.fn() }));
 

@@ -1,6 +1,7 @@
 export { BottomNav } from './BottomNav';
 export { Header } from './Header';
 export { PwaInstallPrompt } from './PwaInstallPrompt';
+export { PhoneRequiredGate } from './PhoneRequiredGate';
 export { ServerWakeGate } from './ServerWakeGate';
 export { SessionBootstrap } from './SessionBootstrap';
 export { Sidebar } from './Sidebar';

@@ -3,19 +3,23 @@ import { useState } from 'react';
 import { Link } from 'react-router';
 
 import type { DashboardGroupSpend, DashboardSummary } from '@features/dashboard/api/dashboardApi';
+import {
+    DashboardTimeFilter,
+    GroupScopeSelector,
+    SpendingTrendChart,
+} from '@features/dashboard/components';
 import { useDashboard } from '@features/dashboard/hooks';
-import { Avatar, Skeleton } from '@shared/components';
-import { disambiguateParticipantNames, formatCurrency, sortMembersByName } from '@shared/utils';
-import { presetPeriod, usesDailyTrend, type DashboardPeriod } from './dashboardDateRange';
 import {
     combineDailySpending,
     combineMonthlySpending,
     comparisonScale,
     contributionCopy,
-} from './dashboardMetrics';
-import { DashboardTimeFilter } from './DashboardTimeFilter';
-import { GroupScopeSelector } from './GroupScopeSelector';
-import { SpendingTrendChart } from './SpendingTrendChart';
+    presetPeriod,
+    usesDailyTrend,
+    type DashboardPeriod,
+} from '@features/dashboard/utils';
+import { Avatar, Skeleton } from '@shared/components';
+import { disambiguateParticipantNames, formatCurrency, sortMembersByName } from '@shared/utils';
 
 function BalanceText({
     value,

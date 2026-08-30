@@ -2,8 +2,13 @@ import { Navigate, Outlet } from 'react-router';
 
 import { useCurrentUser, useThemeAttribute } from '@app/hooks';
 import { useAuthStore } from '@app/stores';
-import { BottomNav, Header, Sidebar, ThemeTransitionOverlay } from '@app/components';
-import { PhoneRequiredGate } from './PhoneRequiredGate';
+import {
+    BottomNav,
+    Header,
+    PhoneRequiredGate,
+    Sidebar,
+    ThemeTransitionOverlay,
+} from '@app/components';
 
 export function AppLayout() {
     useThemeAttribute();

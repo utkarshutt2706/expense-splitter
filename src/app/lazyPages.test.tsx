@@ -16,11 +16,11 @@ import {
     UpsertExpensePage,
 } from './lazyPages';
 
-vi.mock('@app/pages/LoginPage', () => ({
+vi.mock('@features/auth/pages/LoginPage', () => ({
     LoginPage: () => <p>Login page</p>,
 }));
 
-vi.mock('@app/pages/RegisterPage', () => ({
+vi.mock('@features/auth/pages/RegisterPage', () => ({
     RegisterPage: () => <p>Register page</p>,
 }));
 
@@ -28,7 +28,7 @@ vi.mock('@features/dashboard/pages/DashboardPage', () => ({
     DashboardPage: () => <p>Dashboard page</p>,
 }));
 
-vi.mock('@features/dashboard/pages/AnalyticsPage', () => ({
+vi.mock('@features/analytics/pages/AnalyticsPage', () => ({
     AnalyticsPage: () => <p>Analytics page</p>,
 }));
 

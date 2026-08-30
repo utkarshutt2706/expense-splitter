@@ -1,13 +1,13 @@
 import { lazy } from 'react';
 
 export const LoginPage = lazy(() =>
-    import('@app/pages/LoginPage').then((module) => ({
+    import('@features/auth/pages/LoginPage').then((module) => ({
         default: module.LoginPage,
     })),
 );
 
 export const RegisterPage = lazy(() =>
-    import('@app/pages/RegisterPage').then((module) => ({
+    import('@features/auth/pages/RegisterPage').then((module) => ({
         default: module.RegisterPage,
     })),
 );
@@ -19,7 +19,7 @@ export const DashboardPage = lazy(() =>
 );
 
 export const AnalyticsPage = lazy(() =>
-    import('@features/dashboard/pages/AnalyticsPage').then((module) => ({
+    import('@features/analytics/pages/AnalyticsPage').then((module) => ({
         default: module.AnalyticsPage,
     })),
 );
