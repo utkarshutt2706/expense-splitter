@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { toast } from 'sonner';
 import { describe, expect, it, vi } from 'vitest';
@@ -595,8 +595,10 @@ describe('UpsertExpenseForm', () => {
             await user.click(screen.getByRole('menuitemradio', { name: /priya sharma/i }));
             await user.click(screen.getByRole('button', { name: /add expense/i }));
 
-            expect(onSubmit).toHaveBeenCalledWith(
-                expect.objectContaining({ paidByUserId: 'user-2' }),
+            await waitFor(() =>
+                expect(onSubmit).toHaveBeenCalledWith(
+                    expect.objectContaining({ paidByUserId: 'user-2' }),
+                ),
             );
         });
     });
