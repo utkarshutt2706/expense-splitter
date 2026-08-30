@@ -16,7 +16,6 @@ export interface RegisterInput {
     email: string;
     password: string;
     phone: string;
-    inviteToken?: string;
 }
 
 export interface ChangePasswordInput {

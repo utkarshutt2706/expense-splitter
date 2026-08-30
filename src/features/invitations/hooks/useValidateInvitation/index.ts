@@ -1,1 +1,0 @@
-export { useValidateInvitation } from './useValidateInvitation';

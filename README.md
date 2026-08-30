@@ -41,6 +41,19 @@ pnpm dev
 | `pnpm test:watch`    | Run the test suite in watch mode         |
 | `pnpm test:coverage` | Run tests with coverage (80% threshold)  |
 
+## Restoring the removed invitation flow
+
+The invite-aware registration flow was removed after email invitations were dropped
+from the backend because the deployed free-tier setup could not provide reliable email
+delivery. The complete frontend implementation remains in Git history at commit
+`aa6a35e7dcd9495eb048522fe5bde68011c7f5a1`, dated 2026-08-30.
+
+Inspect individual files with
+`git show aa6a35e7dcd9495eb048522fe5bde68011c7f5a1:path/to/file`, or restore the
+snapshot on a new branch with
+`git switch -c restore/invitations aa6a35e7dcd9495eb048522fe5bde68011c7f5a1` and
+reapply later changes as needed.
+
 ## License
 
 MIT

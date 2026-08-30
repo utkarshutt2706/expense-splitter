@@ -49,28 +49,6 @@ describe('authApi', () => {
         expect(session).toEqual({ user, accessToken: 'test-token' });
     });
 
-    it('register forwards an inviteToken when given one', async () => {
-        vi.mocked(httpClient.post).mockResolvedValue({
-            data: { user, accessToken: 'test-token' },
-        });
-
-        await register({
-            name: 'Utkarsh Srivastava',
-            email: 'utkarsh@example.com',
-            phone: '9876543210',
-            password: 'password123',
-            inviteToken: 'raw-token',
-        });
-
-        expect(httpClient.post).toHaveBeenCalledWith('/auth/register', {
-            name: 'Utkarsh Srivastava',
-            email: 'utkarsh@example.com',
-            phone: '9876543210',
-            password: 'password123',
-            inviteToken: 'raw-token',
-        });
-    });
-
     it('changePassword patches the new credentials to /auth/password', async () => {
         vi.mocked(httpClient.patch).mockResolvedValue({ data: undefined });
 

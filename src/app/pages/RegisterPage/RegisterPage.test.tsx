@@ -5,26 +5,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useAuthStore } from '@app/stores';
 import { useRegister } from '@features/auth';
-import { useValidateInvitation } from '@features/invitations';
 import { ApiError } from '@lib/api/apiError';
 import { RegisterPage } from './RegisterPage';
 
 vi.mock('@features/auth', () => ({
     useRegister: vi.fn(),
 }));
-
-vi.mock('@features/invitations', () => ({
-    useValidateInvitation: vi.fn(),
-}));
-
-function mockInvitation(overrides: Record<string, unknown> = {}) {
-    vi.mocked(useValidateInvitation).mockReturnValue({
-        data: undefined,
-        isLoading: false,
-        isError: false,
-        ...overrides,
-    } as unknown as ReturnType<typeof useValidateInvitation>);
-}
 
 function renderPage(initialEntry = '/register') {
     return render(
@@ -41,7 +27,6 @@ describe('RegisterPage', () => {
     beforeEach(() => {
         localStorage.clear();
         useAuthStore.setState({ currentUserId: null, cachedUser: null, accessToken: null });
-        mockInvitation();
     });
 
     it('renders the registration form', () => {
@@ -260,96 +245,5 @@ describe('RegisterPage', () => {
         renderPage();
 
         expect(screen.getByRole('link', { name: /sign in/i })).toHaveAttribute('href', '/login');
-    });
-
-    it('prefills and locks the email field from a valid invite, and shows who invited them', () => {
-        mockInvitation({
-            data: {
-                email: 'jamie@example.com',
-                group: { id: 'group-1', name: 'Goa Trip' },
-                inviterName: 'Alice',
-            },
-        });
-        vi.mocked(useRegister).mockReturnValue({
-            mutateAsync: vi.fn(),
-        } as unknown as ReturnType<typeof useRegister>);
-
-        renderPage('/register?invite=raw-token');
-
-        expect(screen.getByText(/goa trip/i)).toBeInTheDocument();
-        expect(screen.getByText(/alice/i)).toBeInTheDocument();
-        expect(screen.getByLabelText(/email/i)).toHaveValue('jamie@example.com');
-        expect(screen.getByLabelText(/email/i)).toHaveAttribute('readonly');
-    });
-
-    it('registers with the inviteToken when the invite is valid', async () => {
-        mockInvitation({
-            data: {
-                email: 'jamie@example.com',
-                group: { id: 'group-1', name: 'Goa Trip' },
-                inviterName: 'Alice',
-            },
-        });
-        const mutateAsync = vi.fn().mockResolvedValue(undefined);
-        vi.mocked(useRegister).mockReturnValue({
-            mutateAsync,
-        } as unknown as ReturnType<typeof useRegister>);
-        const user = userEvent.setup();
-        renderPage('/register?invite=raw-token');
-
-        await user.type(screen.getByLabelText(/name/i), 'Jamie Fox');
-        await user.type(screen.getByLabelText(/phone/i), '9876543210');
-        await user.type(screen.getByLabelText('Password'), 'correct-horse-battery-staple');
-        await user.type(screen.getByLabelText('Confirm password'), 'correct-horse-battery-staple');
-        await user.click(screen.getByRole('button', { name: /create account/i }));
-
-        expect(await screen.findByText(/home page/i)).toBeInTheDocument();
-        expect(mutateAsync).toHaveBeenCalledWith({
-            name: 'Jamie Fox',
-            email: 'jamie@example.com',
-            phone: '9876543210',
-            password: 'correct-horse-battery-staple',
-            inviteToken: 'raw-token',
-        });
-    });
-
-    it('shows a notice and still allows plain registration when the invite is invalid', async () => {
-        mockInvitation({ isError: true });
-        const mutateAsync = vi.fn().mockResolvedValue(undefined);
-        vi.mocked(useRegister).mockReturnValue({
-            mutateAsync,
-        } as unknown as ReturnType<typeof useRegister>);
-        const user = userEvent.setup();
-        renderPage('/register?invite=expired-token');
-
-        expect(screen.getByText(/no longer valid/i)).toBeInTheDocument();
-        expect(screen.getByLabelText(/email/i)).not.toHaveAttribute('readonly');
-
-        await user.type(screen.getByLabelText(/name/i), 'New Friend');
-        await user.type(screen.getByLabelText(/email/i), 'new.friend@example.com');
-        await user.type(screen.getByLabelText(/phone/i), '9876543210');
-        await user.type(screen.getByLabelText('Password'), 'correct-horse-battery-staple');
-        await user.type(screen.getByLabelText('Confirm password'), 'correct-horse-battery-staple');
-        await user.click(screen.getByRole('button', { name: /create account/i }));
-
-        expect(await screen.findByText(/home page/i)).toBeInTheDocument();
-        expect(mutateAsync).toHaveBeenCalledWith({
-            name: 'New Friend',
-            email: 'new.friend@example.com',
-            phone: '9876543210',
-            password: 'correct-horse-battery-staple',
-            inviteToken: undefined,
-        });
-    });
-
-    it('does not show any invite banner when there is no invite param', () => {
-        vi.mocked(useRegister).mockReturnValue({
-            mutateAsync: vi.fn(),
-        } as unknown as ReturnType<typeof useRegister>);
-
-        renderPage();
-
-        expect(screen.queryByText(/invited you/i)).not.toBeInTheDocument();
-        expect(screen.queryByText(/no longer valid/i)).not.toBeInTheDocument();
     });
 });
