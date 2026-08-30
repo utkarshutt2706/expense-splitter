@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router';
 import { useCurrentUser, useIsDarkTheme } from '@app/hooks';
 import { useAuthStore, useThemeStore, useThemeTransitionStore } from '@app/stores';
 import { ChangePasswordDialog } from '@features/auth';
-import { Avatar } from '@shared/components';
+import { Avatar, ResponsivePopoverContent } from '@shared/components';
 
 interface MenuItemProps {
     readonly icon: typeof UserRound;
@@ -122,7 +122,7 @@ export function UserMenu({ expanded, side = 'top', align = 'start' }: UserMenuPr
                 </button>
             </Popover.Trigger>
             <Popover.Portal>
-                <Popover.Content
+                <ResponsivePopoverContent
                     align={align}
                     side={side}
                     sideOffset={8}
@@ -155,7 +155,7 @@ export function UserMenu({ expanded, side = 'top', align = 'start' }: UserMenuPr
                     <ThemeToggleRow />
                     <div className="bg-border my-1 h-px" />
                     <MenuItem icon={LogOut} label="Logout" onClick={handleLogout} />
-                </Popover.Content>
+                </ResponsivePopoverContent>
             </Popover.Portal>
             {isChangingPassword && (
                 <ChangePasswordDialog open onOpenChange={setIsChangingPassword} />

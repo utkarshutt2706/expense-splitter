@@ -3,6 +3,7 @@ import { Check, ChevronDown, Search } from 'lucide-react';
 import { useRef, useState } from 'react';
 
 import type { DashboardGroupSpend } from '@features/dashboard/api/dashboardApi';
+import { ResponsivePopoverContent } from '@shared/components';
 
 export function GroupScopeSelector({
     scope,
@@ -65,7 +66,7 @@ export function GroupScopeSelector({
                 </Popover.Trigger>
 
                 <Popover.Portal>
-                    <Popover.Content
+                    <ResponsivePopoverContent
                         ref={contentRef}
                         align="start"
                         sideOffset={8}
@@ -125,7 +126,7 @@ export function GroupScopeSelector({
                                 </p>
                             )}
                         </div>
-                    </Popover.Content>
+                    </ResponsivePopoverContent>
                 </Popover.Portal>
             </Popover.Root>
         </div>

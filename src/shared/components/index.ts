@@ -9,6 +9,7 @@ export { MemberPicker } from './MemberPicker';
 export { PasswordInput } from './PasswordInput';
 export { SearchInput } from './SearchInput';
 export { SearchInputSkeleton } from './SearchInputSkeleton';
+export { ResponsivePopoverContent } from './ResponsivePopoverContent';
 export { Skeleton } from './Skeleton';
 export { SkeletonList } from './SkeletonList';
 export { SwipeableRow, type SwipeAction } from './SwipeableRow';

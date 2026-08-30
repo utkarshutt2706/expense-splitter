@@ -9,6 +9,7 @@ import { useFriends, type Friend } from '@features/friends';
 import {
     Avatar,
     FetchingIndicator,
+    ResponsivePopoverContent,
     SearchInput,
     SearchInputSkeleton,
     Skeleton,
@@ -76,7 +77,7 @@ function ContactAction({ friendName, kind, value }: ContactActionProps) {
         <Popover.Root>
             <Popover.Trigger asChild>{trigger}</Popover.Trigger>
             <Popover.Portal>
-                <Popover.Content
+                <ResponsivePopoverContent
                     align="start"
                     sideOffset={8}
                     aria-label={`Choose an action for ${value}`}
@@ -97,7 +98,7 @@ function ContactAction({ friendName, kind, value }: ContactActionProps) {
                         <Icon aria-hidden="true" className="size-4" />
                         {kind === 'email' ? 'Send email' : 'Call phone'}
                     </a>
-                </Popover.Content>
+                </ResponsivePopoverContent>
             </Popover.Portal>
         </Popover.Root>
     );
@@ -184,7 +185,7 @@ function FriendRow({ friend }: { readonly friend: Friend }) {
                                 </button>
                             </Popover.Trigger>
                             <Popover.Portal>
-                                <Popover.Content
+                                <ResponsivePopoverContent
                                     align="start"
                                     sideOffset={8}
                                     collisionPadding={16}
@@ -225,7 +226,7 @@ function FriendRow({ friend }: { readonly friend: Friend }) {
                                             );
                                         })}
                                     </ul>
-                                </Popover.Content>
+                                </ResponsivePopoverContent>
                             </Popover.Portal>
                         </Popover.Root>
                     ) : (
