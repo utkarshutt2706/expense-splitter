@@ -64,6 +64,7 @@ describe('useCreateExpense', () => {
         });
         expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['expenses', 'group-1'] });
         expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['balances', 'group-1'] });
+        expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['dashboard'] });
     });
 
     it('creates an expense with an exact split, using the provided per-participant amounts', async () => {

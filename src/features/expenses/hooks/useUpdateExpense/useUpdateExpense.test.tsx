@@ -66,6 +66,7 @@ describe('useUpdateExpense', () => {
             queryKey: ['expenses', 'detail', 'expense-1'],
         });
         expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['balances', 'group-1'] });
+        expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['dashboard'] });
     });
 
     it('updates the expense with a recalculated exact split', async () => {

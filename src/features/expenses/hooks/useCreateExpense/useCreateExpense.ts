@@ -8,6 +8,7 @@ import type {
     PercentageSplitEntry,
     SharesSplitEntry,
 } from '@features/expenses/utils/splitCalculator';
+import { invalidateGroupFinancialData } from '@lib/query/invalidateGroupFinancialData';
 
 interface CreateExpenseInput {
     groupId: string;
@@ -59,10 +60,7 @@ export function useCreateExpense() {
             });
         },
         onSuccess: (_, { groupId }) => {
-            queryClient.invalidateQueries({ queryKey: ['expenses', groupId] });
-            queryClient.invalidateQueries({ queryKey: ['balances', groupId] });
-            queryClient.invalidateQueries({ queryKey: ['groups'] });
-            queryClient.invalidateQueries({ queryKey: ['users', 'friends'] });
+            invalidateGroupFinancialData(queryClient, groupId);
         },
     });
 }
