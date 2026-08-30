@@ -253,6 +253,7 @@ describe('GroupActivityList', () => {
                     { userId: CURRENT_USER_ID, amount: 20 },
                     { userId: 'friend-1', amount: 20 },
                 ],
+                paidOn: '2026-07-03T00:00:00.000Z',
                 createdAt: '2026-07-01T00:00:00.000Z',
             },
         ]);
@@ -263,6 +264,7 @@ describe('GroupActivityList', () => {
                 fromUserId: CURRENT_USER_ID,
                 toUserId: 'friend-1',
                 amount: 20,
+                paidOn: '2026-07-03T00:00:00.000Z',
                 createdAt: '2026-07-02T00:00:00.000Z',
             },
         ]);
