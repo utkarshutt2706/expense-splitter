@@ -145,10 +145,11 @@ function friendNetStatus(friend: Friend): { label: string; className: string } {
 }
 
 function FriendRow({ friend }: Readonly<{ friend: Friend }>) {
-    const sharedGroupText =
-        friend.sharedGroupCount === undefined
-            ? 'Shared-group details unavailable'
-            : `${friend.sharedGroupCount} shared ${friend.sharedGroupCount === 1 ? 'group' : 'groups'}`;
+    let sharedGroupText = 'Shared-group details unavailable';
+    if (friend.sharedGroupCount !== undefined) {
+        const groupLabel = friend.sharedGroupCount === 1 ? 'group' : 'groups';
+        sharedGroupText = `${friend.sharedGroupCount} shared ${groupLabel}`;
+    }
     const groupBalances = friend.groupBalances ?? [];
     const { label: netStatus, className: netStatusClass } = friendNetStatus(friend);
 
