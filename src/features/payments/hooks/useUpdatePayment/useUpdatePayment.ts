@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { update } from '@features/payments/api/paymentsApi';
+import { invalidateGroupFinancialData } from '@lib/query/invalidateGroupFinancialData';
 
 interface UpdatePaymentInput {
     groupId: string;
@@ -18,10 +19,7 @@ export function useUpdatePayment() {
         mutationFn: ({ groupId, id, fromUserId, toUserId, amount, paidOn }: UpdatePaymentInput) =>
             update(groupId, id, { fromUserId, toUserId, amount, paidOn }),
         onSuccess: (_, { groupId }) => {
-            queryClient.invalidateQueries({ queryKey: ['payments', groupId] });
-            queryClient.invalidateQueries({ queryKey: ['balances', groupId] });
-            queryClient.invalidateQueries({ queryKey: ['groups'] });
-            queryClient.invalidateQueries({ queryKey: ['users', 'friends'] });
+            invalidateGroupFinancialData(queryClient, groupId);
         },
     });
 }

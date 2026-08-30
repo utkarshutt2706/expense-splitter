@@ -44,5 +44,6 @@ describe('useUpdatePayment', () => {
         });
         expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['payments', 'group-1'] });
         expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['balances', 'group-1'] });
+        expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['dashboard'] });
     });
 });
