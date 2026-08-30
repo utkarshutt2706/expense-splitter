@@ -8,6 +8,7 @@ vi.mock('@lib/api/httpClient', () => ({
     httpClient: {
         post: vi.fn(),
         get: vi.fn(),
+        patch: vi.fn(),
     },
 }));
 
