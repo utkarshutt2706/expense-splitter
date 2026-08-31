@@ -1,12 +1,10 @@
 import * as Accordion from '@radix-ui/react-accordion';
 import { ChevronDown, Handshake } from 'lucide-react';
-import { useRef, useState } from 'react';
-import { toast } from 'sonner';
 
 import type { User } from '@features/users/api/usersApi';
 import type { SettlementTransaction } from '@features/balances/api/balancesApi';
+import { useMemberSettlement } from '@features/balances/hooks/useMemberSettlement';
 import { RecordPaymentDialog } from '@features/payments/components/RecordPaymentDialog';
-import { useCreatePayment } from '@features/payments/hooks/useCreatePayment';
 import { formatCurrency, participantNameMap } from '@shared/utils';
 
 type MemberBalanceAccordionProps = Readonly<{
@@ -57,41 +55,14 @@ export function MemberBalanceAccordion({
 }: MemberBalanceAccordionProps) {
     const names = participantNameMap(members, currentUserId);
     const title = titleFor(netAmount, names.get(member.id) ?? member.name);
-    const [settlingTransaction, setSettlingTransaction] = useState<SettlementTransaction | null>(
-        null,
-    );
-    const createPayment = useCreatePayment();
-    const [paymentError, setPaymentError] = useState<string>();
-    const settleTriggerRef = useRef<HTMLButtonElement | null>(null);
-
-    const handleSettleUp = ({
-        fromUserId,
-        toUserId,
-        amount,
-    }: {
-        fromUserId: string;
-        toUserId: string;
-        amount: number;
-    }) => {
-        if (createPayment.isPending) return;
-        setPaymentError(undefined);
-        const toastId = toast.loading('Payment is being recorded…');
-        createPayment.mutate(
-            { groupId, fromUserId, toUserId, amount },
-            {
-                onSuccess: () => {
-                    setSettlingTransaction(null);
-                    toast.success('Payment recorded', { id: toastId });
-                },
-                onError: () => {
-                    const message =
-                        'We couldn’t record this payment. Nothing was changed. Try again.';
-                    setPaymentError(message);
-                    toast.error(message, { id: toastId });
-                },
-            },
-        );
-    };
+    const {
+        isPending,
+        openSettlement,
+        paymentError,
+        setSettlementOpen,
+        settlingTransaction,
+        submitSettlement,
+    } = useMemberSettlement(groupId);
 
     return (
         <Accordion.Item value={member.id} className="border-border rounded-lg border">
@@ -126,9 +97,7 @@ export function MemberBalanceAccordion({
                                     aria-label="Settle up"
                                     title="Settle up"
                                     onClick={(event) => {
-                                        settleTriggerRef.current = event.currentTarget;
-                                        setPaymentError(undefined);
-                                        setSettlingTransaction(transaction);
+                                        openSettlement(transaction, event.currentTarget);
                                     }}
                                     className="border-border text-surface-foreground hover:bg-muted inline-flex shrink-0 cursor-pointer items-center gap-1 rounded-full border px-2 py-1 text-xs font-medium"
                                 >
@@ -143,19 +112,13 @@ export function MemberBalanceAccordion({
 
             <RecordPaymentDialog
                 open={settlingTransaction !== null}
-                onOpenChange={(open) => {
-                    if (!open) {
-                        setSettlingTransaction(null);
-                        setPaymentError(undefined);
-                        queueMicrotask(() => settleTriggerRef.current?.focus());
-                    }
-                }}
+                onOpenChange={setSettlementOpen}
                 members={members}
                 initialValues={settlingTransaction ?? undefined}
                 settlementMode
-                isPending={createPayment.isPending}
+                isPending={isPending}
                 errorMessage={paymentError}
-                onSubmit={handleSettleUp}
+                onSubmit={submitSettlement}
             />
         </Accordion.Item>
     );
