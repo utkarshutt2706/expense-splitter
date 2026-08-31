@@ -1,90 +1,15 @@
 import { Download, Share, SquarePlus, X } from 'lucide-react';
-import { type ReactNode, useEffect, useState } from 'react';
+import type { ReactNode } from 'react';
 
 import logo from '@assets/logo.svg';
+import { usePwaInstallPrompt } from '@app/hooks/usePwaInstallPrompt';
 
 import styles from './PwaInstallPrompt.module.css';
 
-interface BeforeInstallPromptEvent extends Event {
-    readonly userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;
-    prompt(): Promise<void>;
-}
-
-type InstallMethod = 'android' | 'ios';
-const DISMISSED_KEY = 'pwa-install-suggestion-dismissed';
-const AUTO_DISMISS_SECONDS = 10;
-const AUTO_DISMISS_DELAY_MS = AUTO_DISMISS_SECONDS * 1_000;
-
-function isRunningStandalone() {
-    const iosNavigator = navigator as Navigator & { standalone?: boolean };
-    return (
-        window.matchMedia('(display-mode: standalone)').matches || iosNavigator.standalone === true
-    );
-}
-
-function mobileInstallMethod(): InstallMethod | null {
-    const userAgent = navigator.userAgent;
-    const isAppleMobile =
-        /iPad|iPhone|iPod/i.test(userAgent) ||
-        (/Macintosh/i.test(userAgent) && navigator.maxTouchPoints > 1);
-
-    if (isAppleMobile) return 'ios';
-    if (/Android/i.test(userAgent)) return 'android';
-    return null;
-}
-
 export function PwaInstallPrompt() {
-    const [method, setMethod] = useState<InstallMethod | null>(() =>
-        isRunningStandalone() ? null : mobileInstallMethod(),
-    );
-    const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-    const [isDismissed, setIsDismissed] = useState(
-        () => sessionStorage.getItem(DISMISSED_KEY) === 'true',
-    );
+    const { dismiss, install, isNativeInstallAvailable, isVisible, method } = usePwaInstallPrompt();
 
-    useEffect(() => {
-        if (!method || isDismissed) return;
-
-        const dismissTimer = window.setTimeout(() => {
-            sessionStorage.setItem(DISMISSED_KEY, 'true');
-            setIsDismissed(true);
-        }, AUTO_DISMISS_DELAY_MS);
-
-        return () => window.clearTimeout(dismissTimer);
-    }, [isDismissed, method]);
-
-    useEffect(() => {
-        if (isRunningStandalone()) return;
-
-        const handleInstallPrompt = (event: Event) => {
-            event.preventDefault();
-            setInstallPrompt(event as BeforeInstallPromptEvent);
-            setMethod('android');
-        };
-        const handleInstalled = () => {
-            setInstallPrompt(null);
-            setMethod(null);
-        };
-
-        window.addEventListener('beforeinstallprompt', handleInstallPrompt);
-        window.addEventListener('appinstalled', handleInstalled);
-
-        return () => {
-            window.removeEventListener('beforeinstallprompt', handleInstallPrompt);
-            window.removeEventListener('appinstalled', handleInstalled);
-        };
-    }, []);
-
-    if (!method || isDismissed) return null;
-
-    const installOnAndroid = async () => {
-        if (!installPrompt) return;
-
-        await installPrompt.prompt();
-        const { outcome } = await installPrompt.userChoice;
-        setInstallPrompt(null);
-        if (outcome === 'accepted') setMethod(null);
-    };
+    if (!isVisible) return null;
 
     let installAction: ReactNode = (
         <p className="bg-muted mt-4 rounded-xl px-3 py-2.5 text-sm leading-relaxed">
@@ -101,11 +26,11 @@ export function PwaInstallPrompt() {
                 <span className="font-medium">Add to Home Screen</span>
             </div>
         );
-    } else if (installPrompt) {
+    } else if (isNativeInstallAvailable) {
         installAction = (
             <button
                 type="button"
-                onClick={() => void installOnAndroid()}
+                onClick={() => void install()}
                 className="bg-brand-600 hover:bg-brand-700 relative mt-4 flex w-full cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-xl px-4 py-2.5 text-sm font-semibold text-white"
             >
                 <span className={styles.installCountdown} aria-hidden="true" />
@@ -124,10 +49,7 @@ export function PwaInstallPrompt() {
             <button
                 type="button"
                 aria-label="Dismiss install suggestion"
-                onClick={() => {
-                    sessionStorage.setItem(DISMISSED_KEY, 'true');
-                    setIsDismissed(true);
-                }}
+                onClick={dismiss}
                 className="text-muted-foreground hover:bg-muted absolute top-3 right-3 flex size-8 cursor-pointer items-center justify-center rounded-full"
             >
                 <X className="size-4" />
