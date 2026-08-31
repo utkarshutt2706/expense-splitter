@@ -86,4 +86,37 @@ describe('ChangePasswordDialog', () => {
         expect(await screen.findByText('Current password is incorrect')).toBeInTheDocument();
         expect(onOpenChange).not.toHaveBeenCalled();
     });
+
+    it('shows a fallback error when the mutation rejects without an Error object', async () => {
+        mutateAsync.mockRejectedValue('request failed');
+        const user = userEvent.setup();
+        render(<ChangePasswordDialog open onOpenChange={onOpenChange} />);
+
+        await fillAndSubmit(user);
+
+        expect(await screen.findByText('Something went wrong.')).toBeInTheDocument();
+        expect(onOpenChange).not.toHaveBeenCalled();
+    });
+
+    it('closes when cancel is selected', async () => {
+        const user = userEvent.setup();
+        render(<ChangePasswordDialog open onOpenChange={onOpenChange} />);
+
+        await user.click(screen.getByRole('button', { name: /cancel/i }));
+
+        expect(onOpenChange).toHaveBeenCalledWith(false);
+        expect(mutateAsync).not.toHaveBeenCalled();
+    });
+
+    it('resets entered values after the dialog closes', async () => {
+        const user = userEvent.setup();
+        const { rerender } = render(<ChangePasswordDialog open onOpenChange={onOpenChange} />);
+        const currentPassword = screen.getByLabelText(/current password/i);
+
+        await user.type(currentPassword, 'partially-entered');
+        rerender(<ChangePasswordDialog open={false} onOpenChange={onOpenChange} />);
+        rerender(<ChangePasswordDialog open onOpenChange={onOpenChange} />);
+
+        expect(screen.getByLabelText(/current password/i)).toHaveValue('');
+    });
 });
