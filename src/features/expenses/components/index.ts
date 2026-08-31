@@ -1,4 +1,5 @@
 export { AddExpenseAction } from './AddExpenseAction';
+export { ExpenseDetailContent } from './ExpenseDetailContent';
 export {
     UpsertExpenseForm,
     type UpsertExpenseFormInitialValues,
