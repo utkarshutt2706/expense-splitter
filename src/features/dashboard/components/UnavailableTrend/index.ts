@@ -1,0 +1,1 @@
+export { UnavailableTrend } from './UnavailableTrend';

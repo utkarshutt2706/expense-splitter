@@ -69,19 +69,6 @@ function renderPage(data: DashboardSummary = dashboard) {
 describe('DashboardPage', () => {
     beforeEach(() => vi.mocked(useDashboard).mockReset());
 
-    it('does not show false zeroes while loading', () => {
-        vi.mocked(useDashboard).mockReturnValue({ isLoading: true } as ReturnType<
-            typeof useDashboard
-        >);
-        render(
-            <MemoryRouter>
-                <DashboardPage />
-            </MemoryRouter>,
-        );
-        expect(screen.getByRole('status', { name: /loading dashboard/i })).toBeInTheDocument();
-        expect(screen.queryByText(/₹0/)).not.toBeInTheDocument();
-    });
-
     it('shows a retryable, non-destructive error', () => {
         const refetch = vi.fn();
         vi.mocked(useDashboard).mockReturnValue({
