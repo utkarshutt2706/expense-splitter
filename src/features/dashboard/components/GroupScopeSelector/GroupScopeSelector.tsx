@@ -1,8 +1,9 @@
 import * as Popover from '@radix-ui/react-popover';
-import { Check, ChevronDown, Search } from 'lucide-react';
+import { ChevronDown, Search } from 'lucide-react';
 import { useRef, useState } from 'react';
 
 import type { DashboardGroupSpend } from '@features/dashboard/api/dashboardApi';
+import { GroupScopeOption } from '@features/dashboard/components/GroupScopeOption';
 import { ResponsivePopoverContent } from '@shared/components';
 
 export function GroupScopeSelector({
@@ -130,30 +131,5 @@ export function GroupScopeSelector({
                 </Popover.Portal>
             </Popover.Root>
         </div>
-    );
-}
-
-function GroupScopeOption({
-    name,
-    selected,
-    title,
-    onSelect,
-}: Readonly<{
-    name: string;
-    selected: boolean;
-    title?: string;
-    onSelect: () => void;
-}>) {
-    return (
-        <button
-            type="button"
-            onClick={onSelect}
-            title={title}
-            className="hover:bg-muted focus-visible:bg-muted flex min-h-11 w-full cursor-pointer items-center justify-between gap-3 rounded-md px-2 text-left outline-none"
-        >
-            <span className="truncate">{name}</span>
-
-            {selected && <Check className="text-brand-600 size-4 shrink-0" />}
-        </button>
     );
 }
