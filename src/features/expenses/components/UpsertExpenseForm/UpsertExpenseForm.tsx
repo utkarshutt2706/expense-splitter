@@ -1,68 +1,20 @@
-import { zodResolver } from '@hookform/resolvers/zod';
 import { Check, Receipt } from 'lucide-react';
-import { useMemo, useState } from 'react';
-import { Controller, useForm, useWatch } from 'react-hook-form';
-import { toast } from 'sonner';
-import { z } from 'zod';
+import { Controller } from 'react-hook-form';
 
-import { useCurrentUser } from '@app/hooks';
-import type { SplitType } from '@features/expenses/api/expensesApi';
+import {
+    useUpsertExpenseForm,
+    type UpsertExpenseFormInitialValues,
+    type UpsertExpenseFormValues,
+} from '@features/expenses/hooks/useUpsertExpenseForm';
 import type { User } from '@features/users/api/usersApi';
-import type {
-    ExactSplitEntry,
-    PercentageSplitEntry,
-    SharesSplitEntry,
-} from '@features/expenses/utils/splitCalculator';
-import { getSplitAllocationPreview } from '@features/expenses/utils';
 import { CurrencyInput, MemberPicker } from '@shared/components';
-import { localDateInputValue, normalizeDateInputValue, openDatePicker } from '@shared/utils';
+import { localDateInputValue, openDatePicker } from '@shared/utils';
 import { SplitParticipantList } from '../SplitParticipantList';
 import { SplitTypeTabs } from '../SplitTypeTabs';
 
-const upsertExpenseSchema = z.object({
-    description: z.string().trim().min(1, 'Description is required'),
-    amount: z
-        .number({
-            error: 'Amount is required',
-        })
-        .positive('Amount must be greater than zero'),
-    paidOn: z
-        .string()
-        .min(1, 'Paid date is required')
-        .refine(
-            (value) => value <= localDateInputValue(new Date()),
-            'Paid date cannot be in the future',
-        ),
-    paidByUserId: z.string().min(1, 'Select who paid'),
-});
+export type { UpsertExpenseFormInitialValues, UpsertExpenseFormValues };
 
-type UpsertExpenseInput = z.infer<typeof upsertExpenseSchema>;
-
-const PERCENTAGE_TOLERANCE = 0.01;
-
-export interface UpsertExpenseFormValues {
-    description: string;
-    amount: number;
-    paidByUserId: string;
-    paidOn: string;
-    participantUserIds: string[];
-    splitType: SplitType;
-    exactSplits?: ExactSplitEntry[];
-    percentageSplits?: PercentageSplitEntry[];
-    sharesSplits?: SharesSplitEntry[];
-}
-
-export interface UpsertExpenseFormInitialValues {
-    description: string;
-    amount: number;
-    paidByUserId: string;
-    paidOn?: string;
-    participantUserIds: string[];
-    splitType: SplitType;
-    splitValues: Record<string, string>;
-}
-
-type UpsertExpenseFormProps = Readonly<{
+export type UpsertExpenseFormProps = Readonly<{
     mode?: 'add' | 'edit';
     members: User[];
     initialValues?: UpsertExpenseFormInitialValues;
@@ -77,199 +29,28 @@ export function UpsertExpenseForm({
     onSubmit,
     onCancel,
 }: UpsertExpenseFormProps) {
-    const { data: currentUser } = useCurrentUser();
-    const defaultPaidOn = useMemo(() => new Date(), []);
     const {
         register,
-        handleSubmit,
         control,
         formState: { errors },
-    } = useForm<UpsertExpenseInput>({
-        resolver: zodResolver(upsertExpenseSchema),
-        defaultValues: {
-            description: initialValues?.description ?? '',
-            amount: initialValues?.amount,
-            paidOn:
-                normalizeDateInputValue(initialValues?.paidOn) ??
-                localDateInputValue(defaultPaidOn),
-            paidByUserId: initialValues?.paidByUserId ?? currentUser?.id ?? '',
-        },
-    });
-    const amount = useWatch({ control, name: 'amount' });
-    const isAmountFilled = typeof amount === 'number' && Number.isFinite(amount) && amount > 0;
-    const [participantUserIds, setParticipantUserIds] = useState<string[]>(
-        initialValues?.participantUserIds ?? members.map((member) => member.id),
-    );
-    const [participantsError, setParticipantsError] = useState<string | undefined>();
-    const [splitType, setSplitType] = useState<SplitType>(initialValues?.splitType ?? 'equal');
-    const [splitValues, setSplitValues] = useState<Record<string, string>>(
-        initialValues?.splitValues ?? {},
-    );
-    const [splitError, setSplitError] = useState<string | undefined>();
-
-    const allocationPreview = getSplitAllocationPreview({
-        amount,
+        allocationPreview,
+        changeSplitType,
+        changeSplitValue,
+        defaultPaidOn,
         participantUserIds,
+        participantsError,
+        splitError,
         splitType,
         splitValues,
-    });
+        submit,
+        toggleParticipant,
+    } = useUpsertExpenseForm({ members, initialValues, onSubmit });
+
     let allocationSummaryClass = 'text-muted-foreground text-sm';
     if (allocationPreview.status === 'invalid') allocationSummaryClass = 'text-sm text-red-600';
     if (allocationPreview.status === 'valid') {
         allocationSummaryClass = 'text-sm text-green-700 dark:text-green-400';
     }
-
-    const toggleParticipant = (id: string) => {
-        setParticipantUserIds((current) =>
-            current.includes(id) ? current.filter((memberId) => memberId !== id) : [...current, id],
-        );
-    };
-
-    const changeSplitType = (type: SplitType) => {
-        if (!isAmountFilled) {
-            toast.warning('Enter an amount before choosing how to split it');
-            return;
-        }
-        setSplitType(type);
-        setSplitValues({});
-        setSplitError(undefined);
-    };
-
-    const changeSplitValue = (id: string, value: string) => {
-        setSplitValues((current) => ({ ...current, [id]: value }));
-    };
-
-    const buildExactSplits = (amount: number): ExactSplitEntry[] | undefined => {
-        const totalCents = Math.round(amount * 100);
-        let sumCents = 0;
-        const exactSplits: ExactSplitEntry[] = [];
-
-        for (const userId of participantUserIds) {
-            const raw = splitValues[userId];
-            const parsed = raw === undefined || raw === '' ? Number.NaN : Number(raw);
-            if (!Number.isFinite(parsed) || parsed <= 0) {
-                setSplitError('Enter an amount for every participant');
-                return undefined;
-            }
-            sumCents += Math.round(parsed * 100);
-            exactSplits.push({ userId, amount: parsed });
-        }
-
-        if (sumCents !== totalCents) {
-            setSplitError('Exact amounts must add up to the total expense amount');
-            return undefined;
-        }
-
-        return exactSplits;
-    };
-
-    const buildPercentageSplits = (): PercentageSplitEntry[] | undefined => {
-        let sumPercentage = 0;
-        const percentageSplits: PercentageSplitEntry[] = [];
-
-        for (const userId of participantUserIds) {
-            const raw = splitValues[userId];
-            const parsed = raw === undefined || raw === '' ? Number.NaN : Number(raw);
-            if (!Number.isFinite(parsed) || parsed <= 0) {
-                setSplitError('Enter a percentage for every participant');
-                return undefined;
-            }
-            sumPercentage += parsed;
-            percentageSplits.push({ userId, percentage: parsed });
-        }
-
-        if (Math.abs(sumPercentage - 100) > PERCENTAGE_TOLERANCE) {
-            setSplitError('Split percentages must add up to 100');
-            return undefined;
-        }
-
-        return percentageSplits;
-    };
-
-    const buildSharesSplits = (): SharesSplitEntry[] | undefined => {
-        const sharesSplits: SharesSplitEntry[] = [];
-
-        for (const userId of participantUserIds) {
-            const raw = splitValues[userId];
-            const parsed = raw === undefined || raw === '' ? Number.NaN : Number(raw);
-            if (!Number.isFinite(parsed) || parsed <= 0) {
-                setSplitError('Enter a share count for every participant');
-                return undefined;
-            }
-            sharesSplits.push({ userId, shares: parsed });
-        }
-
-        return sharesSplits;
-    };
-
-    const submit = handleSubmit((values) => {
-        if (participantUserIds.length === 0) {
-            setParticipantsError('Select at least one participant');
-            return;
-        }
-        setParticipantsError(undefined);
-
-        if (splitType === 'exact') {
-            const exactSplits = buildExactSplits(values.amount);
-            if (!exactSplits) return;
-
-            setSplitError(undefined);
-            onSubmit({
-                description: values.description,
-                amount: values.amount,
-                paidByUserId: values.paidByUserId,
-                paidOn: values.paidOn,
-                participantUserIds,
-                splitType: 'exact',
-                exactSplits,
-            });
-            return;
-        }
-
-        if (splitType === 'percentage') {
-            const percentageSplits = buildPercentageSplits();
-            if (!percentageSplits) return;
-
-            setSplitError(undefined);
-            onSubmit({
-                description: values.description,
-                amount: values.amount,
-                paidByUserId: values.paidByUserId,
-                paidOn: values.paidOn,
-                participantUserIds,
-                splitType: 'percentage',
-                percentageSplits,
-            });
-            return;
-        }
-
-        if (splitType === 'shares') {
-            const sharesSplits = buildSharesSplits();
-            if (!sharesSplits) return;
-
-            setSplitError(undefined);
-            onSubmit({
-                description: values.description,
-                amount: values.amount,
-                paidByUserId: values.paidByUserId,
-                paidOn: values.paidOn,
-                participantUserIds,
-                splitType: 'shares',
-                sharesSplits,
-            });
-            return;
-        }
-
-        setSplitError(undefined);
-        onSubmit({
-            description: values.description,
-            amount: values.amount,
-            paidByUserId: values.paidByUserId,
-            paidOn: values.paidOn,
-            participantUserIds,
-            splitType: 'equal',
-        });
-    });
 
     return (
         <form onSubmit={submit} noValidate className="flex flex-col gap-4">
