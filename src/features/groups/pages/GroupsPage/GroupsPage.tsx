@@ -1,60 +1,22 @@
-import { ChevronRight, Plus, UsersRound } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
-import { Link } from 'react-router';
 import { toast } from 'sonner';
 
 import { useFriends } from '@features/friends';
 import { GroupListSkeleton } from '@features/groups/components/GroupListSkeleton';
+import { GroupCard } from '@features/groups/components/GroupCard';
 import {
     CreateGroupDialog,
     useCreateGroup,
     useGroupSummaries,
     type CreateGroupFormValues,
-    type GroupSummary,
 } from '@features/groups';
+import { filterGroups } from '@features/groups/utils/groupList';
 import { ActionButtonSkeleton } from '@shared/components/ActionButtonSkeleton';
 import { FetchingIndicator } from '@shared/components/FetchingIndicator';
 import { SearchInput } from '@shared/components/SearchInput';
 import { SearchInputSkeleton } from '@shared/components/SearchInputSkeleton';
-import { formatCurrency } from '@shared/utils';
-
-const dateFormatter = new Intl.DateTimeFormat('en-IN', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-});
-
-function balanceStatus(group: GroupSummary): { text: string; className: string } {
-    if (!group.hasFinancialActivity) {
-        return { text: 'No balance', className: 'text-muted-foreground' };
-    }
-    if (group.currentUserBalance > 0) {
-        return {
-            text: `You are owed ${formatCurrency(group.currentUserBalance)}`,
-            className: 'text-green-700 dark:text-green-400',
-        };
-    }
-    if (group.currentUserBalance < 0) {
-        return {
-            text: `You owe ${formatCurrency(Math.abs(group.currentUserBalance))}`,
-            className: 'text-red-600 dark:text-red-400',
-        };
-    }
-    return { text: 'Settled up', className: 'text-muted-foreground' };
-}
-
-function sortGroups(groups: GroupSummary[]): GroupSummary[] {
-    return [...groups].sort((left, right) => {
-        if (left.lastActivityAt && right.lastActivityAt) {
-            const difference =
-                new Date(right.lastActivityAt).getTime() - new Date(left.lastActivityAt).getTime();
-            if (difference !== 0) return difference;
-        } else if (left.lastActivityAt) return -1;
-        else if (right.lastActivityAt) return 1;
-        return left.name.localeCompare(right.name);
-    });
-}
 
 export function GroupsPage() {
     const { data: groups, isLoading, isFetching, isError, refetch } = useGroupSummaries();
@@ -66,13 +28,7 @@ export function GroupsPage() {
     const hasNoGroups = !isLoading && (!groups || groups.length === 0);
     const isRefreshing = !isLoading && isFetching;
     const friendNameById = new Map((friends ?? []).map((friend) => [friend.id, friend.name]));
-    const query = search.trim().toLowerCase();
-    const filteredGroups = sortGroups(groups ?? []).filter(
-        (group) =>
-            !query ||
-            group.name.toLowerCase().includes(query) ||
-            group.memberIds.some((id) => friendNameById.get(id)?.toLowerCase().includes(query)),
-    );
+    const filteredGroups = filterGroups(groups ?? [], search, friendNameById);
 
     const handleCreateGroup = (values: CreateGroupFormValues) => {
         const toastId = toast.loading('Group is being created…');
@@ -130,63 +86,11 @@ export function GroupsPage() {
     } else {
         content = (
             <ul className="space-y-3">
-                {filteredGroups.map((group) => {
-                    const status = balanceStatus(group);
-                    const activity = group.lastActivityAt
-                        ? `Last activity ${dateFormatter.format(new Date(group.lastActivityAt))}`
-                        : 'No expenses yet';
-                    return (
-                        <li key={group.id}>
-                            <Link
-                                to={`/groups/${group.id}`}
-                                className="border-border hover:bg-muted focus-visible:ring-brand-500 flex min-h-20 items-start gap-3 rounded-xl border p-4 transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none sm:items-center sm:gap-4"
-                            >
-                                <span
-                                    aria-hidden="true"
-                                    className="bg-brand-100 text-brand-700 dark:bg-brand-950 dark:text-brand-300 flex size-11 shrink-0 items-center justify-center rounded-full"
-                                >
-                                    <UsersRound className="size-5" />
-                                </span>
-                                <div className="min-w-0 flex-1">
-                                    <p className="text-surface-foreground font-semibold break-words">
-                                        {group.name}
-                                    </p>
-                                    <p className="text-muted-foreground mt-1 text-sm sm:inline">
-                                        {group.memberCount}{' '}
-                                        {group.memberCount === 1 ? 'member' : 'members'}
-                                    </p>
-                                    <span
-                                        aria-hidden="true"
-                                        className="text-muted-foreground hidden px-1.5 sm:inline"
-                                    >
-                                        ·
-                                    </span>
-                                    <p className="text-muted-foreground text-sm sm:inline">
-                                        {activity}
-                                    </p>
-                                    <p
-                                        className={`mt-3 font-semibold sm:hidden ${status.className}`}
-                                    >
-                                        {status.text}
-                                    </p>
-                                </div>
-                                <div className="hidden shrink-0 items-center gap-3 sm:flex">
-                                    <span className={`font-semibold ${status.className}`}>
-                                        {status.text}
-                                    </span>
-                                    <ChevronRight
-                                        aria-hidden="true"
-                                        className="text-muted-foreground size-5"
-                                    />
-                                </div>
-                                <ChevronRight
-                                    aria-hidden="true"
-                                    className="text-muted-foreground mt-1 size-5 shrink-0 sm:hidden"
-                                />
-                            </Link>
-                        </li>
-                    );
-                })}
+                {filteredGroups.map((group) => (
+                    <li key={group.id}>
+                        <GroupCard group={group} />
+                    </li>
+                ))}
             </ul>
         );
     }
