@@ -1,6 +1,5 @@
-import { ArrowRightLeft, Pencil, Trash2 } from 'lucide-react';
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router';
+import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 
 import { useCurrentUser } from '@app/hooks';
@@ -8,13 +7,14 @@ import type { Expense } from '@features/expenses/api/expensesApi';
 import type { Payment } from '@features/payments/api/paymentsApi';
 import type { User } from '@features/users/api/usersApi';
 import { ActivityRowSkeleton } from '@features/expenses/components/ActivityRowSkeleton';
+import { ExpenseActivityRow } from '@features/expenses/components/ExpenseActivityRow';
+import { PaymentActivityRow } from '@features/expenses/components/PaymentActivityRow';
 import { useDeleteExpense } from '@features/expenses/hooks/useDeleteExpense';
 import { useExpenses } from '@features/expenses/hooks/useExpenses';
-import { calculateExpenseInvolvement } from '@features/expenses/utils/calculateExpenseInvolvement';
 import { useDeletePayment, usePayments, useUpdatePayment } from '@features/payments';
 import { RecordPaymentDialog } from '@features/payments/components/RecordPaymentDialog';
 import type { RecordPaymentFormValues } from '@features/payments/components/RecordPaymentForm';
-import { Avatar, ConfirmationDialog, FetchingIndicator, SwipeableRow } from '@shared/components';
+import { ConfirmationDialog, FetchingIndicator } from '@shared/components';
 import {
     compareFinancialActivityNewestFirst,
     formatCurrency,
@@ -26,142 +26,6 @@ type GroupActivityListProps = Readonly<{
     members: User[];
     isMembersLoading?: boolean;
 }>;
-
-const dateFormatter = new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-});
-
-function memberLabel(member: User | undefined, names: Map<string, string>): string {
-    if (!member) return 'Someone';
-    return names.get(member.id) ?? member.name;
-}
-
-function involvementLabel(
-    expense: Expense,
-    currentUserId: string | undefined,
-): { text: string; className: string } {
-    const involvement = calculateExpenseInvolvement(expense, currentUserId ?? '');
-
-    if (involvement.type === 'lent') {
-        return { text: `You lent ${formatCurrency(involvement.amount)}`, className: 'text-owed' };
-    }
-
-    if (involvement.type === 'owed') {
-        return { text: `You owe ${formatCurrency(involvement.amount)}`, className: 'text-owe' };
-    }
-
-    return { text: 'You were not involved', className: 'text-muted-foreground' };
-}
-
-type ExpenseRowProps = Readonly<{
-    groupId: string;
-    expense: Expense;
-    membersById: Map<string, User>;
-    names: Map<string, string>;
-    currentUserId: string | undefined;
-    onEdit: () => void;
-    onDelete: () => void;
-}>;
-
-function ExpenseRow({
-    groupId,
-    expense,
-    membersById,
-    names,
-    currentUserId,
-    onEdit,
-    onDelete,
-}: ExpenseRowProps) {
-    const payer = membersById.get(expense.paidByUserId);
-    const involvement = involvementLabel(expense, currentUserId);
-
-    return (
-        <SwipeableRow
-            actions={[
-                { key: 'edit', label: 'Edit', icon: Pencil, onClick: onEdit },
-                {
-                    key: 'delete',
-                    label: 'Delete',
-                    icon: Trash2,
-                    tone: 'destructive',
-                    onClick: onDelete,
-                },
-            ]}
-        >
-            <Link
-                to={`/groups/${groupId}/expenses/${expense.id}`}
-                className="border-border hover:bg-muted flex items-center gap-3 rounded-lg border p-3"
-            >
-                <Avatar name={payer?.name ?? '?'} />
-                <div className="min-w-0 flex-1">
-                    <p className="text-surface-foreground font-medium">{expense.description}</p>
-                    <p className="text-muted-foreground text-sm">
-                        {memberLabel(payer, names)} paid ·{' '}
-                        {dateFormatter.format(new Date(expense.paidOn ?? expense.createdAt))}
-                    </p>
-                </div>
-                <div className="flex flex-col items-end gap-0.5">
-                    <p className="text-surface-foreground font-medium">
-                        {formatCurrency(expense.amount)}
-                    </p>
-                    <p className={`text-xs ${involvement.className}`}>{involvement.text}</p>
-                </div>
-            </Link>
-        </SwipeableRow>
-    );
-}
-
-type PaymentRowProps = Readonly<{
-    payment: Payment;
-    membersById: Map<string, User>;
-    names: Map<string, string>;
-    onEdit: () => void;
-    onDelete: () => void;
-}>;
-
-// No detail page exists for a payment (it's a single atomic record, nothing to
-// drill into), so this renders as a plain div rather than a Link like ExpenseRow.
-function PaymentRow({ payment, membersById, names, onEdit, onDelete }: PaymentRowProps) {
-    const from = membersById.get(payment.fromUserId);
-    const to = membersById.get(payment.toUserId);
-
-    return (
-        <SwipeableRow
-            actions={[
-                {
-                    key: 'edit',
-                    label: 'Edit',
-                    icon: Pencil,
-                    onClick: onEdit,
-                },
-                {
-                    key: 'delete',
-                    label: 'Delete',
-                    icon: Trash2,
-                    tone: 'destructive',
-                    onClick: onDelete,
-                },
-            ]}
-        >
-            <div className="border-border bg-owed/5 flex items-center gap-3 rounded-lg border p-3">
-                <span className="bg-owed/10 text-owed flex size-9 shrink-0 items-center justify-center rounded-full">
-                    <ArrowRightLeft className="size-4" />
-                </span>
-                <div className="min-w-0 flex-1">
-                    <p className="text-surface-foreground font-medium">
-                        {memberLabel(from, names)} paid {memberLabel(to, names)}
-                    </p>
-                    <p className="text-muted-foreground text-sm">
-                        {dateFormatter.format(new Date(payment.paidOn ?? payment.createdAt))}
-                    </p>
-                </div>
-                <p className="text-owed font-medium">{formatCurrency(payment.amount)}</p>
-            </div>
-        </SwipeableRow>
-    );
-}
 
 type ActivityItem =
     | { type: 'expense'; id: string; paidOn: string; createdAt: string; expense: Expense }
@@ -300,7 +164,7 @@ export function GroupActivityList({
                 {items.map((item) => (
                     <li key={`${item.type}-${item.id}`}>
                         {item.type === 'expense' ? (
-                            <ExpenseRow
+                            <ExpenseActivityRow
                                 groupId={groupId}
                                 expense={item.expense}
                                 membersById={membersById}
@@ -312,7 +176,7 @@ export function GroupActivityList({
                                 onDelete={() => setDeletingExpense(item.expense)}
                             />
                         ) : (
-                            <PaymentRow
+                            <PaymentActivityRow
                                 payment={item.payment}
                                 membersById={membersById}
                                 names={names}
