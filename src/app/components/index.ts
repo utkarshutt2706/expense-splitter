@@ -6,4 +6,6 @@ export { ServerWakeGate } from './ServerWakeGate';
 export { SessionBootstrap } from './SessionBootstrap';
 export { Sidebar } from './Sidebar';
 export { ThemeTransitionOverlay } from './ThemeTransitionOverlay';
+export { ThemeToggleRow } from './ThemeToggleRow';
 export { UserMenu } from './UserMenu';
+export { UserMenuItem } from './UserMenuItem';
