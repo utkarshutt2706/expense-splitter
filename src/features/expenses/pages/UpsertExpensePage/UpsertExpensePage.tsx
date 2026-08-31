@@ -1,17 +1,9 @@
 import { ArrowLeft } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { Link, useNavigate, useParams } from 'react-router';
-import { toast } from 'sonner';
+import { Link } from 'react-router';
 
-import {
-    UpsertExpenseForm,
-    type UpsertExpenseFormValues,
-} from '@features/expenses/components/UpsertExpenseForm';
-import { useCreateExpense } from '@features/expenses/hooks/useCreateExpense';
-import { useExpense } from '@features/expenses/hooks/useExpense';
-import { useUpdateExpense } from '@features/expenses/hooks/useUpdateExpense';
-import { buildEditExpenseInitialValues } from '@features/expenses/utils/buildEditExpenseInitialValues';
-import { useGroup, useGroupMembers } from '@features/groups';
+import { UpsertExpenseForm } from '@features/expenses/components/UpsertExpenseForm';
+import { useUpsertExpensePage } from '@features/expenses/hooks/useUpsertExpensePage';
 import { Skeleton } from '@shared/components';
 
 function upsertExpenseContent({
@@ -47,53 +39,17 @@ function upsertExpenseContent({
 }
 
 export function UpsertExpensePage() {
-    const { groupId, expenseId } = useParams<{ groupId: string; expenseId?: string }>();
-    const navigate = useNavigate();
-    const isEditMode = expenseId !== undefined;
-
-    const { data: group } = useGroup(groupId ?? '');
-    const { data: members, isLoading: isMembersLoading } = useGroupMembers(group?.memberIds ?? []);
     const {
-        data: expense,
-        isLoading: isExpenseLoading,
-        isError: isExpenseError,
-    } = useExpense(groupId ?? '', isEditMode ? (expenseId ?? '') : '');
-    const createExpense = useCreateExpense();
-    const updateExpense = useUpdateExpense();
-
-    const isLoading = isMembersLoading || (isEditMode && isExpenseLoading);
-    const backTo = isEditMode ? `/groups/${groupId}/expenses/${expenseId}` : `/groups/${groupId}`;
-
-    const handleSubmit = (values: UpsertExpenseFormValues) => {
-        if (!groupId) return;
-
-        if (isEditMode && expenseId) {
-            const toastId = toast.loading('Expense is being updated…');
-            updateExpense.mutate(
-                { id: expenseId, groupId, ...values },
-                {
-                    onSuccess: () => {
-                        toast.success('Expense updated', { id: toastId });
-                        navigate(backTo);
-                    },
-                    onError: (error) => toast.error(error.message, { id: toastId }),
-                },
-            );
-            return;
-        }
-
-        const toastId = toast.loading('Expense is being added…');
-        createExpense.mutate(
-            { groupId, ...values },
-            {
-                onSuccess: () => {
-                    toast.success('Expense added', { id: toastId });
-                    navigate(backTo);
-                },
-                onError: (error) => toast.error(error.message, { id: toastId }),
-            },
-        );
-    };
+        backTo,
+        cancel,
+        expense,
+        handleSubmit,
+        initialValues,
+        isEditMode,
+        isExpenseError,
+        isLoading,
+        members,
+    } = useUpsertExpensePage();
 
     const content = upsertExpenseContent({
         isLoading,
@@ -103,12 +59,10 @@ export function UpsertExpensePage() {
         form: (
             <UpsertExpenseForm
                 mode={isEditMode ? 'edit' : 'add'}
-                members={members ?? []}
-                initialValues={
-                    isEditMode && expense ? buildEditExpenseInitialValues(expense) : undefined
-                }
+                members={members}
+                initialValues={initialValues}
                 onSubmit={handleSubmit}
-                onCancel={() => navigate(backTo)}
+                onCancel={cancel}
             />
         ),
     });
