@@ -1,16 +1,18 @@
-import * as Accordion from '@radix-ui/react-accordion';
-import { ChevronDown, Handshake } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import { useCurrentUser } from '@app/hooks';
-import type { User } from '@features/users/api/usersApi';
 import type { SettlementTransaction } from '@features/balances/api/balancesApi';
+import { BalanceDisclosure } from '@features/balances/components/BalanceDisclosure';
+import { BalancePositionValue } from '@features/balances/components/BalancePositionValue';
+import { SettlementTransactionList } from '@features/balances/components/SettlementTransactionList';
+import { SingleBalancePosition } from '@features/balances/components/SingleBalancePosition';
 import { RecordPaymentAction } from '@features/payments';
 import { RecordPaymentDialog } from '@features/payments/components/RecordPaymentDialog';
 import type { RecordPaymentFormValues } from '@features/payments/components/RecordPaymentForm';
 import { useCreatePayment } from '@features/payments/hooks/useCreatePayment';
+import type { User } from '@features/users/api/usersApi';
 import { formatCurrency, participantNameMap, sortMembersByName } from '@shared/utils';
 
 type Props = Readonly<{
@@ -69,7 +71,7 @@ export function GroupBalanceAccordionList({ groupId, members, netBalances, trans
     const net = netBalances.get(currentUserId ?? '') ?? toReceive - toPay;
     const everyoneSettled = transactions.length === 0 && netBalances.size > 0;
     let positionContent: ReactNode = (
-        <SinglePosition
+        <SingleBalancePosition
             text={`You owe ${formatCurrency(toPay)}`}
             count={personal.length}
             suffix="to make"
@@ -88,8 +90,8 @@ export function GroupBalanceAccordionList({ groupId, members, netBalances, trans
     } else if (toPay > 0 && toReceive > 0) {
         positionContent = (
             <div className="grid gap-3 sm:grid-cols-3">
-                <PositionValue label="To receive" amount={toReceive} tone="receive" />
-                <PositionValue label="To pay" amount={toPay} tone="pay" />
+                <BalancePositionValue label="To receive" amount={toReceive} tone="receive" />
+                <BalancePositionValue label="To pay" amount={toPay} tone="pay" />
                 <div>
                     <p className="text-muted-foreground text-sm">Net position</p>
                     <p className="font-semibold">
@@ -100,7 +102,7 @@ export function GroupBalanceAccordionList({ groupId, members, netBalances, trans
         );
     } else if (toReceive > 0) {
         positionContent = (
-            <SinglePosition
+            <SingleBalancePosition
                 text={`You are owed ${formatCurrency(toReceive)}`}
                 count={personal.length}
                 suffix="to receive"
@@ -129,55 +131,6 @@ export function GroupBalanceAccordionList({ groupId, members, netBalances, trans
             },
         );
     };
-
-    const rows = (items: SettlementTransaction[]) => (
-        <ul>
-            {items.map((item, index) => {
-                const payerName = nameFor(item.fromUserId);
-                const direction = `${payerName} ${payerName === 'You' ? 'owe' : 'owes'} ${nameFor(item.toUserId)}`;
-                const sentence = `${direction} ${formatCurrency(item.amount)}`;
-                const isPaying = item.fromUserId === currentUserId;
-                const isReceiving = item.toUserId === currentUserId;
-                const amountClass = isReceiving ? 'text-owed' : 'text-owe';
-                return (
-                    <li
-                        key={`${item.fromUserId}-${item.toUserId}-${item.amount}-${index}`}
-                        className="border-border flex items-center gap-3 border-b py-3 last:border-b-0 sm:py-4"
-                    >
-                        <div className="min-w-0 flex-1">
-                            <p className="text-surface-foreground font-medium break-words">
-                                {direction}{' '}
-                                <span className={`${amountClass} font-semibold whitespace-nowrap`}>
-                                    {formatCurrency(item.amount)}
-                                </span>
-                            </p>
-                            {(isPaying || isReceiving) && (
-                                <p className="text-muted-foreground mt-1 text-sm">
-                                    {isPaying
-                                        ? 'You need to make this payment.'
-                                        : 'You will receive this payment.'}
-                                </p>
-                            )}
-                        </div>
-                        <div className="shrink-0">
-                            <button
-                                type="button"
-                                aria-label={`Settle up: ${sentence}`}
-                                onClick={(event) => {
-                                    triggerRef.current = event.currentTarget;
-                                    setPaymentError(undefined);
-                                    setSelected(item);
-                                }}
-                                className="border-border hover:bg-muted inline-flex min-h-11 cursor-pointer items-center justify-center gap-1 rounded-md border px-3 py-2 text-sm font-medium"
-                            >
-                                <Handshake className="size-4" /> Settle up
-                            </button>
-                        </div>
-                    </li>
-                );
-            })}
-        </ul>
-    );
 
     return (
         <div className="flex flex-col gap-5 sm:gap-6">
@@ -213,7 +166,16 @@ export function GroupBalanceAccordionList({ groupId, members, netBalances, trans
                 </h2>
                 {personal.length > 0 ? (
                     <div className="border-border mt-2 rounded-xl border px-3 sm:px-4">
-                        {rows(personal)}
+                        <SettlementTransactionList
+                            currentUserId={currentUserId}
+                            items={personal}
+                            nameFor={nameFor}
+                            onSettle={(transaction, trigger) => {
+                                triggerRef.current = trigger;
+                                setPaymentError(undefined);
+                                setSelected(transaction);
+                            }}
+                        />
                     </div>
                 ) : (
                     <p className="text-muted-foreground mt-2 text-sm">
@@ -223,17 +185,29 @@ export function GroupBalanceAccordionList({ groupId, members, netBalances, trans
             </section>
 
             {others.length > 0 && (
-                <Disclosure
+                <BalanceDisclosure
                     value="others"
                     label={`Other group balances (${others.length})`}
                     description="Payments between other participants"
                 >
-                    {rows(others)}
-                </Disclosure>
+                    <SettlementTransactionList
+                        currentUserId={currentUserId}
+                        items={others}
+                        nameFor={nameFor}
+                        onSettle={(transaction, trigger) => {
+                            triggerRef.current = trigger;
+                            setPaymentError(undefined);
+                            setSelected(transaction);
+                        }}
+                    />
+                </BalanceDisclosure>
             )}
 
             {settled.length > 0 && (
-                <Disclosure value="settled" label={`Settled participants (${settled.length})`}>
+                <BalanceDisclosure
+                    value="settled"
+                    label={`Settled participants (${settled.length})`}
+                >
                     <ul className="divide-border divide-y">
                         {settled.map((member) => (
                             <li key={member.id} className="flex justify-between gap-3 py-3 text-sm">
@@ -242,7 +216,7 @@ export function GroupBalanceAccordionList({ groupId, members, netBalances, trans
                             </li>
                         ))}
                     </ul>
-                </Disclosure>
+                </BalanceDisclosure>
             )}
 
             <RecordPaymentDialog
@@ -262,92 +236,5 @@ export function GroupBalanceAccordionList({ groupId, members, netBalances, trans
                 onSubmit={recordPayment}
             />
         </div>
-    );
-}
-
-function PositionValue({
-    label,
-    amount,
-    tone,
-}: Readonly<{
-    label: string;
-    amount: number;
-    tone: string;
-}>) {
-    return (
-        <div>
-            <p className="text-muted-foreground text-sm">{label}</p>
-            <p
-                className={
-                    tone === 'receive' ? 'text-owed font-semibold' : 'text-owe font-semibold'
-                }
-            >
-                {formatCurrency(amount)}
-            </p>
-        </div>
-    );
-}
-
-function SinglePosition({
-    text,
-    count,
-    suffix,
-    tone,
-}: Readonly<{
-    text: string;
-    count: number;
-    suffix: string;
-    tone: string;
-}>) {
-    return (
-        <>
-            <p
-                className={
-                    tone === 'receive'
-                        ? 'text-owed text-lg font-semibold'
-                        : 'text-owe text-lg font-semibold'
-                }
-            >
-                {text}
-            </p>
-            <p className="text-muted-foreground mt-1 text-sm">
-                {count} {count === 1 ? 'payment' : 'payments'} {suffix}
-            </p>
-        </>
-    );
-}
-
-function Disclosure({
-    value,
-    label,
-    description,
-    children,
-}: Readonly<{
-    value: string;
-    label: string;
-    description?: string;
-    children: ReactNode;
-}>) {
-    return (
-        <Accordion.Root type="single" collapsible>
-            <Accordion.Item value={value} className="border-border rounded-xl border">
-                <Accordion.Header>
-                    <Accordion.Trigger className="group focus-visible:ring-brand-500 flex min-h-11 w-full cursor-pointer items-center justify-between gap-3 rounded-xl p-3 text-left outline-none focus-visible:ring-2 sm:p-4">
-                        <span>
-                            <span className="text-lg font-semibold">{label}</span>
-                            {description && (
-                                <span className="text-muted-foreground mt-0.5 block text-sm">
-                                    {description}
-                                </span>
-                            )}
-                        </span>
-                        <ChevronDown className="text-muted-foreground size-4 shrink-0 transition-transform group-data-[state=open]:rotate-180 motion-reduce:transition-none" />
-                    </Accordion.Trigger>
-                </Accordion.Header>
-                <Accordion.Content className="border-border px-3 data-[state=open]:border-t sm:px-4">
-                    {children}
-                </Accordion.Content>
-            </Accordion.Item>
-        </Accordion.Root>
     );
 }
