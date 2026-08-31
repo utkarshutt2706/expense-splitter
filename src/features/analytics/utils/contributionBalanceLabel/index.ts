@@ -1,0 +1,1 @@
+export { contributionBalanceLabel } from './contributionBalanceLabel';
