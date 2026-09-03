@@ -1,16 +1,10 @@
 import * as Popover from '@radix-ui/react-popover';
 import { ArrowLeft, Check, ChevronDown } from 'lucide-react';
-import { useState, type MouseEvent } from 'react';
+import type { MouseEvent } from 'react';
 
 import { ResponsivePopoverContent } from '@shared/components';
-import {
-    customPeriod,
-    dateInputValue,
-    periodLabel,
-    presetPeriod,
-    type DashboardPeriod,
-    type DashboardPeriodPreset,
-} from '@features/dashboard/utils/dashboardDateRange';
+import { periodLabel, type DashboardPeriod } from '@features/dashboard/utils/dashboardDateRange';
+import { useDashboardTimeFilter } from '@features/dashboard/hooks/useDashboardTimeFilter';
 
 const PRESETS = [
     'all-time',
@@ -35,65 +29,24 @@ export function DashboardTimeFilter({
     period: DashboardPeriod;
     onChange: (period: DashboardPeriod) => void;
 }>) {
-    const now = new Date();
-    const [open, setOpen] = useState(false);
-    const [showCustom, setShowCustom] = useState(false);
-    const [start, setStart] = useState(
-        dateInputValue(new Date(now.getFullYear(), now.getMonth(), 1)),
-    );
-    const [end, setEnd] = useState(dateInputValue(now));
-    const [error, setError] = useState<string | null>(null);
-    const today = dateInputValue(now);
-    const maximumEnd = (() => {
-        if (!start) return undefined;
-        const anniversary = new Date(`${start}T00:00:00`);
-        anniversary.setFullYear(anniversary.getFullYear() + 1);
-        anniversary.setDate(anniversary.getDate() - 1);
-        return dateInputValue(anniversary) < today ? dateInputValue(anniversary) : today;
-    })();
-
-    function changeStart(value: string) {
-        setStart(value);
-        setError(null);
-        if (!value) {
-            setEnd('');
-            return;
-        }
-        const anniversary = new Date(`${value}T00:00:00`);
-        anniversary.setFullYear(anniversary.getFullYear() + 1);
-        anniversary.setDate(anniversary.getDate() - 1);
-        const nextMaximum =
-            dateInputValue(anniversary) < today ? dateInputValue(anniversary) : today;
-        if (end < value || end > nextMaximum) setEnd('');
-    }
-
-    function choosePreset(value: Exclude<DashboardPeriodPreset, 'custom'>) {
-        onChange(presetPeriod(value));
-        setError(null);
-        setOpen(false);
-    }
-
-    function applyCustom() {
-        try {
-            onChange(customPeriod(start, end));
-            setError(null);
-            setOpen(false);
-        } catch (cause) {
-            setError(cause instanceof Error ? cause.message : 'Choose a valid date range.');
-        }
-    }
+    const filter = useDashboardTimeFilter(period, onChange);
+    const {
+        applyCustom,
+        changeStart,
+        choosePreset,
+        end,
+        error,
+        maximumEnd,
+        open,
+        showCustom,
+        start,
+        today,
+    } = filter;
 
     return (
         <div className="w-full text-sm font-medium">
             <span id="dashboard-period-label">Time period</span>
-            <Popover.Root
-                open={open}
-                onOpenChange={(nextOpen) => {
-                    setOpen(nextOpen);
-                    setError(null);
-                    if (nextOpen) setShowCustom(period.preset === 'custom');
-                }}
-            >
+            <Popover.Root open={open} onOpenChange={filter.changeOpen}>
                 <Popover.Trigger asChild>
                     <button
                         type="button"
@@ -120,8 +73,8 @@ export function DashboardTimeFilter({
                                 <button
                                     type="button"
                                     onClick={() => {
-                                        setShowCustom(false);
-                                        setError(null);
+                                        filter.setShowCustom(false);
+                                        filter.setError(null);
                                     }}
                                     className="text-muted-foreground hover:bg-muted focus-visible:bg-muted flex min-h-11 w-full cursor-pointer items-center gap-2 rounded-md px-2 text-sm outline-none"
                                 >
@@ -157,7 +110,9 @@ export function DashboardTimeFilter({
                                                 max={maximumEnd}
                                                 disabled={!start}
                                                 onClick={openDatePicker}
-                                                onChange={(event) => setEnd(event.target.value)}
+                                                onChange={(event) =>
+                                                    filter.setEnd(event.target.value)
+                                                }
                                                 className="border-border bg-surface focus:border-brand-500 focus:ring-brand-500 mt-1 min-h-11 w-full rounded-md border px-2 outline-none focus:ring-1 disabled:cursor-not-allowed disabled:opacity-60"
                                             />
                                         </label>
@@ -194,7 +149,7 @@ export function DashboardTimeFilter({
                                 <div className="border-border mt-1 border-t pt-1">
                                     <button
                                         type="button"
-                                        onClick={() => setShowCustom(true)}
+                                        onClick={() => filter.setShowCustom(true)}
                                         className="hover:bg-muted focus-visible:bg-muted flex min-h-11 w-full cursor-pointer items-center justify-between gap-3 rounded-md px-2 text-left text-sm outline-none"
                                     >
                                         <span>Custom date range</span>
