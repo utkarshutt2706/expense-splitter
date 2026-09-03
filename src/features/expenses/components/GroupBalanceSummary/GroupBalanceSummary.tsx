@@ -1,10 +1,12 @@
 import { ArrowRight } from 'lucide-react';
-import { useState, type CSSProperties, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { Link } from 'react-router';
 
 import { useCurrentUser } from '@app/hooks';
 import type { User } from '@features/users/api/usersApi';
 import { useGroupBalances } from '@features/balances/hooks/useGroupBalances';
+import { SettlementConfetti } from '@features/balances/components/SettlementConfetti';
+import { balanceSummaryViewModel } from '@features/balances/utils/balanceSummaryViewModel';
 import { FetchingIndicator, Skeleton } from '@shared/components';
 import { formatCurrency } from '@shared/utils';
 
@@ -12,64 +14,6 @@ type GroupBalanceSummaryProps = Readonly<{
     groupId: string;
     members: User[];
 }>;
-
-type Celebration = 'personal' | 'group';
-
-const CONFETTI_COLORS = ['#c2410c', '#ea580c', '#f97316', '#f59e0b', '#d6a15d'];
-
-function shouldCelebrate(groupId: string, celebration: Celebration): boolean {
-    if (
-        typeof window === 'undefined' ||
-        window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
-    ) {
-        return false;
-    }
-
-    const key = `expense-splitter:settlement-celebrated:${groupId}:${celebration}`;
-    try {
-        if (window.sessionStorage.getItem(key)) return false;
-        window.sessionStorage.setItem(key, 'true');
-        return true;
-    } catch {
-        return true;
-    }
-}
-
-function SettlementConfetti({
-    groupId,
-    celebration,
-}: Readonly<{
-    groupId: string;
-    celebration: Celebration;
-}>) {
-    const [visible, setVisible] = useState(() => shouldCelebrate(groupId, celebration));
-    if (!visible) return null;
-
-    const particleCount = celebration === 'group' ? 18 : 12;
-    return (
-        <span
-            aria-hidden="true"
-            data-testid={`${celebration}-settlement-confetti`}
-            onAnimationEnd={() => setVisible(false)}
-            className="settlement-confetti pointer-events-none fixed inset-0 z-40 overflow-hidden"
-        >
-            {Array.from({ length: particleCount }, (_, index) => (
-                <span
-                    key={index}
-                    className="settlement-confetti__particle"
-                    style={
-                        {
-                            '--confetti-color': CONFETTI_COLORS[index % CONFETTI_COLORS.length],
-                            '--confetti-delay': `${(index % 6) * 70}ms`,
-                            '--confetti-left': `${8 + ((index * 47) % 84)}%`,
-                            '--confetti-rotation': `${90 + ((index * 53) % 240)}deg`,
-                        } as CSSProperties
-                    }
-                />
-            ))}
-        </span>
-    );
-}
 
 export function GroupBalanceSummary({ groupId, members }: GroupBalanceSummaryProps) {
     const { data: currentUser } = useCurrentUser();
@@ -108,9 +52,12 @@ export function GroupBalanceSummary({ groupId, members }: GroupBalanceSummaryPro
         );
     }
 
-    const balances = groupBalances?.balances ?? [];
-    const transactions = groupBalances?.settlements ?? [];
-    const hasFinancialActivity = balances.length > 0 || transactions.length > 0;
+    const model = balanceSummaryViewModel(
+        groupBalances ?? { balances: [], settlements: [] },
+        members,
+        currentUser?.id ?? '',
+    );
+    const { hasFinancialActivity } = model;
     if (!hasFinancialActivity) {
         return (
             <div className="border-border rounded-xl border p-4">
@@ -120,22 +67,8 @@ export function GroupBalanceSummary({ groupId, members }: GroupBalanceSummaryPro
         );
     }
 
-    const currentUserId = currentUser?.id ?? '';
-    const balancesByUserId = new Map(balances.map((balance) => [balance.userId, balance.balance]));
-    const balance = balancesByUserId.get(currentUserId) ?? 0;
-    const isGroupFullySettled =
-        members.length > 0 &&
-        balances.length > 0 &&
-        members.every((member) => (balancesByUserId.get(member.id) ?? 0) === 0);
-    const personalTransactions = transactions.filter(({ fromUserId, toUserId }) =>
-        [fromUserId, toUserId].includes(currentUserId),
-    );
-    const toPay = personalTransactions
-        .filter(({ fromUserId }) => fromUserId === currentUserId)
-        .reduce((total, item) => total + item.amount, 0);
-    const toReceive = personalTransactions
-        .filter(({ toUserId }) => toUserId === currentUserId)
-        .reduce((total, item) => total + item.amount, 0);
+    const { balance, isGroupFullySettled, isMixedPosition, isPersonallySettled, toPay, toReceive } =
+        model;
 
     if (isGroupFullySettled) {
         return (
@@ -154,8 +87,6 @@ export function GroupBalanceSummary({ groupId, members }: GroupBalanceSummaryPro
         );
     }
 
-    const isMixedPosition = toPay > 0 && toReceive > 0;
-    const isPersonallySettled = balance === 0;
     let summary: ReactNode;
     if (isMixedPosition) {
         summary = (
