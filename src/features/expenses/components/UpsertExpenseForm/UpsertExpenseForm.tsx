@@ -1,5 +1,6 @@
 import { Check, Receipt } from 'lucide-react';
 import { Controller } from 'react-hook-form';
+import { toast } from 'sonner';
 
 import {
     useUpsertExpenseForm,
@@ -147,7 +148,14 @@ export function UpsertExpenseForm({
                 aria-invalid={participantsError ? 'true' : undefined}
             >
                 <span className="text-surface-foreground text-sm font-medium">Split type</span>
-                <SplitTypeTabs value={splitType} onChange={changeSplitType} />
+                <SplitTypeTabs
+                    value={splitType}
+                    onChange={(type) => {
+                        if (!changeSplitType(type)) {
+                            toast.warning('Enter an amount before choosing how to split it');
+                        }
+                    }}
+                />
                 <SplitParticipantList
                     users={members}
                     splitType={splitType}

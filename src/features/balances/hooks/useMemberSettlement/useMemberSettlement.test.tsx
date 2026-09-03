@@ -23,6 +23,7 @@ const transaction: SettlementTransaction = {
     toUserId: 'user-2',
     amount: 42,
 };
+const paymentValues = { ...transaction, paidOn: '2026-09-03' };
 
 describe('useMemberSettlement', () => {
     beforeEach(() => {
@@ -61,7 +62,7 @@ describe('useMemberSettlement', () => {
         } as unknown as ReturnType<typeof useCreatePayment>);
         const { result } = renderHook(() => useMemberSettlement('group-1'));
 
-        act(() => result.current.submitSettlement(transaction));
+        act(() => result.current.submitSettlement(paymentValues));
 
         expect(result.current.isPending).toBe(true);
         expect(mutate).not.toHaveBeenCalled();
@@ -80,7 +81,7 @@ describe('useMemberSettlement', () => {
         const { result } = renderHook(() => useMemberSettlement('group-1'));
 
         act(() => result.current.openSettlement(transaction, document.createElement('button')));
-        act(() => result.current.submitSettlement(transaction));
+        act(() => result.current.submitSettlement(paymentValues));
         act(() => onError?.());
 
         const message = 'We couldn’t record this payment. Nothing was changed. Try again.';
@@ -101,11 +102,11 @@ describe('useMemberSettlement', () => {
         const { result } = renderHook(() => useMemberSettlement('group-1'));
 
         act(() => result.current.openSettlement(transaction, document.createElement('button')));
-        act(() => result.current.submitSettlement(transaction));
+        act(() => result.current.submitSettlement(paymentValues));
         act(() => onSuccess?.());
 
         expect(mutate).toHaveBeenCalledWith(
-            { groupId: 'group-1', ...transaction },
+            { groupId: 'group-1', ...paymentValues },
             expect.anything(),
         );
         expect(result.current.settlingTransaction).toBeNull();
