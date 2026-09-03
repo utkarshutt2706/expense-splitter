@@ -1,129 +1,18 @@
 import { RefreshCw } from 'lucide-react';
-import { useEffect, useState, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
 import logo from '@assets/logo.svg';
+import { useServerReadiness } from '@app/hooks/useServerReadiness';
+import { InjuredServerIllustration } from './InjuredServerIllustration';
 
 import styles from './ServerWakeGate.module.css';
-
-const SLOW_RESPONSE_DELAY_MS = 1_500;
-const REQUEST_TIMEOUT_MS = 90_000;
-const AUTO_RETRY_DELAY_MS = 10_000;
-
-type ReadinessState = 'checking' | 'waking' | 'unavailable' | 'ready';
 
 type ServerWakeGateProps = Readonly<{
     children: ReactNode;
 }>;
 
-function InjuredServerIllustration() {
-    return (
-        <div
-            className="relative flex size-24 -rotate-2 items-center justify-center"
-            role="img"
-            aria-label="An injured server waiting to recover"
-        >
-            <svg
-                viewBox="0 0 112 96"
-                className="drop-shadow-brand-900/15 size-full drop-shadow-md"
-                aria-hidden="true"
-            >
-                <path
-                    d="M20 18a10 10 0 0 1 10-10h52a10 10 0 0 1 10 10v58a10 10 0 0 1-10 10H30a10 10 0 0 1-10-10V18Z"
-                    className="fill-surface stroke-brand-500"
-                    strokeWidth="4"
-                />
-                <path d="M22 35h68M22 57h68" className={styles.rule} strokeWidth="3" />
-                <circle cx="33" cy="22" r="4" className="fill-brand-500" />
-                <circle cx="33" cy="46" r="4" className="fill-brand-400" />
-                <circle cx="33" cy="69" r="4" className="fill-brand-300" />
-                <g className={styles.sadEyes}>
-                    <path
-                        d="M49 49l5-3M67 46l5 3"
-                        className="stroke-surface-foreground"
-                        strokeLinecap="round"
-                        strokeWidth="3"
-                    />
-                </g>
-                <g className={styles.quiveringMouth}>
-                    <path
-                        d="M49 67c4-7 11-7 15 0"
-                        className="stroke-surface-foreground"
-                        strokeLinecap="round"
-                        strokeWidth="3"
-                    />
-                </g>
-                <g transform="rotate(-12 75 25)">
-                    <rect
-                        x="62"
-                        y="18"
-                        width="27"
-                        height="13"
-                        rx="6.5"
-                        className="fill-amber-200 stroke-amber-500"
-                        strokeWidth="2"
-                    />
-                    <path d="M72 20v9M78 20v9" className="stroke-amber-500" strokeWidth="1.5" />
-                </g>
-            </svg>
-            <span
-                className={`${styles.fallingTear} absolute top-[53%] left-[61%] h-4 w-2 rounded-[50%_50%_55%_55%] bg-sky-400/80`}
-                aria-hidden="true"
-            />
-        </div>
-    );
-}
-
-function healthUrl(): string {
-    const baseUrl = import.meta.env.VITE_API_BASE_URL as string | undefined;
-    if (!baseUrl) throw new Error('VITE_API_BASE_URL is not configured');
-    return `${baseUrl.replace(/\/$/, '')}/health`;
-}
-
 export function ServerWakeGate({ children }: ServerWakeGateProps) {
-    const [state, setState] = useState<ReadinessState>('checking');
-    const [attempt, setAttempt] = useState(0);
-
-    useEffect(() => {
-        const controller = new AbortController();
-        let disposed = false;
-        const slowResponseTimer = window.setTimeout(
-            () => setState((current) => (current === 'checking' ? 'waking' : current)),
-            SLOW_RESPONSE_DELAY_MS,
-        );
-        const requestTimeout = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
-        let retryTimer: number | undefined;
-
-        const checkReadiness = async () => {
-            try {
-                const response = await fetch(healthUrl(), {
-                    cache: 'no-store',
-                    signal: controller.signal,
-                });
-                if (!response.ok) throw new Error(`Health check returned ${response.status}`);
-                setState('ready');
-            } catch {
-                if (disposed) return;
-                setState('unavailable');
-                retryTimer = window.setTimeout(() => {
-                    setState('waking');
-                    setAttempt((current) => current + 1);
-                }, AUTO_RETRY_DELAY_MS);
-            } finally {
-                window.clearTimeout(slowResponseTimer);
-                window.clearTimeout(requestTimeout);
-            }
-        };
-
-        void checkReadiness();
-
-        return () => {
-            disposed = true;
-            controller.abort();
-            window.clearTimeout(slowResponseTimer);
-            window.clearTimeout(requestTimeout);
-            if (retryTimer !== undefined) window.clearTimeout(retryTimer);
-        };
-    }, [attempt]);
+    const { state, retry } = useServerReadiness();
 
     if (state === 'ready') return children;
 
@@ -186,8 +75,7 @@ export function ServerWakeGate({ children }: ServerWakeGateProps) {
                     <button
                         type="button"
                         onClick={() => {
-                            setState('waking');
-                            setAttempt((current) => current + 1);
+                            retry();
                         }}
                         className="bg-brand-600 hover:bg-brand-700 mt-7 inline-flex cursor-pointer items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-white"
                     >
