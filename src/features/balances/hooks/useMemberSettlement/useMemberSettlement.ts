@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import type { SettlementTransaction } from '@features/balances/api/balancesApi';
+import type { RecordPaymentFormValues } from '@features/payments/components/RecordPaymentForm';
 import { useCreatePayment } from '@features/payments/hooks/useCreatePayment';
 
 const PAYMENT_ERROR_MESSAGE = 'We couldn’t record this payment. Nothing was changed. Try again.';
@@ -28,12 +29,17 @@ export function useMemberSettlement(groupId: string) {
         }
     };
 
-    const submitSettlement = ({ fromUserId, toUserId, amount }: SettlementTransaction) => {
+    const submitSettlement = ({
+        fromUserId,
+        toUserId,
+        amount,
+        paidOn,
+    }: RecordPaymentFormValues) => {
         if (createPayment.isPending) return;
         setPaymentError(undefined);
         const toastId = toast.loading('Payment is being recorded…');
         createPayment.mutate(
-            { groupId, fromUserId, toUserId, amount },
+            { groupId, fromUserId, toUserId, amount, paidOn },
             {
                 onSuccess: () => {
                     setSettlingTransaction(null);
