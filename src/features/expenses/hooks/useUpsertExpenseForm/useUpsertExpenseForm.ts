@@ -1,12 +1,12 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMemo, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
-import { toast } from 'sonner';
 import { z } from 'zod';
 
 import { useCurrentUser } from '@app/hooks';
 import type { SplitType } from '@features/expenses/api/expensesApi';
 import { getSplitAllocationPreview } from '@features/expenses/utils';
+import { validateSplitInput } from '@features/expenses/utils/expenseSplitInput';
 import type {
     ExactSplitEntry,
     PercentageSplitEntry,
@@ -58,8 +58,6 @@ export type UseUpsertExpenseFormOptions = Readonly<{
     onSubmit: (values: UpsertExpenseFormValues) => void;
 }>;
 
-const PERCENTAGE_TOLERANCE = 0.01;
-
 export function useUpsertExpenseForm({
     members,
     initialValues,
@@ -104,29 +102,15 @@ export function useUpsertExpenseForm({
     };
 
     const changeSplitType = (type: SplitType) => {
-        if (!isAmountFilled) {
-            toast.warning('Enter an amount before choosing how to split it');
-            return;
-        }
+        if (!isAmountFilled) return false;
         setSplitType(type);
         setSplitValues({});
         setSplitError(undefined);
+        return true;
     };
 
     const changeSplitValue = (id: string, value: string) => {
         setSplitValues((current) => ({ ...current, [id]: value }));
-    };
-
-    const parseValues = (label: string): { userId: string; value: number }[] | undefined => {
-        const parsedValues = participantUserIds.map((userId) => ({
-            userId,
-            value: Number(splitValues[userId] ?? Number.NaN),
-        }));
-        if (parsedValues.some(({ value }) => !Number.isFinite(value) || value <= 0)) {
-            setSplitError(`Enter ${label} for every participant`);
-            return undefined;
-        }
-        return parsedValues;
     };
 
     const submit = form.handleSubmit((values) => {
@@ -136,18 +120,20 @@ export function useUpsertExpenseForm({
         }
         setParticipantsError(undefined);
         const baseValues = { ...values, participantUserIds };
+        const validation = validateSplitInput(
+            splitType,
+            values.amount,
+            participantUserIds,
+            splitValues,
+        );
+        if (validation.error) {
+            setSplitError(validation.error);
+            return;
+        }
+        const parsed = validation.values ?? [];
+        setSplitError(undefined);
 
         if (splitType === 'exact') {
-            const parsed = parseValues('an amount');
-            if (!parsed) return;
-            if (
-                parsed.reduce((sum, entry) => sum + Math.round(entry.value * 100), 0) !==
-                Math.round(values.amount * 100)
-            ) {
-                setSplitError('Exact amounts must add up to the total expense amount');
-                return;
-            }
-            setSplitError(undefined);
             onSubmit({
                 ...baseValues,
                 splitType,
@@ -157,16 +143,6 @@ export function useUpsertExpenseForm({
         }
 
         if (splitType === 'percentage') {
-            const parsed = parseValues('a percentage');
-            if (!parsed) return;
-            if (
-                Math.abs(parsed.reduce((sum, entry) => sum + entry.value, 0) - 100) >
-                PERCENTAGE_TOLERANCE
-            ) {
-                setSplitError('Split percentages must add up to 100');
-                return;
-            }
-            setSplitError(undefined);
             onSubmit({
                 ...baseValues,
                 splitType,
@@ -179,9 +155,6 @@ export function useUpsertExpenseForm({
         }
 
         if (splitType === 'shares') {
-            const parsed = parseValues('a share count');
-            if (!parsed) return;
-            setSplitError(undefined);
             onSubmit({
                 ...baseValues,
                 splitType,
@@ -190,7 +163,6 @@ export function useUpsertExpenseForm({
             return;
         }
 
-        setSplitError(undefined);
         onSubmit({ ...baseValues, splitType: 'equal' });
     });
 
