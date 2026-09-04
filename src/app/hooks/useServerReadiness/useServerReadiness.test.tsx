@@ -112,7 +112,10 @@ describe('useServerReadiness', () => {
 
     it('aborts pending work and prevents state updates after unmount', async () => {
         let resolveFetch!: (value: Response) => void;
-        const fetchMock = vi.fn(() => new Promise<Response>((resolve) => (resolveFetch = resolve)));
+        const fetchMock = vi.fn(
+            (_url: string, _init?: RequestInit) =>
+                new Promise<Response>((resolve) => (resolveFetch = resolve)),
+        );
         vi.stubGlobal('fetch', fetchMock);
         const { result, unmount } = renderHook(() => useServerReadiness());
         const signal = fetchMock.mock.calls[0]?.[1]?.signal;
