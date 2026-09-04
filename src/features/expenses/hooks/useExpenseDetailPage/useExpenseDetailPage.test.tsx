@@ -209,7 +209,8 @@ describe('useExpenseDetailPage', () => {
         ['pending mutation', { deletion: { isPending: true } }],
     ])('does not request deletion for a %s', (_label, overrides) => {
         const mutate = vi.fn();
-        mockDependencies({ ...overrides, deletion: { mutate, ...overrides.deletion } });
+        const deletion = 'deletion' in overrides ? overrides.deletion : {};
+        mockDependencies({ ...overrides, deletion: { mutate, ...deletion } });
         const { result } = renderHook(() => useExpenseDetailPage());
 
         act(() => result.current.handleDelete());
