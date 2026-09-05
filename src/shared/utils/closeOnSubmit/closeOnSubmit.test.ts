@@ -12,6 +12,9 @@ describe('closeOnSubmit', () => {
 
         expect(onOpenChange).toHaveBeenCalledWith(false);
         expect(onSubmit).toHaveBeenCalledWith({ name: 'Priya Sharma' });
+        expect(onOpenChange.mock.invocationCallOrder[0]).toBeLessThan(
+            onSubmit.mock.invocationCallOrder[0]!,
+        );
     });
 
     it('closes the dialog on cancel without calling onSubmit', () => {
@@ -22,6 +25,28 @@ describe('closeOnSubmit', () => {
         handlers.onCancel();
 
         expect(onOpenChange).toHaveBeenCalledWith(false);
+        expect(onSubmit).not.toHaveBeenCalled();
+    });
+
+    it('propagates submission failures after closing the dialog', () => {
+        const onOpenChange = vi.fn();
+        const failure = new Error('submission failed');
+        const handlers = closeOnSubmit(onOpenChange, () => {
+            throw failure;
+        });
+
+        expect(() => handlers.onSubmit('values')).toThrow(failure);
+        expect(onOpenChange).toHaveBeenCalledWith(false);
+    });
+
+    it('does not submit when closing itself fails', () => {
+        const onSubmit = vi.fn();
+        const failure = new Error('close failed');
+        const handlers = closeOnSubmit(() => {
+            throw failure;
+        }, onSubmit);
+
+        expect(() => handlers.onSubmit('values')).toThrow(failure);
         expect(onSubmit).not.toHaveBeenCalled();
     });
 });

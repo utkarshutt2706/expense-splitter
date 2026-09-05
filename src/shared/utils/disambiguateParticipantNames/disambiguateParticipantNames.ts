@@ -103,5 +103,5 @@ export function participantNameMap<T extends { id: string; name: string }>(
             isCurrentUser: member.id === currentUserId,
         })),
     );
-    return new Map(members.map((member, index) => [member.id, labels[index] ?? member.name]));
+    return new Map(members.map((member, index) => [member.id, labels[index]!]));
 }

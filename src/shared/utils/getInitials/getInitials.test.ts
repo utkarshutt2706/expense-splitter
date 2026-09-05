@@ -30,4 +30,12 @@ describe('getInitials', () => {
     it('collapses extra whitespace between words', () => {
         expect(getInitials('  Alex   Morgan  ')).toBe('AM');
     });
+
+    it('handles tabs and newlines between name parts', () => {
+        expect(getInitials('\tAlex\nMorgan\t')).toBe('AM');
+    });
+
+    it('preserves non-ASCII initials while uppercasing them', () => {
+        expect(getInitials('élise østergaard')).toBe('ÉØ');
+    });
 });
