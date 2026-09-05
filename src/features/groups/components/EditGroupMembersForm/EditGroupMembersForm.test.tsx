@@ -1,5 +1,6 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import type { ComponentProps } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { User } from '@features/users/api/usersApi';
@@ -20,6 +21,21 @@ vi.mock('@app/hooks', async (importOriginal) => ({
 vi.mock('@features/users/hooks', () => ({
     useUserLookup: vi.fn(),
 }));
+
+vi.mock('../MemberSearchSection', async (importOriginal) => {
+    const actual = await importOriginal<typeof import('../MemberSearchSection')>();
+    return {
+        ...actual,
+        MemberSearchSection: (props: ComponentProps<typeof actual.MemberSearchSection>) => (
+            <>
+                <actual.MemberSearchSection {...props} />
+                <button type="button" onClick={() => props.onToggle(CURRENT_USER_ID)}>
+                    Attempt guarded current-user removal
+                </button>
+            </>
+        ),
+    };
+});
 
 function mockLookup(overrides: Record<string, unknown> = {}) {
     vi.mocked(useUserLookup).mockReturnValue({
@@ -98,6 +114,26 @@ describe('EditGroupMembersForm', () => {
         );
 
         await user.click(screen.getByRole('checkbox', { name: 'You' }));
+        await user.click(screen.getByRole('button', { name: /save changes/i }));
+
+        expect(onSubmit).toHaveBeenCalledWith({ memberIds: [CURRENT_USER_ID] });
+    });
+
+    it('rejects current-user removal even when the child invokes the toggle callback', async () => {
+        const onSubmit = vi.fn();
+        const user = userEvent.setup();
+        render(
+            <EditGroupMembersForm
+                users={users}
+                initialMemberIds={[CURRENT_USER_ID]}
+                onSubmit={onSubmit}
+                onCancel={vi.fn()}
+            />,
+        );
+
+        await user.click(
+            screen.getByRole('button', { name: /attempt guarded current-user removal/i }),
+        );
         await user.click(screen.getByRole('button', { name: /save changes/i }));
 
         expect(onSubmit).toHaveBeenCalledWith({ memberIds: [CURRENT_USER_ID] });
