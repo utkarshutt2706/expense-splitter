@@ -21,6 +21,12 @@ const NON_REFRESHABLE_AUTH_ENDPOINTS = new Set([
     '/auth/logout',
 ]);
 
+function isNonRefreshableAuthEndpoint(url: string | undefined): boolean {
+    if (!url) return false;
+    const pathname = new URL(url, 'https://expense-splitter.local').pathname.replace(/\/$/, '');
+    return NON_REFRESHABLE_AUTH_ENDPOINTS.has(pathname);
+}
+
 export function attachAuthHeader(config: InternalAxiosRequestConfig): InternalAxiosRequestConfig {
     const { accessToken } = useAuthStore.getState();
     if (accessToken) {
@@ -34,10 +40,11 @@ export function attachAuthHeader(config: InternalAxiosRequestConfig): InternalAx
 export async function handleResponseError(error: AxiosError): Promise<unknown> {
     const apiError = toApiError(error);
     const config = error.config as RetryableRequestConfig | undefined;
-    const isSessionEndpoint = config?.url ? NON_REFRESHABLE_AUTH_ENDPOINTS.has(config.url) : false;
+    const isUnauthorized = apiError.code === 'UNAUTHORIZED' || error.response?.status === 401;
+    const isSessionEndpoint = isNonRefreshableAuthEndpoint(config?.url);
 
-    if (apiError.code !== 'UNAUTHORIZED' || !config || isSessionEndpoint) {
-        if (apiError.code === 'UNAUTHORIZED') useAuthStore.getState().logout();
+    if (!isUnauthorized || !config || isSessionEndpoint) {
+        if (isUnauthorized) useAuthStore.getState().logout();
         throw apiError;
     }
 

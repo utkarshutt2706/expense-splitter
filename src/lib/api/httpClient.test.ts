@@ -30,6 +30,12 @@ function unauthorizedError(url = '/groups', sessionRefreshAttempted = false): Ax
     } as AxiosError;
 }
 
+function malformedUnauthorizedError(url = '/groups'): AxiosError {
+    const error = unauthorizedError(url);
+    error.response!.data = { unexpected: true };
+    return error;
+}
+
 describe('httpClient', () => {
     beforeEach(() => {
         vi.restoreAllMocks();
@@ -58,6 +64,17 @@ describe('httpClient', () => {
             const result = attachAuthHeader(config);
 
             expect(result.headers.get('Authorization')).toBeUndefined();
+        });
+
+        it('replaces a stale Authorization value with the current token', () => {
+            useAuthStore.setState({ accessToken: 'current-token' });
+            const config = {
+                headers: new AxiosHeaders({ Authorization: 'Bearer stale-token' }),
+            } as InternalAxiosRequestConfig;
+
+            attachAuthHeader(config);
+
+            expect(config.headers.get('Authorization')).toBe('Bearer current-token');
         });
     });
 
@@ -130,6 +147,38 @@ describe('httpClient', () => {
             });
         });
 
+        it('refreshes a malformed 401 response based on its HTTP status', async () => {
+            const adapter = vi.fn(async (config: InternalAxiosRequestConfig) => ({
+                data: { retried: true },
+                status: 200,
+                statusText: 'OK',
+                headers: new AxiosHeaders(),
+                config,
+            }));
+            const error = malformedUnauthorizedError();
+            error.config!.adapter = adapter;
+            vi.spyOn(httpClient, 'post').mockResolvedValue({
+                data: { user: refreshedUser, accessToken: 'refreshed-token' },
+            } as AxiosResponse);
+
+            await expect(handleResponseError(error)).resolves.toMatchObject({
+                data: { retried: true },
+            });
+            expect(useAuthStore.getState().accessToken).toBe('refreshed-token');
+        });
+
+        it('logs out for a malformed 401 that has no retryable request config', async () => {
+            useAuthStore.getState().login(refreshedUser, 'expired-token');
+            const error = malformedUnauthorizedError();
+            delete error.config;
+
+            await expect(handleResponseError(error)).rejects.toMatchObject({
+                code: 'ERROR',
+                status: 401,
+            });
+            expect(useAuthStore.getState().currentUserId).toBeNull();
+        });
+
         it('logs out when the refresh cookie no longer represents a session', async () => {
             useAuthStore.getState().login(refreshedUser, 'expired-token');
             vi.spyOn(httpClient, 'post').mockResolvedValue({ data: null } as AxiosResponse);
@@ -168,6 +217,49 @@ describe('httpClient', () => {
                 expect(useAuthStore.getState().currentUserId).toBeNull();
             },
         );
+
+        it.each([
+            '/auth/login?redirect=%2Fgroups',
+            '/auth/register/',
+            'https://api.example.test/auth/refresh#retry',
+            'https://api.example.test/auth/logout?all=true',
+        ])('does not refresh a normalized failed session endpoint: %s', async (url) => {
+            useAuthStore.getState().login(refreshedUser, 'expired-token');
+            const refresh = vi.spyOn(httpClient, 'post');
+
+            await expect(handleResponseError(unauthorizedError(url))).rejects.toMatchObject({
+                code: 'UNAUTHORIZED',
+            });
+
+            expect(refresh).not.toHaveBeenCalled();
+            expect(useAuthStore.getState().currentUserId).toBeNull();
+        });
+
+        it('clears the shared refresh promise after failure so a later request can retry', async () => {
+            const refresh = vi
+                .spyOn(httpClient, 'post')
+                .mockRejectedValueOnce(new Error('network unavailable'))
+                .mockResolvedValueOnce({
+                    data: { user: refreshedUser, accessToken: 'refreshed-token' },
+                } as AxiosResponse);
+            const retried = unauthorizedError('/groups/two');
+            retried.config!.adapter = vi.fn(async (config: InternalAxiosRequestConfig) => ({
+                data: { retried: true },
+                status: 200,
+                statusText: 'OK',
+                headers: new AxiosHeaders(),
+                config,
+            }));
+
+            await expect(handleResponseError(unauthorizedError('/groups/one'))).rejects.toThrow(
+                'network unavailable',
+            );
+            await expect(handleResponseError(retried)).resolves.toMatchObject({
+                data: { retried: true },
+            });
+
+            expect(refresh).toHaveBeenCalledTimes(2);
+        });
 
         it('shares one refresh request between concurrent unauthorized responses', async () => {
             const adapter = vi.fn(async (config: InternalAxiosRequestConfig) => ({
