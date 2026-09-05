@@ -4,9 +4,15 @@ import type { DashboardGroupSpend } from '@features/dashboard/api/dashboardApi';
 import { GroupScopeSelector } from './GroupScopeSelector';
 
 vi.mock('@shared/components', () => ({
-    ResponsivePopoverContent: ({ children, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-        <div {...props}>{children}</div>
-    ),
+    ResponsivePopoverContent: ({
+        children,
+        sideOffset: _sideOffset,
+        onOpenAutoFocus: _onOpenAutoFocus,
+        ...props
+    }: React.HTMLAttributes<HTMLDivElement> & {
+        sideOffset?: number;
+        onOpenAutoFocus?: (event: Event) => void;
+    }) => <div {...props}>{children}</div>,
 }));
 
 const groups = ['Alpha', 'Beach Trip', 'Cooking', 'Dinner', 'Events', 'Family'].map(

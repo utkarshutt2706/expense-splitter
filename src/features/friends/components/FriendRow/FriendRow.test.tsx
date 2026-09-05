@@ -13,9 +13,15 @@ vi.mock('@features/friends/components/ContactAction', () => ({
 }));
 vi.mock('@shared/components', () => ({
     Avatar: ({ name }: { name: string }) => <span>Avatar:{name}</span>,
-    ResponsivePopoverContent: ({ children, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-        <div {...props}>{children}</div>
-    ),
+    ResponsivePopoverContent: ({
+        children,
+        sideOffset: _sideOffset,
+        collisionPadding: _collisionPadding,
+        ...props
+    }: React.HTMLAttributes<HTMLDivElement> & {
+        sideOffset?: number;
+        collisionPadding?: number;
+    }) => <div {...props}>{children}</div>,
 }));
 
 const friend = (overrides: Partial<Friend> = {}): Friend => ({
