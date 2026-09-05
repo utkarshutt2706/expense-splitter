@@ -4,6 +4,8 @@ import { useThemeTransitionStore } from './themeTransitionStore';
 
 describe('useThemeTransitionStore', () => {
     beforeEach(() => {
+        localStorage.clear();
+        sessionStorage.clear();
         useThemeTransitionStore.setState({ direction: null });
     });
 
@@ -11,10 +13,24 @@ describe('useThemeTransitionStore', () => {
         expect(useThemeTransitionStore.getState().direction).toBeNull();
     });
 
-    it('sets the direction when triggered', () => {
+    it.each(['dark', 'light'] as const)('sets the %s direction when triggered', (direction) => {
+        useThemeTransitionStore.getState().trigger(direction);
+
+        expect(useThemeTransitionStore.getState().direction).toBe(direction);
+    });
+
+    it('replaces an active transition when another direction is triggered', () => {
+        useThemeTransitionStore.getState().trigger('dark');
+        useThemeTransitionStore.getState().trigger('light');
+
+        expect(useThemeTransitionStore.getState().direction).toBe('light');
+    });
+
+    it('does not persist transient transition state', () => {
         useThemeTransitionStore.getState().trigger('dark');
 
-        expect(useThemeTransitionStore.getState().direction).toBe('dark');
+        expect(localStorage.length).toBe(0);
+        expect(sessionStorage.length).toBe(0);
     });
 
     it('clears the direction', () => {

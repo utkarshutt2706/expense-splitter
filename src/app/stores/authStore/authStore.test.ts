@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { User } from '@features/users/api/usersApi';
 import { useAuthStore } from './authStore';
@@ -10,6 +10,36 @@ describe('useAuthStore', () => {
     beforeEach(() => {
         localStorage.clear();
         useAuthStore.setState({ currentUserId: null, cachedUser: null, accessToken: null });
+    });
+
+    afterEach(() => {
+        vi.restoreAllMocks();
+        vi.unstubAllGlobals();
+    });
+
+    it('removes a legacy browser-readable authentication record on initialization', async () => {
+        localStorage.setItem('auth', 'legacy bearer token');
+        vi.resetModules();
+
+        await import('./authStore');
+
+        expect(localStorage.getItem('auth')).toBeNull();
+    });
+
+    it('initializes when legacy storage cleanup is blocked', async () => {
+        vi.spyOn(Storage.prototype, 'removeItem').mockImplementation(() => {
+            throw new Error('storage blocked');
+        });
+        vi.resetModules();
+
+        await expect(import('./authStore')).resolves.toHaveProperty('useAuthStore');
+    });
+
+    it('initializes when local storage is unavailable', async () => {
+        vi.stubGlobal('localStorage', undefined);
+        vi.resetModules();
+
+        await expect(import('./authStore')).resolves.toHaveProperty('useAuthStore');
     });
 
     it('defaults to no logged-in user, no cached user, and no access token', () => {
