@@ -53,9 +53,9 @@ export default defineConfig(({ command }) => ({
         globals: false,
         coverage: {
             provider: 'v8',
-            // json-summary and json are required by the PR coverage-report action,
-            // not just for local reading.
-            reporter: ['text', 'lcov', 'html', 'json-summary', 'json'],
+            // json-summary is required for the PR summary; json supplies its
+            // changed-file detail. LCOV is consumed by SonarCloud.
+            reporter: ['text', 'lcov', 'json-summary', 'json'],
             reportOnFailure: true,
             include: ['src/**/*.{ts,tsx}'],
             exclude: [
