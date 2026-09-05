@@ -1,5 +1,5 @@
-import { render, screen } from '@testing-library/react';
-import { Suspense } from 'react';
+import { act, render, screen } from '@testing-library/react';
+import { type ReactNode, Suspense } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
 import {
@@ -60,114 +60,56 @@ vi.mock('@features/expenses/pages/UpsertExpensePage', () => ({
     UpsertExpensePage: () => <p>Upsert expense page</p>,
 }));
 
+async function renderLazyPage(page: ReactNode, text: string) {
+    await act(async () => {
+        render(<Suspense fallback="loading">{page}</Suspense>);
+    });
+
+    expect(screen.getByText(text)).toBeInTheDocument();
+}
+
 describe('lazyPages', () => {
     it('resolves LoginPage to the real named export once loaded', async () => {
-        render(
-            <Suspense fallback="loading">
-                <LoginPage />
-            </Suspense>,
-        );
-
-        expect(await screen.findByText('Login page')).toBeInTheDocument();
+        await renderLazyPage(<LoginPage />, 'Login page');
     });
 
     it('resolves RegisterPage to the real named export once loaded', async () => {
-        render(
-            <Suspense fallback="loading">
-                <RegisterPage />
-            </Suspense>,
-        );
-
-        expect(await screen.findByText('Register page')).toBeInTheDocument();
+        await renderLazyPage(<RegisterPage />, 'Register page');
     });
 
     it('resolves DashboardPage to the real named export once loaded', async () => {
-        render(
-            <Suspense fallback="loading">
-                <DashboardPage />
-            </Suspense>,
-        );
-
-        expect(await screen.findByText('Dashboard page')).toBeInTheDocument();
+        await renderLazyPage(<DashboardPage />, 'Dashboard page');
     });
 
     it('resolves AnalyticsPage to the real named export once loaded', async () => {
-        render(
-            <Suspense fallback="loading">
-                <AnalyticsPage />
-            </Suspense>,
-        );
-
-        expect(await screen.findByText('Analytics page')).toBeInTheDocument();
+        await renderLazyPage(<AnalyticsPage />, 'Analytics page');
     });
 
     it('resolves FriendsPage to the real named export once loaded', async () => {
-        render(
-            <Suspense fallback="loading">
-                <FriendsPage />
-            </Suspense>,
-        );
-
-        expect(await screen.findByText('Friends page')).toBeInTheDocument();
+        await renderLazyPage(<FriendsPage />, 'Friends page');
     });
 
     it('resolves GroupsPage to the real named export once loaded', async () => {
-        render(
-            <Suspense fallback="loading">
-                <GroupsPage />
-            </Suspense>,
-        );
-
-        expect(await screen.findByText('Groups page')).toBeInTheDocument();
+        await renderLazyPage(<GroupsPage />, 'Groups page');
     });
 
     it('resolves GroupDetailPage to the real named export once loaded', async () => {
-        render(
-            <Suspense fallback="loading">
-                <GroupDetailPage />
-            </Suspense>,
-        );
-
-        expect(await screen.findByText('Group detail page')).toBeInTheDocument();
+        await renderLazyPage(<GroupDetailPage />, 'Group detail page');
     });
 
     it('resolves GroupSettingsPage to the real named export once loaded', async () => {
-        render(
-            <Suspense fallback="loading">
-                <GroupSettingsPage />
-            </Suspense>,
-        );
-
-        expect(await screen.findByText('Group settings page')).toBeInTheDocument();
+        await renderLazyPage(<GroupSettingsPage />, 'Group settings page');
     });
 
     it('resolves GroupBalancePage to the real named export once loaded', async () => {
-        render(
-            <Suspense fallback="loading">
-                <GroupBalancePage />
-            </Suspense>,
-        );
-
-        expect(await screen.findByText('Group balance page')).toBeInTheDocument();
+        await renderLazyPage(<GroupBalancePage />, 'Group balance page');
     });
 
     it('resolves ExpenseDetailPage to the real named export once loaded', async () => {
-        render(
-            <Suspense fallback="loading">
-                <ExpenseDetailPage />
-            </Suspense>,
-        );
-
-        expect(await screen.findByText('Expense detail page')).toBeInTheDocument();
+        await renderLazyPage(<ExpenseDetailPage />, 'Expense detail page');
     });
 
     it('resolves UpsertExpensePage to the real named export once loaded', async () => {
-        render(
-            <Suspense fallback="loading">
-                <UpsertExpensePage />
-            </Suspense>,
-        );
-
-        expect(await screen.findByText('Upsert expense page')).toBeInTheDocument();
+        await renderLazyPage(<UpsertExpensePage />, 'Upsert expense page');
     });
 });

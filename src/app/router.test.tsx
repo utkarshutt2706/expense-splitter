@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -48,7 +48,7 @@ describe('router', () => {
         useAuthStore.setState({ currentUserId: null });
     });
 
-    function renderRouterWithClient(routerInstance = router) {
+    async function renderRouterWithClient(routerInstance = router) {
         const queryClient = new QueryClient({
             defaultOptions: {
                 queries: { retry: false },
@@ -56,15 +56,17 @@ describe('router', () => {
             },
         });
 
-        return render(
-            <QueryClientProvider client={queryClient}>
-                <RouterProvider router={routerInstance} />
-            </QueryClientProvider>,
-        );
+        await act(async () => {
+            render(
+                <QueryClientProvider client={queryClient}>
+                    <RouterProvider router={routerInstance} />
+                </QueryClientProvider>,
+            );
+        });
     }
 
     it('redirects to the login page at the root path when not logged in', async () => {
-        renderRouterWithClient();
+        await renderRouterWithClient();
 
         expect(await screen.findByLabelText(/email/i)).toBeInTheDocument();
     });
@@ -73,7 +75,7 @@ describe('router', () => {
         useAuthStore.setState({ currentUserId: 'current-user' });
         const memoryRouter = createMemoryRouter(routes, { initialEntries: ['/'] });
 
-        renderRouterWithClient(memoryRouter);
+        await renderRouterWithClient(memoryRouter);
 
         expect(await screen.findByText(/no groups yet/i)).toBeInTheDocument();
         expect(memoryRouter.state.location.pathname).toBe('/groups');
@@ -83,7 +85,7 @@ describe('router', () => {
         useAuthStore.setState({ currentUserId: 'current-user' });
         const memoryRouter = createMemoryRouter(routes, { initialEntries: ['/'] });
 
-        renderRouterWithClient(memoryRouter);
+        await renderRouterWithClient(memoryRouter);
         await screen.findByText(/no groups yet/i);
 
         expect(memoryRouter.state.historyAction).toBe('REPLACE');
@@ -93,7 +95,7 @@ describe('router', () => {
         useAuthStore.setState({ currentUserId: 'current-user' });
         const memoryRouter = createMemoryRouter(routes, { initialEntries: ['/dashboard'] });
 
-        renderRouterWithClient(memoryRouter);
+        await renderRouterWithClient(memoryRouter);
 
         expect(await screen.findByText(/no shared spending yet/i)).toBeInTheDocument();
     });
@@ -101,7 +103,7 @@ describe('router', () => {
     it('renders the not-found page for an unmatched route', async () => {
         const memoryRouter = createMemoryRouter(routes, { initialEntries: ['/does-not-exist'] });
 
-        renderRouterWithClient(memoryRouter);
+        await renderRouterWithClient(memoryRouter);
 
         expect(await screen.findByRole('heading', { name: /page not found/i })).toBeInTheDocument();
     });

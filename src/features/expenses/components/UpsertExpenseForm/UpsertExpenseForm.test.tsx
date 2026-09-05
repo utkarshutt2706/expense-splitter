@@ -14,6 +14,33 @@ vi.mock('@app/hooks', async (importOriginal) => ({
     }),
 }));
 
+vi.mock('@shared/components', async (importOriginal) => ({
+    ...(await importOriginal<typeof import('@shared/components')>()),
+    MemberPicker: ({
+        members,
+        value,
+        onChange,
+        ariaLabel,
+    }: {
+        members: User[];
+        value: string;
+        onChange: (id: string) => void;
+        ariaLabel: string;
+    }) => (
+        <select
+            aria-label={ariaLabel}
+            value={value}
+            onChange={(event) => onChange(event.target.value)}
+        >
+            {members.map((member) => (
+                <option key={member.id} value={member.id}>
+                    {member.id === CURRENT_USER_ID ? 'You' : member.name}
+                </option>
+            ))}
+        </select>
+    ),
+}));
+
 vi.mock('sonner', () => ({
     toast: {
         loading: vi.fn(() => 'toast-id'),
@@ -581,7 +608,8 @@ describe('UpsertExpenseForm', () => {
         it('defaults the payer to the current user, labeled "You"', () => {
             render(<UpsertExpenseForm members={members} onSubmit={vi.fn()} onCancel={vi.fn()} />);
 
-            expect(screen.getByRole('button', { name: 'Paid by' })).toHaveTextContent('You');
+            expect(screen.getByRole('combobox', { name: 'Paid by' })).toHaveValue(CURRENT_USER_ID);
+            expect(screen.getByRole('option', { name: 'You' })).toBeInTheDocument();
         });
 
         it('submits the selected payer when changed', async () => {
@@ -591,8 +619,7 @@ describe('UpsertExpenseForm', () => {
 
             await user.type(screen.getByLabelText(/description/i), 'Groceries');
             await user.type(screen.getByLabelText(/amount/i), '42.50');
-            await user.click(screen.getByRole('button', { name: 'Paid by' }));
-            await user.click(screen.getByRole('menuitemradio', { name: /priya sharma/i }));
+            await user.selectOptions(screen.getByRole('combobox', { name: 'Paid by' }), 'user-2');
             await user.click(screen.getByRole('button', { name: /add expense/i }));
 
             await waitFor(() =>
@@ -626,7 +653,7 @@ describe('UpsertExpenseForm', () => {
             expect(screen.getByLabelText(/description/i)).toHaveValue('Groceries');
             expect(screen.getByLabelText(/^amount$/i)).toHaveValue(42.5);
             expect(screen.getByLabelText(/paid on/i)).toHaveValue('2026-07-18');
-            expect(screen.getByRole('button', { name: 'Paid by' })).toHaveTextContent(/priya/i);
+            expect(screen.getByRole('combobox', { name: 'Paid by' })).toHaveValue('user-2');
             expect(screen.getByRole('checkbox', { name: 'You' })).not.toBeChecked();
             expect(screen.getByRole('checkbox', { name: /priya sharma/i })).toBeChecked();
             expect(screen.getByRole('button', { name: 'Exact' })).toHaveAttribute(

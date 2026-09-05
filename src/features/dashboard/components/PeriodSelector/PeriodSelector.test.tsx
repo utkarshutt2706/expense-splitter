@@ -3,9 +3,15 @@ import { describe, expect, it, vi } from 'vitest';
 import { PeriodSelector, type TrendEntry } from './PeriodSelector';
 
 vi.mock('@shared/components', () => ({
-    ResponsivePopoverContent: ({ children, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-        <div {...props}>{children}</div>
-    ),
+    ResponsivePopoverContent: ({
+        children,
+        sideOffset: _sideOffset,
+        onOpenAutoFocus: _onOpenAutoFocus,
+        ...props
+    }: React.HTMLAttributes<HTMLDivElement> & {
+        sideOffset?: number;
+        onOpenAutoFocus?: (event: Event) => void;
+    }) => <div {...props}>{children}</div>,
 }));
 
 const entries: TrendEntry[] = [
