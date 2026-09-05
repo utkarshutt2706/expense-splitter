@@ -9,7 +9,10 @@ import { useChangePassword } from '@features/auth/hooks/useChangePassword';
 const changePasswordSchema = z
     .object({
         currentPassword: z.string().min(1, 'Enter your current password'),
-        newPassword: z.string().min(8, 'Password must be at least 8 characters'),
+        newPassword: z
+            .string()
+            .min(8, 'Password must be at least 8 characters')
+            .max(200, 'Password must be at most 200 characters'),
         confirmNewPassword: z.string().min(1, 'Confirm your new password'),
     })
     .refine((values) => values.newPassword === values.confirmNewPassword, {

@@ -14,7 +14,7 @@ import { sanitizePhoneInput } from '@shared/utils';
 
 const registerSchema = z
     .object({
-        name: z.string().trim().min(1, 'Name is required'),
+        name: z.string().trim().min(1, 'Name is required').max(200, 'Name is too long'),
         email: z.email('Enter a valid email address'),
         phone: z
             .string()
@@ -22,7 +22,10 @@ const registerSchema = z
             .regex(/^[6-9]\d{9}$/, {
                 message: 'Enter a valid 10-digit number starting with 6, 7, 8, or 9',
             }),
-        password: z.string().min(8, 'Password must be at least 8 characters'),
+        password: z
+            .string()
+            .min(8, 'Password must be at least 8 characters')
+            .max(200, 'Password must be at most 200 characters'),
         confirmPassword: z.string().min(1, 'Confirm your password'),
     })
     .refine((values) => values.password === values.confirmPassword, {
