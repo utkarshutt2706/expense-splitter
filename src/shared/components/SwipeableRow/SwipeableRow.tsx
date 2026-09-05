@@ -27,6 +27,7 @@ export function SwipeableRow({ actions, children, className }: SwipeableRowProps
         foregroundStyle,
         handleMouseDown,
         handleRowClick,
+        handleTouchCancel,
         handleTouchEnd,
         handleTouchMove,
         handleTouchStart,
@@ -67,6 +68,7 @@ export function SwipeableRow({ actions, children, className }: SwipeableRowProps
                 onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
+                onTouchCancel={handleTouchCancel}
                 onMouseDown={handleMouseDown}
                 onClickCapture={handleRowClick}
                 style={foregroundStyle}

@@ -85,6 +85,23 @@ describe('SwipeableRow', () => {
         expect(foreground).toHaveStyle({ transform: 'translateX(0px)' });
     });
 
+    it('settles the row when the browser cancels an active touch gesture', () => {
+        const { container } = render(
+            <SwipeableRow actions={makeActions()}>
+                <p>Row content</p>
+            </SwipeableRow>,
+        );
+        const foreground = screen.getByText('Row content').parentElement!;
+
+        fireEvent.touchStart(foreground, touch(100));
+        fireEvent.touchMove(foreground, touch(20));
+        fireEvent.touchCancel(foreground);
+
+        expect(container.querySelector('[aria-hidden="false"]')).toBeInTheDocument();
+        expect(foreground).toHaveStyle({ transform: 'translateX(-128px)' });
+        expect(foreground).not.toHaveStyle({ userSelect: 'none' });
+    });
+
     it('calls the action handler and closes when an action button is clicked', async () => {
         const user = userEvent.setup();
         const onEdit = vi.fn();

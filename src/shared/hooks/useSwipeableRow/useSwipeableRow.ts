@@ -16,14 +16,25 @@ export function useSwipeableRow(actionCount: number) {
         null,
     );
     const justDragged = useRef(false);
+    const dragResetTimer = useRef<number | undefined>(undefined);
+    const removeMouseListeners = useRef<(() => void) | null>(null);
     const rootRef = useRef<HTMLDivElement>(null);
-    const maxOffset = -(actionCount * ACTION_WIDTH);
+    const maxOffset = -(Math.max(0, actionCount) * ACTION_WIDTH);
     const clamp = (value: number) => Math.min(0, Math.max(maxOffset, value));
+    const effectiveOffset = clamp(offset);
     const snap = (current: number) => (current < maxOffset / 2 ? maxOffset : 0);
     const close = () => setOffset(0);
 
+    useEffect(
+        () => () => {
+            removeMouseListeners.current?.();
+            if (dragResetTimer.current !== undefined) clearTimeout(dragResetTimer.current);
+        },
+        [],
+    );
+
     useEffect(() => {
-        if (offset === 0) return undefined;
+        if (effectiveOffset === 0) return undefined;
         const closeIfOutside = (event: MouseEvent | TouchEvent) => {
             if (rootRef.current && !rootRef.current.contains(event.target as Node)) close();
         };
@@ -33,19 +44,25 @@ export function useSwipeableRow(actionCount: number) {
             document.removeEventListener('mousedown', closeIfOutside);
             document.removeEventListener('touchstart', closeIfOutside);
         };
-    }, [offset]);
+    }, [effectiveOffset]);
 
     const markDragFinished = () => {
         justDragged.current = true;
-        setTimeout(() => {
+        if (dragResetTimer.current !== undefined) clearTimeout(dragResetTimer.current);
+        dragResetTimer.current = window.setTimeout(() => {
             justDragged.current = false;
+            dragResetTimer.current = undefined;
         }, 0);
     };
 
     const handleTouchStart = (event: ReactTouchEvent<HTMLDivElement>) => {
         const touch = event.touches[0];
         if (touch) {
-            touchDrag.current = { startX: touch.clientX, startOffset: offset, isDragging: false };
+            touchDrag.current = {
+                startX: touch.clientX,
+                startOffset: effectiveOffset,
+                isDragging: false,
+            };
         }
     };
 
@@ -71,11 +88,18 @@ export function useSwipeableRow(actionCount: number) {
         setOffset(snap);
     };
 
+    const handleTouchCancel = () => {
+        touchDrag.current = null;
+        setIsDragging(false);
+        setOffset(snap);
+    };
+
     const handleMouseDown = (event: ReactMouseEvent<HTMLDivElement>) => {
         if (event.button !== 0) return;
         event.preventDefault();
+        removeMouseListeners.current?.();
         const startX = event.clientX;
-        const startOffset = offset;
+        const startOffset = effectiveOffset;
         let dragging = false;
 
         const handleWindowMouseMove = (moveEvent: MouseEvent) => {
@@ -88,9 +112,14 @@ export function useSwipeableRow(actionCount: number) {
             setOffset(clamp(startOffset + deltaX));
         };
 
-        const handleWindowMouseUp = () => {
+        const cleanup = () => {
             window.removeEventListener('mousemove', handleWindowMouseMove);
             window.removeEventListener('mouseup', handleWindowMouseUp);
+            removeMouseListeners.current = null;
+        };
+
+        const handleWindowMouseUp = () => {
+            cleanup();
             if (!dragging) return;
             markDragFinished();
             setIsDragging(false);
@@ -99,6 +128,7 @@ export function useSwipeableRow(actionCount: number) {
 
         window.addEventListener('mousemove', handleWindowMouseMove);
         window.addEventListener('mouseup', handleWindowMouseUp);
+        removeMouseListeners.current = cleanup;
     };
 
     const handleRowClick = (event: ReactMouseEvent<HTMLDivElement>) => {
@@ -108,7 +138,7 @@ export function useSwipeableRow(actionCount: number) {
             event.stopPropagation();
             return;
         }
-        if (offset === 0) return;
+        if (effectiveOffset === 0) return;
         event.preventDefault();
         event.stopPropagation();
         close();
@@ -118,16 +148,17 @@ export function useSwipeableRow(actionCount: number) {
         actionWidth: ACTION_WIDTH,
         close,
         foregroundStyle: {
-            transform: `translateX(${offset}px)`,
+            transform: `translateX(${effectiveOffset}px)`,
             transition: isDragging ? 'none' : 'transform 200ms ease-out',
             userSelect: isDragging ? ('none' as const) : undefined,
         },
         handleMouseDown,
         handleRowClick,
+        handleTouchCancel,
         handleTouchEnd,
         handleTouchMove,
         handleTouchStart,
-        isOpen: offset !== 0,
+        isOpen: effectiveOffset !== 0,
         rootRef,
     };
 }
