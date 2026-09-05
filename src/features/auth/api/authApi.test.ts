@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { User } from '@features/users/api/usersApi';
 import { httpClient } from '@lib/api/httpClient';
@@ -14,6 +14,10 @@ vi.mock('@lib/api/httpClient', () => ({
 const user: User = { id: 'current-user', name: 'Utkarsh Srivastava', email: 'utkarsh@example.com' };
 
 describe('authApi', () => {
+    beforeEach(() => {
+        vi.resetAllMocks();
+    });
+
     it('login posts credentials to /auth/login and returns the session', async () => {
         vi.mocked(httpClient.post).mockResolvedValue({
             data: { user, accessToken: 'test-token' },
@@ -74,6 +78,12 @@ describe('authApi', () => {
         });
     });
 
+    it('preserves a null refresh response when no server session exists', async () => {
+        vi.mocked(httpClient.post).mockResolvedValue({ data: null });
+
+        await expect(refreshSession()).resolves.toBeNull();
+    });
+
     it('posts to /auth/logout to revoke the refresh session', async () => {
         vi.mocked(httpClient.post).mockResolvedValue({ data: undefined });
 
@@ -82,5 +92,40 @@ describe('authApi', () => {
         expect(httpClient.post).toHaveBeenCalledWith('/auth/logout', undefined, {
             headers: { 'X-Session-Request': 'ExpenseSplitter' },
         });
+    });
+
+    it.each([
+        [
+            'login',
+            () => login({ email: 'utkarsh@example.com', password: 'password123' }),
+            httpClient.post,
+        ],
+        [
+            'register',
+            () =>
+                register({
+                    name: 'Utkarsh',
+                    email: 'utkarsh@example.com',
+                    phone: '9876543210',
+                    password: 'password123',
+                }),
+            httpClient.post,
+        ],
+        ['refreshSession', () => refreshSession(), httpClient.post],
+        ['logout', () => logout(), httpClient.post],
+        [
+            'changePassword',
+            () =>
+                changePassword({
+                    currentPassword: 'old-password',
+                    newPassword: 'new-password',
+                }),
+            httpClient.patch,
+        ],
+    ] as const)('propagates %s transport failures unchanged', async (_name, request, method) => {
+        const failure = new Error('Network unavailable');
+        vi.mocked(method).mockRejectedValue(failure);
+
+        await expect(request()).rejects.toBe(failure);
     });
 });

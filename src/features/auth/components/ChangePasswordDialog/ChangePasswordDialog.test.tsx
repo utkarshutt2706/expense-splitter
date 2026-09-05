@@ -76,6 +76,58 @@ describe('ChangePasswordDialog', () => {
         expect(mutateAsync).not.toHaveBeenCalled();
     });
 
+    it('requires the current password and enforces the new-password minimum length', async () => {
+        const user = userEvent.setup();
+        render(<ChangePasswordDialog open onOpenChange={onOpenChange} />);
+
+        await fillAndSubmit(user, { current: '', next: 'short', confirm: 'short' });
+
+        expect(await screen.findByText('Enter your current password')).toBeInTheDocument();
+        expect(screen.getByText('Password must be at least 8 characters')).toBeInTheDocument();
+        expect(mutateAsync).not.toHaveBeenCalled();
+    });
+
+    it('requires confirmation of the new password', async () => {
+        const user = userEvent.setup();
+        render(<ChangePasswordDialog open onOpenChange={onOpenChange} />);
+
+        await fillAndSubmit(user, { confirm: '' });
+
+        expect(await screen.findByText('Confirm your new password')).toBeInTheDocument();
+        expect(mutateAsync).not.toHaveBeenCalled();
+    });
+
+    it('rejects a new password above the API maximum length', async () => {
+        const user = userEvent.setup();
+        const oversizedPassword = 'a'.repeat(201);
+        render(<ChangePasswordDialog open onOpenChange={onOpenChange} />);
+
+        await fillAndSubmit(user, { next: oversizedPassword, confirm: oversizedPassword });
+
+        expect(
+            await screen.findByText('Password must be at most 200 characters'),
+        ).toBeInTheDocument();
+        expect(mutateAsync).not.toHaveBeenCalled();
+    });
+
+    it('disables submission and shows progress while changing the password', async () => {
+        let resolveChange!: () => void;
+        mutateAsync.mockImplementation(
+            () =>
+                new Promise<void>((resolve) => {
+                    resolveChange = resolve;
+                }),
+        );
+        const user = userEvent.setup();
+        render(<ChangePasswordDialog open onOpenChange={onOpenChange} />);
+
+        await fillAndSubmit(user);
+
+        expect(await screen.findByRole('button', { name: 'Changing…' })).toBeDisabled();
+        resolveChange();
+        await screen.findByRole('button', { name: /change password/i });
+    });
+
     it('keeps the dialog open and shows the backend error when the current password is wrong', async () => {
         mutateAsync.mockRejectedValue(new Error('Current password is incorrect'));
         const user = userEvent.setup();

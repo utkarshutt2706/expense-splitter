@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -92,6 +92,33 @@ describe('RegisterPage', () => {
         await user.click(screen.getByRole('button', { name: /create account/i }));
 
         expect(await screen.findByText(/passwords do not match/i)).toBeInTheDocument();
+    });
+
+    it('enforces the API maximum lengths for names and passwords', async () => {
+        const mutateAsync = vi.fn();
+        vi.mocked(useRegister).mockReturnValue({
+            mutateAsync,
+        } as unknown as ReturnType<typeof useRegister>);
+        const user = userEvent.setup();
+        const oversizedValue = 'a'.repeat(201);
+        renderPage();
+
+        fireEvent.change(screen.getByLabelText(/name/i), {
+            target: { value: oversizedValue },
+        });
+        await user.type(screen.getByLabelText(/email/i), 'new.friend@example.com');
+        await user.type(screen.getByLabelText(/phone/i), '9876543210');
+        fireEvent.change(screen.getByLabelText('Password'), {
+            target: { value: oversizedValue },
+        });
+        fireEvent.change(screen.getByLabelText('Confirm password'), {
+            target: { value: oversizedValue },
+        });
+        await user.click(screen.getByRole('button', { name: /create account/i }));
+
+        expect(await screen.findByText('Name is too long')).toBeInTheDocument();
+        expect(screen.getByText('Password must be at most 200 characters')).toBeInTheDocument();
+        expect(mutateAsync).not.toHaveBeenCalled();
     });
 
     it('strips non-digit characters as they are typed into the phone field', async () => {
