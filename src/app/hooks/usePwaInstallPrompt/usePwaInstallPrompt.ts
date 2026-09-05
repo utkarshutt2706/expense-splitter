@@ -10,6 +10,22 @@ export type PwaInstallMethod = 'android' | 'ios';
 const DISMISSED_KEY = 'pwa-install-suggestion-dismissed';
 const AUTO_DISMISS_DELAY_MS = 10_000;
 
+function wasDismissed(): boolean {
+    try {
+        return sessionStorage.getItem(DISMISSED_KEY) === 'true';
+    } catch {
+        return false;
+    }
+}
+
+function rememberDismissal(): void {
+    try {
+        sessionStorage.setItem(DISMISSED_KEY, 'true');
+    } catch {
+        // In-memory state still hides the prompt when storage is unavailable.
+    }
+}
+
 function isRunningStandalone() {
     const iosNavigator = navigator as Navigator & { standalone?: boolean };
     return (
@@ -32,12 +48,10 @@ export function usePwaInstallPrompt() {
         isRunningStandalone() ? null : mobileInstallMethod(),
     );
     const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-    const [isDismissed, setIsDismissed] = useState(
-        () => sessionStorage.getItem(DISMISSED_KEY) === 'true',
-    );
+    const [isDismissed, setIsDismissed] = useState(wasDismissed);
 
     const dismiss = useCallback(() => {
-        sessionStorage.setItem(DISMISSED_KEY, 'true');
+        rememberDismissal();
         setIsDismissed(true);
     }, []);
 
@@ -68,8 +82,14 @@ export function usePwaInstallPrompt() {
 
     const install = async () => {
         if (!installPrompt) return;
-        await installPrompt.prompt();
-        const { outcome } = await installPrompt.userChoice;
+        let outcome: 'accepted' | 'dismissed';
+        try {
+            await installPrompt.prompt();
+            ({ outcome } = await installPrompt.userChoice);
+        } catch {
+            // Keep the captured prompt available so the user can try again.
+            return;
+        }
         setInstallPrompt(null);
         if (outcome === 'accepted') setMethod(null);
     };

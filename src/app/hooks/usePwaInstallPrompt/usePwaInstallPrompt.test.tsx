@@ -55,6 +55,20 @@ describe('usePwaInstallPrompt', () => {
         });
     });
 
+    it('recognizes the legacy iOS standalone flag', () => {
+        vi.stubGlobal('navigator', {
+            ...window.navigator,
+            userAgent: 'Mozilla/5.0 (iPhone)',
+            standalone: true,
+        });
+        vi.spyOn(window, 'matchMedia').mockReturnValue({ matches: false } as MediaQueryList);
+
+        const { result } = renderHook(() => usePwaInstallPrompt());
+
+        expect(result.current.method).toBeNull();
+        expect(result.current.isVisible).toBe(false);
+    });
+
     it('respects a dismissal stored for the browser session', () => {
         sessionStorage.setItem('pwa-install-suggestion-dismissed', 'true');
         mockDevice('Mozilla/5.0 (Linux; Android 15)');
@@ -62,6 +76,21 @@ describe('usePwaInstallPrompt', () => {
         const { result } = renderHook(() => usePwaInstallPrompt());
 
         expect(result.current.method).toBe('android');
+        expect(result.current.isVisible).toBe(false);
+    });
+
+    it('continues when dismissal storage is unavailable', () => {
+        vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+            throw new Error('storage blocked');
+        });
+        vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+            throw new Error('storage blocked');
+        });
+        mockDevice('Mozilla/5.0 (Linux; Android 15)');
+        const { result } = renderHook(() => usePwaInstallPrompt());
+
+        expect(result.current.isVisible).toBe(true);
+        act(() => result.current.dismiss());
         expect(result.current.isVisible).toBe(false);
     });
 
@@ -83,6 +112,17 @@ describe('usePwaInstallPrompt', () => {
         act(() => vi.advanceTimersByTime(1));
         expect(second.result.current.isVisible).toBe(false);
         expect(sessionStorage.getItem('pwa-install-suggestion-dismissed')).toBe('true');
+    });
+
+    it('cancels automatic dismissal when the hook unmounts', () => {
+        vi.useFakeTimers();
+        mockDevice('Mozilla/5.0 (Linux; Android 15)');
+        const { unmount } = renderHook(() => usePwaInstallPrompt());
+
+        unmount();
+        act(() => vi.advanceTimersByTime(10_000));
+
+        expect(sessionStorage.getItem('pwa-install-suggestion-dismissed')).toBeNull();
     });
 
     it('captures the native prompt and clears the suggestion after accepted installation', async () => {
@@ -121,6 +161,33 @@ describe('usePwaInstallPrompt', () => {
             isVisible: true,
             isNativeInstallAvailable: false,
         });
+    });
+
+    it('retains the native prompt when opening it fails so installation can be retried', async () => {
+        mockDevice('Mozilla/5.0 (Linux; Android 15)');
+        const { event, prompt } = installEvent('accepted');
+        prompt.mockRejectedValueOnce(new Error('prompt unavailable'));
+        const { result } = renderHook(() => usePwaInstallPrompt());
+
+        act(() => window.dispatchEvent(event));
+        await act(() => result.current.install());
+
+        expect(result.current.isNativeInstallAvailable).toBe(true);
+        expect(result.current.method).toBe('android');
+    });
+
+    it('removes browser event listeners when unmounted', () => {
+        mockDevice('Mozilla/5.0 (Linux; Android 15)');
+        const removeEventListener = vi.spyOn(window, 'removeEventListener');
+        const { unmount } = renderHook(() => usePwaInstallPrompt());
+
+        unmount();
+
+        expect(removeEventListener).toHaveBeenCalledWith(
+            'beforeinstallprompt',
+            expect.any(Function),
+        );
+        expect(removeEventListener).toHaveBeenCalledWith('appinstalled', expect.any(Function));
     });
 
     it('clears state when the browser reports a completed installation', async () => {
