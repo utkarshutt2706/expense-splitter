@@ -23,7 +23,7 @@ const NON_REFRESHABLE_AUTH_ENDPOINTS = new Set([
 
 function isNonRefreshableAuthEndpoint(url: string | undefined): boolean {
     if (!url) return false;
-    const pathname = new URL(url, 'http://expense-splitter.local').pathname.replace(/\/$/, '');
+    const pathname = new URL(url, 'https://expense-splitter.local').pathname.replace(/\/$/, '');
     return NON_REFRESHABLE_AUTH_ENDPOINTS.has(pathname);
 }
 
