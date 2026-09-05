@@ -19,7 +19,9 @@ export function ThemeTransitionOverlay() {
     return (
         <div
             aria-hidden="true"
-            onAnimationEnd={clear}
+            onAnimationEnd={(event) => {
+                if (event.target === event.currentTarget) clear();
+            }}
             className="animate-theme-backdrop pointer-events-none fixed inset-0 z-9999 flex items-center justify-center"
         >
             {isDark ? (

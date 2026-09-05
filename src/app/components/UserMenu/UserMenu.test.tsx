@@ -7,10 +7,17 @@ import { useAuthStore, useThemeStore, useThemeTransitionStore } from '@app/store
 import { logout as revokeSession } from '@features/auth/api/authApi';
 import { UserMenu } from './UserMenu';
 
+const { currentUser } = vi.hoisted(() => ({
+    currentUser: {
+        value: { id: 'current-user', name: 'Alex Morgan', email: 'alex@example.com' } as
+            { id: string; name: string; email: string } | undefined,
+    },
+}));
+
 vi.mock('@app/hooks', async (importOriginal) => ({
     ...(await importOriginal<typeof import('@app/hooks')>()),
     useCurrentUser: () => ({
-        data: { id: 'current-user', name: 'Alex Morgan', email: 'alex@example.com' },
+        data: currentUser.value,
     }),
 }));
 
@@ -41,6 +48,11 @@ describe('UserMenu', () => {
         useAuthStore.setState({ currentUserId: 'current-user' });
         useThemeStore.setState({ theme: 'light' });
         useThemeTransitionStore.setState({ direction: null });
+        currentUser.value = {
+            id: 'current-user',
+            name: 'Alex Morgan',
+            email: 'alex@example.com',
+        };
     });
 
     it('shows the current user name and email inside the popover', async () => {
@@ -52,6 +64,18 @@ describe('UserMenu', () => {
         const content = within(screen.getByTestId('user-menu-content'));
         expect(content.getByText('Alex Morgan')).toBeInTheDocument();
         expect(content.getByText('alex@example.com')).toBeInTheDocument();
+    });
+
+    it('renders safely while current-user data is unavailable', async () => {
+        currentUser.value = undefined;
+        const user = userEvent.setup();
+        renderMenu();
+
+        const trigger = screen.getByRole('button', { name: /open user menu/i });
+        expect(trigger).toHaveTextContent('');
+        await user.click(trigger);
+
+        expect(screen.getByTestId('user-menu-content')).toBeInTheDocument();
     });
 
     it('opens the menu with all options in order when the avatar is clicked', async () => {
@@ -121,6 +145,18 @@ describe('UserMenu', () => {
         expect(useAuthStore.getState().currentUserId).toBeNull();
         expect(revokeSession).toHaveBeenCalledOnce();
         expect(await screen.findByText(/login page/i)).toBeInTheDocument();
+    });
+
+    it('still clears the session and navigates when server logout fails', async () => {
+        vi.mocked(revokeSession).mockRejectedValueOnce(new Error('server unavailable'));
+        const user = userEvent.setup();
+        renderMenu();
+
+        await user.click(screen.getByRole('button', { name: /open user menu/i }));
+        await user.click(screen.getByRole('button', { name: /logout/i }));
+
+        expect(await screen.findByText(/login page/i)).toBeInTheDocument();
+        expect(useAuthStore.getState().currentUserId).toBeNull();
     });
 
     it('hides the trigger name and email when collapsed', () => {

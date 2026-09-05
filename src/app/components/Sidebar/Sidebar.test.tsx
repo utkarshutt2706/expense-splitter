@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
 
+import { navItems } from '@app/configs/navigation';
 import { Sidebar } from './Sidebar';
 
 vi.mock('@app/hooks', async (importOriginal) => ({
@@ -48,6 +49,10 @@ describe('Sidebar', () => {
             '/activity',
         );
         expect(screen.queryByRole('link', { name: /settings/i })).not.toBeInTheDocument();
+        const links = screen.getByRole('navigation', { name: 'Main' }).querySelectorAll('a');
+        expect([...links].map((link) => link.textContent?.trim())).toEqual(
+            navItems.map(({ label }) => label),
+        );
     });
 
     it('marks the matching route as active', () => {

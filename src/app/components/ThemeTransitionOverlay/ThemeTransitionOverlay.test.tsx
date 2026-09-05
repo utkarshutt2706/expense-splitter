@@ -43,6 +43,15 @@ describe('ThemeTransitionOverlay', () => {
         expect(useThemeTransitionStore.getState().direction).toBeNull();
     });
 
+    it('does not clear when the child icon animation ends', () => {
+        useThemeTransitionStore.setState({ direction: 'dark' });
+        const { container } = render(<ThemeTransitionOverlay />);
+
+        fireEvent.animationEnd(container.querySelector('.lucide-moon')!);
+
+        expect(useThemeTransitionStore.getState().direction).toBe('dark');
+    });
+
     it('is not interactive, sitting purely as a decorative overlay', () => {
         useThemeTransitionStore.setState({ direction: 'dark' });
 

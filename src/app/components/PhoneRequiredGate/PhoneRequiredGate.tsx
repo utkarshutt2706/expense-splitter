@@ -32,7 +32,7 @@ export function PhoneRequiredGate({ currentUserId }: Readonly<{ currentUserId: s
         const result = phoneGateSchema.safeParse(sanitized);
 
         if (!result.success) {
-            setFormError(result.error.issues[0]?.message ?? 'Enter a valid phone number');
+            setFormError(result.error.issues[0]!.message);
             return;
         }
 

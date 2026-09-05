@@ -1,14 +1,9 @@
 import { render, screen } from '@testing-library/react';
-import { MemoryRouter, useParams } from 'react-router';
+import { MemoryRouter, Route, Routes } from 'react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useGroup } from '@features/groups';
 import { Header } from './Header';
-
-vi.mock('react-router', async (importOriginal) => ({
-    ...(await importOriginal<typeof import('react-router')>()),
-    useParams: vi.fn(),
-}));
 
 vi.mock('@features/groups', () => ({
     useGroup: vi.fn(),
@@ -28,7 +23,10 @@ vi.mock('@app/hooks', async (importOriginal) => ({
 function renderHeader(initialPath = '/friends') {
     return render(
         <MemoryRouter initialEntries={[initialPath]}>
-            <Header />
+            <Routes>
+                <Route path="/groups/:groupId/*" element={<Header />} />
+                <Route path="*" element={<Header />} />
+            </Routes>
         </MemoryRouter>,
     );
 }
@@ -36,7 +34,6 @@ function renderHeader(initialPath = '/friends') {
 describe('Header', () => {
     beforeEach(() => {
         localStorage.clear();
-        vi.mocked(useParams).mockReturnValue({});
         vi.mocked(useGroup).mockReturnValue({
             data: undefined,
         } as unknown as ReturnType<typeof useGroup>);
@@ -49,7 +46,6 @@ describe('Header', () => {
     });
 
     it("shows the group's name on a group detail route", () => {
-        vi.mocked(useParams).mockReturnValue({ groupId: 'group-1' });
         vi.mocked(useGroup).mockReturnValue({
             data: { id: 'group-1', name: 'Weekend Trip', memberIds: [], createdAt: '' },
         } as unknown as ReturnType<typeof useGroup>);
@@ -60,11 +56,22 @@ describe('Header', () => {
     });
 
     it('shows a fallback title while the group name is still loading', () => {
-        vi.mocked(useParams).mockReturnValue({ groupId: 'group-1' });
-
         renderHeader('/groups/group-1');
 
         expect(screen.getByRole('heading', { name: 'Group Detail' })).toBeInTheDocument();
+    });
+
+    it('loads a group using the id supplied by the real route', () => {
+        renderHeader('/groups/group-1');
+
+        expect(useGroup).toHaveBeenCalledWith('group-1');
+    });
+
+    it('uses an empty group id and title for an unknown non-group route', () => {
+        renderHeader('/unknown');
+
+        expect(useGroup).toHaveBeenCalledWith('');
+        expect(screen.getByRole('heading')).toHaveTextContent('');
     });
 
     it('carries a brand link back to the root path, only where the sidebar is absent', () => {
