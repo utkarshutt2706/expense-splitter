@@ -65,7 +65,7 @@ export function RecordPaymentDialog({
         <FormDialog
             open={open}
             onOpenChange={(nextOpen) => {
-                if (!nextOpen) setThirdPartyConfirmation(undefined);
+                setThirdPartyConfirmation(undefined);
                 onOpenChange(nextOpen);
             }}
             title={isEditing ? 'Edit payment' : 'Record a payment'}

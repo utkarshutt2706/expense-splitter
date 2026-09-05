@@ -5,8 +5,12 @@ import type { User } from '@features/users/api/usersApi';
 
 import { type RecordPaymentFormInitialValues, useRecordPaymentForm } from './useRecordPaymentForm';
 
+const currentUserState = vi.hoisted(() => ({
+    data: { id: 'current', name: 'Alex Smith' } as { id: string; name: string } | undefined,
+}));
+
 vi.mock('@app/hooks', () => ({
-    useCurrentUser: () => ({ data: { id: 'current', name: 'Alex Smith' } }),
+    useCurrentUser: () => ({ data: currentUserState.data }),
 }));
 
 const members: User[] = [
@@ -47,6 +51,7 @@ async function submit(result: ReturnType<typeof renderForm>['result']) {
 
 describe('useRecordPaymentForm', () => {
     beforeEach(() => {
+        currentUserState.data = { id: 'current', name: 'Alex Smith' };
         vi.useFakeTimers();
         vi.setSystemTime(new Date(2026, 7, 17, 12));
     });
@@ -67,6 +72,14 @@ describe('useRecordPaymentForm', () => {
         expect(result.current.amountCents).toBe(0);
         expect(result.current.outstandingCents).toBeUndefined();
         expect(result.current.amountDescriptionId).toBeUndefined();
+    });
+
+    it('leaves the payer empty when there are no initial values or current user', () => {
+        currentUserState.data = undefined;
+
+        const { result } = renderForm();
+
+        expect(result.current.getValues('fromUserId')).toBe('');
     });
 
     it('normalizes initial values and calculates cent values', () => {
