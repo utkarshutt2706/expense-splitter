@@ -15,7 +15,7 @@ describe('NotFoundPage', () => {
         expect(screen.getByRole('heading', { name: /page not found/i })).toBeInTheDocument();
     });
 
-    it('links back to the dashboard', () => {
+    it('explains the missing page and links back to groups', () => {
         render(
             <MemoryRouter>
                 <NotFoundPage />
@@ -26,5 +26,6 @@ describe('NotFoundPage', () => {
             'href',
             '/groups',
         );
+        expect(screen.getByText(/doesn't exist or may have moved/i)).toBeInTheDocument();
     });
 });
