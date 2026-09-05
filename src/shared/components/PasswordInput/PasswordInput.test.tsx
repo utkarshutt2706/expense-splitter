@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { createRef } from 'react';
 import { describe, expect, it } from 'vitest';
 
 import { PasswordInput } from './PasswordInput';
@@ -29,5 +30,24 @@ describe('PasswordInput', () => {
 
         const input = document.getElementById('login-password');
         expect(input).toHaveAttribute('autoComplete', 'current-password');
+    });
+
+    it('forwards the input ref and custom class', () => {
+        const ref = createRef<HTMLInputElement>();
+        render(<PasswordInput ref={ref} aria-label="Password" className="custom-input" />);
+
+        expect(ref.current).toBe(screen.getByLabelText('Password'));
+        expect(ref.current).toHaveClass('custom-input');
+    });
+
+    it('disables visibility changes when the password input is disabled', async () => {
+        const user = userEvent.setup();
+        render(<PasswordInput aria-label="Password" disabled />);
+
+        const toggle = screen.getByRole('button', { name: /show password/i });
+        expect(toggle).toBeDisabled();
+        await user.click(toggle);
+
+        expect(screen.getByLabelText('Password')).toHaveAttribute('type', 'password');
     });
 });

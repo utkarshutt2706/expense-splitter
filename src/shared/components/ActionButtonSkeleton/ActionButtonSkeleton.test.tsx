@@ -8,6 +8,6 @@ describe('ActionButtonSkeleton', () => {
         const { container } = render(<ActionButtonSkeleton className="w-32" />);
 
         expect(container.firstChild).toHaveAttribute('aria-hidden', 'true');
-        expect(container.firstChild).toHaveClass('w-32');
+        expect(container.firstChild).toHaveClass('h-9', 'shrink-0', 'w-32');
     });
 });

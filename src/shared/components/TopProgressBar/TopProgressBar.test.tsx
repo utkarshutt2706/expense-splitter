@@ -5,8 +5,13 @@ import { TopProgressBar } from './TopProgressBar';
 
 describe('TopProgressBar', () => {
     it('renders an accessible progress indicator', () => {
-        render(<TopProgressBar />);
+        const { container } = render(<TopProgressBar />);
 
-        expect(screen.getByRole('progressbar', { name: 'Loading' })).toBeInTheDocument();
+        const progress = screen.getByRole('progressbar', { name: 'Loading' });
+        expect(progress).not.toHaveAttribute('value');
+        expect(progress).toHaveClass('sr-only');
+        expect(container.querySelector('[aria-hidden="true"]')).toHaveClass(
+            'animate-progress-fill',
+        );
     });
 });

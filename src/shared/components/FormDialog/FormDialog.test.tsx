@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -40,6 +40,68 @@ describe('FormDialog', () => {
         );
 
         await user.click(screen.getByRole('button', { name: /close/i }));
+
+        expect(onOpenChange).toHaveBeenCalledWith(false);
+    });
+
+    it('shows or visually hides the accessible description as requested', () => {
+        const { rerender } = render(
+            <FormDialog
+                open
+                onOpenChange={vi.fn()}
+                title="Add a friend"
+                description="Friend details"
+            >
+                content
+            </FormDialog>,
+        );
+        expect(screen.getByText('Friend details')).toHaveClass('sr-only');
+
+        rerender(
+            <FormDialog
+                open
+                showDescription
+                onOpenChange={vi.fn()}
+                title="Add a friend"
+                description="Friend details"
+            >
+                content
+            </FormDialog>,
+        );
+        expect(screen.getByText('Friend details')).toHaveClass('text-muted-foreground');
+        expect(screen.getByRole('dialog')).toHaveAccessibleDescription('Friend details');
+    });
+
+    it('disables closing and prevents Escape while pending', () => {
+        const onOpenChange = vi.fn();
+        render(
+            <FormDialog
+                open
+                isPending
+                onOpenChange={onOpenChange}
+                title="Add a friend"
+                description="Friend details"
+            >
+                content
+            </FormDialog>,
+        );
+
+        expect(screen.getByRole('button', { name: /close/i })).toBeDisabled();
+        fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' });
+        expect(onOpenChange).not.toHaveBeenCalled();
+        expect(screen.getByRole('dialog')).toBeInTheDocument();
+    });
+
+    it('allows Escape to request closure when idle', async () => {
+        const onOpenChange = vi.fn();
+        const user = userEvent.setup();
+        render(
+            <FormDialog open onOpenChange={onOpenChange} title="Add a friend" description="">
+                content
+            </FormDialog>,
+        );
+
+        await user.keyboard('{Escape}');
 
         expect(onOpenChange).toHaveBeenCalledWith(false);
     });

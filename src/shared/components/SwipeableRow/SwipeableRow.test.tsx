@@ -35,6 +35,50 @@ describe('SwipeableRow', () => {
         );
 
         expect(container.querySelector('[aria-hidden="true"]')).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Edit', hidden: true })).toHaveAttribute(
+            'tabindex',
+            '-1',
+        );
+    });
+
+    it('applies action widths, tones, title fallbacks, and a custom row class', () => {
+        const actions = makeActions();
+        actions[1] = { ...actions[1]!, title: 'Permanently delete' };
+        const { container } = render(
+            <SwipeableRow actions={actions} className="rounded-none">
+                <p>Row content</p>
+            </SwipeableRow>,
+        );
+
+        expect(container.firstChild).toHaveClass('rounded-none');
+        expect(screen.getByRole('button', { name: 'Edit', hidden: true })).toHaveAttribute(
+            'title',
+            'Edit',
+        );
+        expect(screen.getByRole('button', { name: 'Edit', hidden: true })).toHaveStyle({
+            width: '64px',
+        });
+        expect(screen.getByRole('button', { name: 'Edit', hidden: true })).toHaveClass(
+            'bg-brand-600',
+        );
+        expect(screen.getByRole('button', { name: 'Delete', hidden: true })).toHaveAttribute(
+            'title',
+            'Permanently delete',
+        );
+        expect(screen.getByRole('button', { name: 'Delete', hidden: true })).toHaveClass(
+            'bg-red-600',
+        );
+    });
+
+    it('supports a row with no actions', () => {
+        render(
+            <SwipeableRow actions={[]}>
+                <p>Row content</p>
+            </SwipeableRow>,
+        );
+
+        expect(screen.getByText('Row content')).toBeInTheDocument();
+        expect(screen.queryAllByRole('button', { hidden: true })).toHaveLength(0);
     });
 
     it('does not reveal actions for a small movement below the drag threshold', () => {

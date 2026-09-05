@@ -11,8 +11,11 @@ describe('FetchingIndicator', () => {
     });
 
     it('accepts a custom label', () => {
-        render(<FetchingIndicator label="Updating balances…" />);
+        render(<FetchingIndicator label="Updating balances…" className="size-6" />);
 
-        expect(screen.getByRole('status', { name: 'Updating balances…' })).toBeInTheDocument();
+        expect(screen.getByRole('status', { name: 'Updating balances…' })).toHaveClass(
+            'size-6',
+            'animate-spin',
+        );
     });
 });
