@@ -27,11 +27,6 @@ export function EditGroupMembersForm({
     const { search, setSearch, memberIds, toggleMember, addFoundUser, visibleUsers } =
         useMemberSearchSelection(users, initialMemberIds);
 
-    const handleToggle = (id: string) => {
-        if (id === currentUser?.id) return;
-        toggleMember(id);
-    };
-
     const submit = (event: SubmitEvent<HTMLFormElement>) => {
         event.preventDefault();
         onSubmit({ memberIds });
@@ -44,7 +39,7 @@ export function EditGroupMembersForm({
                 onSearchChange={setSearch}
                 visibleUsers={visibleUsers}
                 selectedIds={memberIds}
-                onToggle={handleToggle}
+                onToggle={toggleMember}
                 onFound={addFoundUser}
                 emptyMessage="No members to show."
                 currentUserId={currentUser?.id ?? ''}

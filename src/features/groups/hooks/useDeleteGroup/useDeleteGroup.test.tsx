@@ -30,4 +30,21 @@ describe('useDeleteGroup', () => {
         expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['groups'] });
         expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['users', 'friends'] });
     });
+
+    it('exposes deletion failures without invalidating cached data', async () => {
+        const failure = new Error('Delete failed');
+        vi.mocked(groupsApi.remove).mockRejectedValue(failure);
+        const queryClient = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
+        const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
+        const wrapper = ({ children }: { children: ReactNode }) => (
+            <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+        );
+        const { result } = renderHook(() => useDeleteGroup(), { wrapper });
+
+        result.current.mutate('group-1');
+
+        await waitFor(() => expect(result.current.isError).toBe(true));
+        expect(result.current.error).toBe(failure);
+        expect(invalidateSpy).not.toHaveBeenCalled();
+    });
 });

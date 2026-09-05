@@ -7,11 +7,14 @@ import { CURRENT_USER_ID } from '@test/fixtures/ids';
 import { useUserLookup } from '@features/users/hooks';
 import { EditGroupMembersForm } from './EditGroupMembersForm';
 
+const currentUserState = vi.hoisted(() => ({
+    data: { id: 'current-user', name: 'Alex Morgan', email: 'alex@example.com' } as
+        User | undefined,
+}));
+
 vi.mock('@app/hooks', async (importOriginal) => ({
     ...(await importOriginal<typeof import('@app/hooks')>()),
-    useCurrentUser: () => ({
-        data: { id: CURRENT_USER_ID, name: 'Alex Morgan', email: 'alex@example.com' },
-    }),
+    useCurrentUser: () => ({ data: currentUserState.data }),
 }));
 
 vi.mock('@features/users/hooks', () => ({
@@ -36,6 +39,11 @@ const users: User[] = [
 
 describe('EditGroupMembersForm', () => {
     beforeEach(() => {
+        currentUserState.data = {
+            id: CURRENT_USER_ID,
+            name: 'Alex Morgan',
+            email: 'alex@example.com',
+        };
         vi.clearAllMocks();
         mockLookup();
     });
@@ -144,5 +152,26 @@ describe('EditGroupMembersForm', () => {
         await user.click(screen.getByRole('button', { name: /cancel/i }));
 
         expect(onCancel).toHaveBeenCalled();
+    });
+
+    it('keeps members editable when current-user data is unavailable', async () => {
+        currentUserState.data = undefined;
+        const onSubmit = vi.fn();
+        const user = userEvent.setup();
+        render(
+            <EditGroupMembersForm
+                users={users}
+                initialMemberIds={[CURRENT_USER_ID]}
+                onSubmit={onSubmit}
+                onCancel={vi.fn()}
+            />,
+        );
+
+        const currentMember = screen.getByRole('checkbox', { name: /alex morgan/i });
+        expect(currentMember).not.toBeDisabled();
+        await user.click(currentMember);
+        await user.click(screen.getByRole('button', { name: /save changes/i }));
+
+        expect(onSubmit).toHaveBeenCalledWith({ memberIds: [] });
     });
 });
