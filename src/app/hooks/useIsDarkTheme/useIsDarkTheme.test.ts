@@ -1,4 +1,4 @@
-import { renderHook } from '@testing-library/react';
+import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useThemeStore } from '@app/stores';
@@ -58,5 +58,34 @@ describe('useIsDarkTheme', () => {
         const { result } = renderHook(() => useIsDarkTheme());
 
         expect(result.current).toBe(false);
+    });
+
+    it('reacts to OS preference changes and unsubscribes on unmount', () => {
+        let matches = false;
+        let onChange: (() => void) | undefined;
+        const removeEventListener = vi.fn();
+        vi.spyOn(window, 'matchMedia').mockImplementation(
+            () =>
+                ({
+                    get matches() {
+                        return matches;
+                    },
+                    addEventListener: (_event: string, listener: () => void) => {
+                        onChange = listener;
+                    },
+                    removeEventListener,
+                }) as unknown as MediaQueryList,
+        );
+        const { result, unmount } = renderHook(() => useIsDarkTheme());
+        expect(result.current).toBe(false);
+
+        act(() => {
+            matches = true;
+            onChange?.();
+        });
+        expect(result.current).toBe(true);
+
+        unmount();
+        expect(removeEventListener).toHaveBeenCalledWith('change', onChange);
     });
 });

@@ -52,8 +52,39 @@ describe('useServerReadiness', () => {
         expect(result.current.state).toBe('waking');
     });
 
+    it('keeps the waking state when the slow timer fires during a retry', async () => {
+        vi.stubGlobal(
+            'fetch',
+            vi.fn(() => new Promise(() => undefined)),
+        );
+        const { result } = renderHook(() => useServerReadiness());
+
+        act(() => result.current.retry());
+        expect(result.current.state).toBe('waking');
+        act(() => vi.advanceTimersByTime(1_500));
+
+        expect(result.current.state).toBe('waking');
+    });
+
+    it('throws a clear error when the API base URL is missing', () => {
+        vi.stubEnv('VITE_API_BASE_URL', '');
+
+        expect(() => renderHook(() => useServerReadiness())).toThrow(
+            'VITE_API_BASE_URL is not configured',
+        );
+    });
+
     it('becomes unavailable for an unsuccessful response', async () => {
         vi.stubGlobal('fetch', vi.fn().mockResolvedValue(response(false, 503)));
+        const { result } = renderHook(() => useServerReadiness());
+
+        await flushPromises();
+
+        expect(result.current.state).toBe('unavailable');
+    });
+
+    it('becomes unavailable when the health request rejects', async () => {
+        vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('network unavailable')));
         const { result } = renderHook(() => useServerReadiness());
 
         await flushPromises();
@@ -91,6 +122,23 @@ describe('useServerReadiness', () => {
         act(() => result.current.retry());
         expect(result.current.state).toBe('waking');
         await flushPromises();
+
+        expect(fetchMock).toHaveBeenCalledTimes(2);
+        expect(result.current.state).toBe('ready');
+    });
+
+    it('cancels a scheduled automatic retry after a successful manual retry', async () => {
+        const fetchMock = vi
+            .fn()
+            .mockResolvedValueOnce(response(false))
+            .mockResolvedValueOnce(response(true));
+        vi.stubGlobal('fetch', fetchMock);
+        const { result } = renderHook(() => useServerReadiness());
+        await flushPromises();
+
+        act(() => result.current.retry());
+        await flushPromises();
+        await act(() => vi.advanceTimersByTimeAsync(10_000));
 
         expect(fetchMock).toHaveBeenCalledTimes(2);
         expect(result.current.state).toBe('ready');

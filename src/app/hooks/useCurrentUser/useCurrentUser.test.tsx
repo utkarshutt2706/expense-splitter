@@ -1,4 +1,4 @@
-import { renderHook } from '@testing-library/react';
+import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { useAuthStore } from '@app/stores';
@@ -28,5 +28,18 @@ describe('useCurrentUser', () => {
         const { result } = renderHook(() => useCurrentUser());
 
         expect(result.current.data).toEqual(cachedUser);
+    });
+
+    it('reacts when the cached user changes', () => {
+        const { result } = renderHook(() => useCurrentUser());
+        const cachedUser: User = {
+            id: 'current-user',
+            name: 'Alex Morgan',
+            email: 'alex@example.com',
+        };
+
+        act(() => useAuthStore.setState({ cachedUser }));
+
+        expect(result.current.data).toBe(cachedUser);
     });
 });
