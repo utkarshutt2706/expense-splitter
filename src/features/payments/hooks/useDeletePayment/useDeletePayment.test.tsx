@@ -23,7 +23,29 @@ describe('useDeletePayment', () => {
 
         await waitFor(() => expect(result.current.isSuccess).toBe(true));
         expect(paymentsApi.remove).toHaveBeenCalledWith('group-1', 'payment-1');
+        expect(invalidateSpy).toHaveBeenCalledTimes(4);
         expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['payments', 'group-1'] });
         expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['balances', 'group-1'] });
+        expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['groups'] });
+        expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['users', 'friends'] });
+    });
+
+    it('exposes deletion failures without invalidating cached data', async () => {
+        const failure = new Error('Delete failed');
+        vi.mocked(paymentsApi.remove).mockRejectedValue(failure);
+        const queryClient = new QueryClient({
+            defaultOptions: { mutations: { retry: false } },
+        });
+        const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
+        const wrapper = ({ children }: { children: ReactNode }) => (
+            <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+        );
+        const { result } = renderHook(() => useDeletePayment(), { wrapper });
+
+        result.current.mutate({ groupId: 'group-1', id: 'payment-1' });
+
+        await waitFor(() => expect(result.current.isError).toBe(true));
+        expect(result.current.error).toBe(failure);
+        expect(invalidateSpy).not.toHaveBeenCalled();
     });
 });

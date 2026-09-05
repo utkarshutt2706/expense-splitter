@@ -19,6 +19,7 @@ describe('useCreatePayment', () => {
             fromUserId: 'user-1',
             toUserId: 'user-2',
             amount: 45,
+            paidOn: '2026-06-30',
             createdAt: '2026-07-01T00:00:00.000Z',
         };
         vi.mocked(paymentsApi.create).mockResolvedValue(created);
@@ -36,6 +37,7 @@ describe('useCreatePayment', () => {
             fromUserId: 'user-1',
             toUserId: 'user-2',
             amount: 45,
+            paidOn: '2026-06-30',
         });
 
         await waitFor(() => expect(result.current.isSuccess).toBe(true));
@@ -44,9 +46,38 @@ describe('useCreatePayment', () => {
             fromUserId: 'user-1',
             toUserId: 'user-2',
             amount: 45,
+            paidOn: '2026-06-30',
         });
+        expect(invalidateSpy).toHaveBeenCalledTimes(6);
+        expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['expenses', 'group-1'] });
         expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['payments', 'group-1'] });
         expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['balances', 'group-1'] });
         expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['dashboard'] });
+        expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['groups'] });
+        expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['users', 'friends'] });
+    });
+
+    it('exposes creation failures without invalidating cached financial data', async () => {
+        const failure = new Error('Create failed');
+        vi.mocked(paymentsApi.create).mockRejectedValue(failure);
+        const queryClient = new QueryClient({
+            defaultOptions: { mutations: { retry: false } },
+        });
+        const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
+        const wrapper = ({ children }: { children: ReactNode }) => (
+            <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+        );
+        const { result } = renderHook(() => useCreatePayment(), { wrapper });
+
+        result.current.mutate({
+            groupId: 'group-1',
+            fromUserId: 'user-1',
+            toUserId: 'user-2',
+            amount: 45,
+        });
+
+        await waitFor(() => expect(result.current.isError).toBe(true));
+        expect(result.current.error).toBe(failure);
+        expect(invalidateSpy).not.toHaveBeenCalled();
     });
 });

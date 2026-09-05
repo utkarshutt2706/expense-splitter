@@ -1,8 +1,14 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { RecordPaymentDialog } from './RecordPaymentDialog';
+
+const currentUser = vi.hoisted(() => ({ id: 'current-user' }));
+
+vi.mock('@app/hooks', () => ({
+    useCurrentUser: () => ({ data: { id: currentUser.id, name: 'Current User' } }),
+}));
 
 vi.mock('../RecordPaymentForm', () => ({
     RecordPaymentForm: ({
@@ -34,6 +40,10 @@ vi.mock('../RecordPaymentForm', () => ({
 }));
 
 describe('RecordPaymentDialog', () => {
+    beforeEach(() => {
+        currentUser.id = 'current-user';
+    });
+
     it('does not render the form when closed', () => {
         render(
             <RecordPaymentDialog
@@ -168,5 +178,128 @@ describe('RecordPaymentDialog', () => {
             toUserId: 'user-2',
             amount: 25,
         });
+    });
+
+    it('closes an edit dialog before forwarding the updated values', async () => {
+        const onOpenChange = vi.fn();
+        const onSubmit = vi.fn();
+        const user = userEvent.setup();
+        render(
+            <RecordPaymentDialog
+                mode="edit"
+                open
+                onOpenChange={onOpenChange}
+                members={[]}
+                onSubmit={onSubmit}
+            />,
+        );
+
+        await user.click(screen.getByRole('button', { name: /fake submit/i }));
+
+        expect(onOpenChange).toHaveBeenCalledWith(false);
+        expect(onOpenChange.mock.invocationCallOrder[0]).toBeLessThan(
+            onSubmit.mock.invocationCallOrder[0]!,
+        );
+        expect(onSubmit).toHaveBeenCalledOnce();
+    });
+
+    it.each(['user-1', 'user-2'])(
+        'submits a settlement involving the current user as %s without confirmation',
+        async (currentUserId) => {
+            currentUser.id = currentUserId;
+            const onSubmit = vi.fn();
+            const user = userEvent.setup();
+            render(
+                <RecordPaymentDialog
+                    open
+                    onOpenChange={vi.fn()}
+                    members={[]}
+                    initialValues={{ fromUserId: 'user-1', toUserId: 'user-2', amount: 25 }}
+                    settlementMode
+                    onSubmit={onSubmit}
+                />,
+            );
+
+            await user.click(screen.getByRole('button', { name: /fake submit/i }));
+
+            expect(onSubmit).toHaveBeenCalledOnce();
+            expect(screen.queryByText(/record that/i)).not.toBeInTheDocument();
+        },
+    );
+
+    it('cancels and clears a third-party confirmation', async () => {
+        const onSubmit = vi.fn();
+        const user = userEvent.setup();
+        render(
+            <RecordPaymentDialog
+                open
+                onOpenChange={vi.fn()}
+                members={[]}
+                initialValues={{ fromUserId: 'user-1', toUserId: 'user-2', amount: 25 }}
+                settlementMode
+                onSubmit={onSubmit}
+            />,
+        );
+
+        await user.click(screen.getByRole('button', { name: /fake submit/i }));
+        await user.click(screen.getByRole('button', { name: 'Cancel' }));
+
+        expect(screen.getByTestId('record-payment-form')).toBeInTheDocument();
+        expect(onSubmit).not.toHaveBeenCalled();
+    });
+
+    it('clears a confirmation when the dialog closes', async () => {
+        const onOpenChange = vi.fn();
+        const user = userEvent.setup();
+        const { rerender } = render(
+            <RecordPaymentDialog
+                open
+                onOpenChange={onOpenChange}
+                members={[]}
+                initialValues={{ fromUserId: 'user-1', toUserId: 'user-2', amount: 25 }}
+                settlementMode
+                onSubmit={vi.fn()}
+            />,
+        );
+        await user.click(screen.getByRole('button', { name: /fake submit/i }));
+
+        await user.click(screen.getByRole('button', { name: /close/i }));
+        rerender(
+            <RecordPaymentDialog
+                open
+                onOpenChange={onOpenChange}
+                members={[]}
+                initialValues={{ fromUserId: 'user-1', toUserId: 'user-2', amount: 25 }}
+                settlementMode
+                onSubmit={vi.fn()}
+            />,
+        );
+
+        expect(screen.getByTestId('record-payment-form')).toBeInTheDocument();
+    });
+
+    it('shows fallback names, an error, and pending controls in third-party confirmation', async () => {
+        const user = userEvent.setup();
+        render(
+            <RecordPaymentDialog
+                open
+                onOpenChange={vi.fn()}
+                members={[]}
+                initialValues={{ fromUserId: 'user-1', toUserId: 'user-2', amount: 25 }}
+                settlementMode
+                isPending
+                errorMessage="Payment failed"
+                onSubmit={vi.fn()}
+            />,
+        );
+
+        await user.click(screen.getByRole('button', { name: /fake submit/i }));
+
+        expect(
+            screen.getByText('Record that a group member paid a group member ₹25.00?'),
+        ).toBeInTheDocument();
+        expect(screen.getByRole('alert')).toHaveTextContent('Payment failed');
+        expect(screen.getByRole('button', { name: 'Recording…' })).toBeDisabled();
+        expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
     });
 });

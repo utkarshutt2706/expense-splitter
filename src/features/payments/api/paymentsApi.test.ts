@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { Payment } from './paymentsApi';
 import { httpClient } from '@lib/api/httpClient';
@@ -23,6 +23,10 @@ const payment: Payment = {
 };
 
 describe('paymentsApi', () => {
+    beforeEach(() => {
+        vi.resetAllMocks();
+    });
+
     it('getByGroupId fetches the payment list from /groups/:groupId/payments', async () => {
         vi.mocked(httpClient.get).mockResolvedValue({ data: [payment] });
 
@@ -73,5 +77,40 @@ describe('paymentsApi', () => {
         await expect(remove('group-1', 'payment-1')).resolves.toBeUndefined();
 
         expect(httpClient.delete).toHaveBeenCalledWith('/groups/group-1/payments/payment-1');
+    });
+
+    it('preserves empty payment lists and complete payment fields from the server', async () => {
+        const completePayment = { ...payment, paidOn: '2026-06-30' };
+        vi.mocked(httpClient.get)
+            .mockResolvedValueOnce({ data: [] })
+            .mockResolvedValueOnce({ data: [completePayment] });
+
+        await expect(getByGroupId('empty-group')).resolves.toEqual([]);
+        await expect(getByGroupId('group-1')).resolves.toEqual([completePayment]);
+    });
+
+    it.each([
+        ['getByGroupId', () => getByGroupId('group-1'), httpClient.get],
+        [
+            'create',
+            () => create('group-1', { fromUserId: 'user-1', toUserId: 'user-2', amount: 45 }),
+            httpClient.post,
+        ],
+        [
+            'update',
+            () =>
+                update('group-1', 'payment-1', {
+                    fromUserId: 'user-1',
+                    toUserId: 'user-2',
+                    amount: 45,
+                }),
+            httpClient.patch,
+        ],
+        ['remove', () => remove('group-1', 'payment-1'), httpClient.delete],
+    ] as const)('propagates %s transport failures unchanged', async (_name, request, method) => {
+        const failure = new Error('Network unavailable');
+        vi.mocked(method).mockRejectedValue(failure);
+
+        await expect(request()).rejects.toBe(failure);
     });
 });

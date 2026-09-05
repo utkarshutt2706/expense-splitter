@@ -45,6 +45,24 @@ describe('RecordPaymentForm', () => {
         expect(onSubmit).not.toHaveBeenCalled();
     });
 
+    it('shows a validation error when no payer is selected', async () => {
+        const onSubmit = vi.fn();
+        const user = userEvent.setup();
+        render(
+            <RecordPaymentForm
+                members={members}
+                initialValues={{ fromUserId: '', toUserId: 'user-2', amount: 25 }}
+                onSubmit={onSubmit}
+                onCancel={vi.fn()}
+            />,
+        );
+
+        await user.click(screen.getByRole('button', { name: /record payment/i }));
+
+        expect(await screen.findByText('Select who paid', { selector: 'p' })).toBeInTheDocument();
+        expect(onSubmit).not.toHaveBeenCalled();
+    });
+
     it('shows a validation error when the amount is zero', async () => {
         const onSubmit = vi.fn();
         const user = userEvent.setup();
@@ -118,6 +136,25 @@ describe('RecordPaymentForm', () => {
         await user.click(screen.getByRole('button', { name: /record payment/i }));
 
         expect(await screen.findByText(/paid date cannot be in the future/i)).toBeInTheDocument();
+    });
+
+    it('requires a paid date and amount', async () => {
+        const onSubmit = vi.fn();
+        const user = userEvent.setup();
+        render(<RecordPaymentForm members={members} onSubmit={onSubmit} onCancel={vi.fn()} />);
+
+        await pickMember('To', /priya sharma/i);
+        await user.clear(screen.getByLabelText(/paid on/i));
+        await user.click(screen.getByRole('button', { name: /record payment/i }));
+
+        expect(await screen.findByText('Paid date is required')).toBeInTheDocument();
+        expect(screen.getByText('Amount is required')).toBeInTheDocument();
+        expect(screen.getByLabelText(/amount/i)).toHaveAttribute('aria-invalid', 'true');
+        expect(screen.getByLabelText(/amount/i)).toHaveAttribute(
+            'aria-describedby',
+            'payment-currency-description payment-amount-error',
+        );
+        expect(onSubmit).not.toHaveBeenCalled();
     });
 
     it('prefills fields from initialValues', () => {
@@ -210,5 +247,23 @@ describe('RecordPaymentForm', () => {
         await user.click(screen.getByRole('button', { name: /cancel/i }));
 
         expect(onCancel).toHaveBeenCalled();
+    });
+
+    it('shows a server error and disables both actions while submission is pending', () => {
+        render(
+            <RecordPaymentForm
+                members={members}
+                onSubmit={vi.fn()}
+                onCancel={vi.fn()}
+                submitLabel="Save changes"
+                isPending
+                errorMessage="The payment could not be saved"
+            />,
+        );
+
+        expect(screen.getByRole('alert')).toHaveTextContent('The payment could not be saved');
+        expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
+        expect(screen.getByRole('button', { name: 'Recording…' })).toBeDisabled();
+        expect(screen.queryByRole('button', { name: 'Save changes' })).not.toBeInTheDocument();
     });
 });

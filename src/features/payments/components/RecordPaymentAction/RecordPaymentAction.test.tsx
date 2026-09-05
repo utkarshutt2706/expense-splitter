@@ -13,11 +13,28 @@ vi.mock('@features/payments/hooks/useCreatePayment', () => ({
 
 vi.mock('../RecordPaymentDialog', () => ({
     RecordPaymentDialog: ({
+        open,
+        onOpenChange,
         onSubmit,
+        isPending,
+        errorMessage,
     }: {
+        open: boolean;
+        onOpenChange: (open: boolean) => void;
         onSubmit: (values: { fromUserId: string; toUserId: string; amount: number }) => void;
+        isPending: boolean;
+        errorMessage?: string;
     }) => (
         <div data-testid="record-payment-dialog">
+            <span>{open ? 'Dialog open' : 'Dialog closed'}</span>
+            <span>{isPending ? 'Payment pending' : 'Payment idle'}</span>
+            {errorMessage && <span role="alert">{errorMessage}</span>}
+            <button type="button" onClick={() => onOpenChange(false)}>
+                Fake close
+            </button>
+            <button type="button" onClick={() => onOpenChange(true)}>
+                Fake reopen
+            </button>
             <button
                 type="button"
                 onClick={() =>
@@ -45,8 +62,10 @@ const members: User[] = [
 
 describe('RecordPaymentAction', () => {
     beforeEach(() => {
+        vi.clearAllMocks();
         vi.mocked(useCreatePayment).mockReturnValue({
             mutate: vi.fn(),
+            isPending: false,
         } as unknown as ReturnType<typeof useCreatePayment>);
     });
 
@@ -80,6 +99,7 @@ describe('RecordPaymentAction', () => {
         });
         vi.mocked(useCreatePayment).mockReturnValue({
             mutate,
+            isPending: false,
         } as unknown as ReturnType<typeof useCreatePayment>);
 
         const user = userEvent.setup();
@@ -101,6 +121,7 @@ describe('RecordPaymentAction', () => {
         act(() => onSuccess?.());
 
         expect(toast.success).toHaveBeenCalledWith('Payment recorded', { id: 'toast-id' });
+        expect(screen.getByText('Dialog closed')).toBeInTheDocument();
     });
 
     it('shows an error toast when recording a payment fails', async () => {
@@ -110,17 +131,63 @@ describe('RecordPaymentAction', () => {
         });
         vi.mocked(useCreatePayment).mockReturnValue({
             mutate,
+            isPending: false,
         } as unknown as ReturnType<typeof useCreatePayment>);
 
         const user = userEvent.setup();
         render(<RecordPaymentAction groupId="group-1" members={members} />);
 
         await user.click(screen.getByRole('button', { name: /fake record payment submit/i }));
-        onError?.(new Error('Something went wrong'));
+        act(() => onError?.(new Error('Something went wrong')));
 
         expect(toast.error).toHaveBeenCalledWith(
             'We couldn’t record this payment. Nothing was changed. Try again.',
             { id: 'toast-id' },
         );
+        expect(screen.getByRole('alert')).toHaveTextContent(
+            'We couldn’t record this payment. Nothing was changed. Try again.',
+        );
+    });
+
+    it('opens the dialog and clears a previous mutation error when it is closed', async () => {
+        let onError: (() => void) | undefined;
+        vi.mocked(useCreatePayment).mockReturnValue({
+            mutate: vi.fn((_values, options: { onError?: () => void }) => {
+                onError = options.onError;
+            }),
+            isPending: false,
+        } as unknown as ReturnType<typeof useCreatePayment>);
+        const user = userEvent.setup();
+        render(<RecordPaymentAction groupId="group-1" members={members} />);
+
+        expect(screen.getByText('Dialog closed')).toBeInTheDocument();
+        await user.click(screen.getByRole('button', { name: 'Record a payment' }));
+        expect(screen.getByText('Dialog open')).toBeInTheDocument();
+
+        await user.click(screen.getByRole('button', { name: /fake record payment submit/i }));
+        act(() => onError?.());
+        expect(screen.getByRole('alert')).toBeInTheDocument();
+
+        await user.click(screen.getByRole('button', { name: /fake reopen/i }));
+        expect(screen.getByRole('alert')).toBeInTheDocument();
+
+        await user.click(screen.getByRole('button', { name: /fake close/i }));
+        expect(screen.getByText('Dialog closed')).toBeInTheDocument();
+        expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    });
+
+    it('ignores duplicate submissions while a payment is pending', async () => {
+        const mutate = vi.fn();
+        vi.mocked(useCreatePayment).mockReturnValue({
+            mutate,
+            isPending: true,
+        } as unknown as ReturnType<typeof useCreatePayment>);
+        const user = userEvent.setup();
+        render(<RecordPaymentAction groupId="group-1" members={members} />);
+
+        await user.click(screen.getByRole('button', { name: /fake record payment submit/i }));
+
+        expect(mutate).not.toHaveBeenCalled();
+        expect(toast.loading).not.toHaveBeenCalled();
     });
 });
