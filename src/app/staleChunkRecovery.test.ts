@@ -66,6 +66,24 @@ describe('reloadForStaleChunk', () => {
         expect(reload).toHaveBeenCalledTimes(2);
     });
 
+    it('allows another recovery at the exact retry-window boundary', async () => {
+        const { reloadForStaleChunk } = await loadModule();
+        reloadForStaleChunk(1_000);
+
+        const atBoundary = await loadModule();
+
+        expect(atBoundary.reloadForStaleChunk(11_000)).toBe(true);
+        expect(reload).toHaveBeenCalledTimes(2);
+    });
+
+    it('recovers when the system clock moves behind the stored timestamp', async () => {
+        sessionStorage.setItem('stale-chunk-reload-at', '50000');
+        const { reloadForStaleChunk } = await loadModule();
+
+        expect(reloadForStaleChunk(1_000)).toBe(true);
+        expect(reload).toHaveBeenCalledOnce();
+    });
+
     it('still recovers when storage is unavailable, without looping', async () => {
         vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
             throw new Error('storage blocked');
