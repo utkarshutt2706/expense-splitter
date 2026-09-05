@@ -84,16 +84,20 @@ describe('FriendsPage', () => {
     });
 
     it('shows an error message when the query fails', () => {
+        const refetch = vi.fn();
         vi.mocked(useFriends).mockReturnValue({
             data: undefined,
             isLoading: false,
             isError: true,
+            refetch,
         } as unknown as ReturnType<typeof useFriends>);
 
         render(<FriendsPage />);
 
         expect(screen.getByText(/we couldn’t load your friends/i)).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /try again/i })).toBeInTheDocument();
+        fireEvent.click(screen.getByRole('button', { name: /try again/i }));
+        expect(refetch).toHaveBeenCalledOnce();
     });
 
     it('shows an empty state explaining friends are derived from shared groups', () => {
@@ -116,6 +120,23 @@ describe('FriendsPage', () => {
             'href',
             '/groups',
         );
+    });
+
+    it('treats an unavailable non-loading response as empty', () => {
+        vi.mocked(useFriends).mockReturnValue({
+            data: undefined,
+            isLoading: false,
+            isError: false,
+        } as unknown as ReturnType<typeof useFriends>);
+
+        render(
+            <MemoryRouter>
+                <FriendsPage />
+            </MemoryRouter>,
+        );
+
+        expect(screen.getByText('No friends yet')).toBeInTheDocument();
+        expect(screen.queryByRole('searchbox')).not.toBeInTheDocument();
     });
 
     it("prefixes the empty state's create-group link with the router basename", () => {
@@ -275,6 +296,26 @@ describe('FriendsPage', () => {
         expect(contactDetails).not.toHaveClass('flex-col');
     });
 
+    it('sorts equal friend names deterministically by id', () => {
+        vi.mocked(useFriends).mockReturnValue({
+            data: [
+                { ...friends[0], id: 'friend-b', name: 'Alex Smith' },
+                { ...friends[1], id: 'friend-a', name: 'Alex Smith' },
+            ],
+            isLoading: false,
+            isError: false,
+        } as unknown as ReturnType<typeof useFriends>);
+
+        render(<FriendsPage />);
+
+        expect(
+            screen.getAllByText('Alex Smith').map((name) => name.closest('li')?.textContent),
+        ).toEqual([
+            expect.stringContaining('5551234567'),
+            expect.stringContaining('priya@example.com'),
+        ]);
+    });
+
     it('reveals per-group balances and links each group to its detail page', async () => {
         const user = userEvent.setup();
         vi.mocked(useFriends).mockReturnValue({
@@ -389,6 +430,23 @@ describe('FriendsPage', () => {
             ).toBeInTheDocument();
             expect(screen.queryByText('Priya Sharma')).not.toBeInTheDocument();
             expect(screen.queryByText('Jordan Lee')).not.toBeInTheDocument();
+        });
+
+        it('restores all friends from the no-match state when clear search is clicked', () => {
+            render(<FriendsPage />);
+            fireEvent.change(screen.getByRole('searchbox', { name: /search friends/i }), {
+                target: { value: 'nobody' },
+            });
+
+            fireEvent.click(screen.getByRole('button', { name: /clear search/i }));
+
+            expect(screen.getByText('Priya Sharma')).toBeInTheDocument();
+            expect(screen.getByText('Jordan Lee')).toBeInTheDocument();
+            expect(
+                screen.getByRole('searchbox', {
+                    name: /search friends — people you’ve shared groups with/i,
+                }),
+            ).toHaveValue('');
         });
 
         it('shows every friend again once the search is cleared', () => {

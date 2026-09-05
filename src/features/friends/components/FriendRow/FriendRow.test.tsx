@@ -95,4 +95,17 @@ describe('FriendRow', () => {
         expect(screen.getByText('Shared-group details unavailable')).toBeInTheDocument();
         expect(screen.queryByText(/email:|phone:/)).not.toBeInTheDocument();
     });
+
+    it('defaults a missing net balance to settled and distinguishes existing group activity', () => {
+        renderRow(
+            friend({
+                netBalance: undefined,
+                groupBalances: [{ groupId: 'trip', groupName: 'Trip', balance: 0 }],
+            }),
+        );
+
+        expect(screen.getByRole('button', { name: /view balance breakdown/i })).toHaveTextContent(
+            'Net settled',
+        );
+    });
 });
