@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { User } from './usersApi';
 import { httpClient } from '@lib/api/httpClient';
@@ -18,6 +18,10 @@ const users: User[] = [
 ];
 
 describe('usersApi', () => {
+    beforeEach(() => {
+        vi.resetAllMocks();
+    });
+
     it('getByIds posts the id list to /users/batch and returns matching users', async () => {
         vi.mocked(httpClient.post).mockResolvedValue({ data: users });
 
@@ -27,6 +31,15 @@ describe('usersApi', () => {
             ids: ['user-1', 'user-2'],
         });
         expect(result).toEqual(users);
+    });
+
+    it('sends an empty id list instead of silently skipping the batch request', async () => {
+        vi.mocked(httpClient.post).mockResolvedValue({ data: [] });
+
+        await expect(getByIds([])).resolves.toEqual([]);
+
+        expect(httpClient.post).toHaveBeenCalledOnce();
+        expect(httpClient.post).toHaveBeenCalledWith('/users/batch', { ids: [] });
     });
 
     it('lookup gets /users/lookup with a generic query param', async () => {
@@ -40,6 +53,16 @@ describe('usersApi', () => {
         expect(result).toEqual(users);
     });
 
+    it('passes whitespace and punctuation in lookup queries through unchanged', async () => {
+        vi.mocked(httpClient.get).mockResolvedValue({ data: [] });
+
+        await expect(lookup({ query: '  priya+lee@example.com  ' })).resolves.toEqual([]);
+
+        expect(httpClient.get).toHaveBeenCalledWith('/users/lookup', {
+            params: { query: '  priya+lee@example.com  ' },
+        });
+    });
+
     it('updateUser patches the user and returns the updated profile', async () => {
         const updatedUser = { ...users[0]!, phone: '9876543210' };
         vi.mocked(httpClient.patch).mockResolvedValue({ data: updatedUser });
@@ -51,4 +74,38 @@ describe('usersApi', () => {
         });
         expect(result).toEqual(updatedUser);
     });
+
+    it('forwards every supported profile field and returns nullable fields unchanged', async () => {
+        const input = {
+            name: 'Priya S.',
+            email: 'new-priya@example.com',
+            phone: '9876543210',
+            avatarUrl: 'https://example.com/priya.png',
+        };
+        const updatedUser = {
+            id: 'user-1',
+            ...input,
+            email: null,
+            avatarUrl: null,
+        };
+        vi.mocked(httpClient.patch).mockResolvedValue({ data: updatedUser });
+
+        await expect(updateUser('user-1', input)).resolves.toBe(updatedUser);
+
+        expect(httpClient.patch).toHaveBeenCalledWith('/users/user-1', input);
+    });
+
+    it.each([
+        ['getByIds', () => getByIds(['user-1']), httpClient.post],
+        ['lookup', () => lookup({ query: 'priya' }), httpClient.get],
+        ['updateUser', () => updateUser('user-1', { name: 'Priya' }), httpClient.patch],
+    ] as const)(
+        'propagates transport failures from %s unchanged',
+        async (_name, request, method) => {
+            const failure = new Error('Network unavailable');
+            vi.mocked(method).mockRejectedValue(failure);
+
+            await expect(request()).rejects.toBe(failure);
+        },
+    );
 });
