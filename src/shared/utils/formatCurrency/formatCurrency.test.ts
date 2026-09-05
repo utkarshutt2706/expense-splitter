@@ -40,6 +40,7 @@ describe('formatCompactCurrency', () => {
 
     it('leaves small amounts unabbreviated', () => {
         expect(formatCompactCurrency(0)).toBe('₹0');
+        expect(formatCompactCurrency(-0)).toBe('₹0');
         expect(formatCompactCurrency(999)).toBe('₹999');
     });
 
@@ -47,8 +48,14 @@ describe('formatCompactCurrency', () => {
         expect(formatCompactCurrency(-35000)).toBe('-₹35K');
     });
 
-    it('falls back to a dash for values that are not finite numbers', () => {
-        expect(formatCompactCurrency(Number.NaN)).toBe('—');
-        expect(formatCompactCurrency(undefined)).toBe('—');
-    });
+    it.each([
+        Number.NaN,
+        Number.POSITIVE_INFINITY,
+        Number.NEGATIVE_INFINITY,
+        undefined,
+        null,
+        '100',
+    ])('falls back to a dash for invalid value %s', (value) =>
+        expect(formatCompactCurrency(value)).toBe('—'),
+    );
 });

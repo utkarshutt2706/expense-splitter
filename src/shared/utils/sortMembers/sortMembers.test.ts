@@ -41,6 +41,24 @@ describe('sortMembersByName', () => {
         expect(names(sorted)).toEqual(['Chandra', 'alice', 'Bob']);
     });
 
+    it('floats a priority member encountered on either side of a comparison', () => {
+        const priorityLast = [
+            { id: 'regular', name: 'Alice' },
+            { id: 'priority', name: 'Zoe' },
+        ];
+        const priorityFirst = [...priorityLast].reverse();
+        const options = { isPriority: (member: { id: string }) => member.id === 'priority' };
+
+        expect(sortMembersByName(priorityLast, options).map(({ id }) => id)).toEqual([
+            'priority',
+            'regular',
+        ]);
+        expect(sortMembersByName(priorityFirst, options).map(({ id }) => id)).toEqual([
+            'priority',
+            'regular',
+        ]);
+    });
+
     it('ranks the current user above the priority band', () => {
         const sorted = sortMembersByName(members, {
             isCurrentUser: (m) => m.id === 'u1',
@@ -76,6 +94,15 @@ describe('sortMembersByName', () => {
 
     it('handles an empty roster', () => {
         expect(sortMembersByName([])).toEqual([]);
+    });
+
+    it('preserves input order for equal names within the same band', () => {
+        const duplicates = [
+            { id: 'first', name: 'Alex' },
+            { id: 'second', name: 'Alex' },
+        ];
+
+        expect(sortMembersByName(duplicates).map(({ id }) => id)).toEqual(['first', 'second']);
     });
 
     it('works on shapes that identify the current user by a flag rather than an id', () => {

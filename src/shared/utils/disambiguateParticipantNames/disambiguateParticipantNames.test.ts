@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { disambiguateParticipantNames } from './disambiguateParticipantNames';
+import { disambiguateParticipantNames, participantNameMap } from './disambiguateParticipantNames';
 
 describe('disambiguateParticipantNames', () => {
     it('uses first names when all participants have distinct first names', () => {
@@ -85,5 +85,53 @@ describe('disambiguateParticipantNames', () => {
         ];
 
         expect(disambiguateParticipantNames(members)).toEqual(['Vijay S', 'Vijay T']);
+    });
+
+    it('handles an empty participant list', () => {
+        expect(disambiguateParticipantNames([])).toEqual([]);
+    });
+
+    it('preserves an empty stored name without inventing a label', () => {
+        expect(disambiguateParticipantNames([{ name: '' }])).toEqual(['']);
+    });
+
+    it('uses the shortest available prefixes when one remainder prefixes another', () => {
+        const members = [{ name: 'Vijay S' }, { name: 'Vijay Sharma' }];
+
+        expect(disambiguateParticipantNames(members)).toEqual(['Vijay S', 'Vijay Sh']);
+    });
+
+    it('preserves identical full names when neither participant is current', () => {
+        const members = [{ name: 'Vijay Sharma' }, { name: 'Vijay Sharma' }];
+
+        expect(disambiguateParticipantNames(members)).toEqual(['Vijay Sharma', 'Vijay Sharma']);
+    });
+});
+
+describe('participantNameMap', () => {
+    const members = [
+        { id: 'user-1', name: 'Alex Morgan', role: 'member' },
+        { id: 'user-2', name: 'Alex Sharma', role: 'admin' },
+        { id: 'user-3', name: 'Priya Singh', role: 'member' },
+    ];
+
+    it('maps ids to disambiguated labels and marks the current user', () => {
+        expect([...participantNameMap(members, 'user-2')]).toEqual([
+            ['user-1', 'Alex M'],
+            ['user-2', 'You'],
+            ['user-3', 'Priya'],
+        ]);
+    });
+
+    it('does not mark anyone as current when no current-user id is supplied', () => {
+        expect([...participantNameMap(members)]).toEqual([
+            ['user-1', 'Alex M'],
+            ['user-2', 'Alex S'],
+            ['user-3', 'Priya'],
+        ]);
+    });
+
+    it('returns an empty map for an empty participant list', () => {
+        expect(participantNameMap([])).toEqual(new Map());
     });
 });

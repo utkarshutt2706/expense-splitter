@@ -9,6 +9,14 @@ describe('localDateInputValue', () => {
 
         expect(localDateInputValue(date)).toBe('2026-08-31');
     });
+
+    it('handles a timezone behind UTC without changing the instant supplied by the caller', () => {
+        const date = new Date('2026-08-31T02:30:00.000Z');
+        vi.spyOn(date, 'getTimezoneOffset').mockReturnValue(300);
+
+        expect(localDateInputValue(date)).toBe('2026-08-30');
+        expect(date.toISOString()).toBe('2026-08-31T02:30:00.000Z');
+    });
 });
 
 describe('normalizeDateInputValue', () => {
@@ -18,6 +26,10 @@ describe('normalizeDateInputValue', () => {
 
     it('preserves an absent optional date', () => {
         expect(normalizeDateInputValue()).toBeUndefined();
+    });
+
+    it.each(['', '2026-08-30'])('preserves the already-normalized value %j', (value) => {
+        expect(normalizeDateInputValue(value)).toBe(value);
     });
 });
 

@@ -44,4 +44,26 @@ describe('compareFinancialActivityNewestFirst', () => {
             earlier,
         ]);
     });
+
+    it("compares a paid date against another record's creation fallback", () => {
+        const paidEarlier = {
+            paidOn: '2026-08-29T00:00:00.000Z',
+            createdAt: '2026-08-31T00:00:00.000Z',
+        };
+        const createdLater = { createdAt: '2026-08-30T00:00:00.000Z' };
+
+        expect([paidEarlier, createdLater].sort(compareFinancialActivityNewestFirst)).toEqual([
+            createdLater,
+            paidEarlier,
+        ]);
+    });
+
+    it('returns equality when both paid and creation timestamps match', () => {
+        const date = {
+            paidOn: '2026-08-30T00:00:00.000Z',
+            createdAt: '2026-08-30T12:00:00.000Z',
+        };
+
+        expect(compareFinancialActivityNewestFirst(date, { ...date })).toBe(0);
+    });
 });
