@@ -22,12 +22,7 @@ export function FormDialog({
     isPending = false,
 }: FormDialogProps) {
     return (
-        <Dialog.Root
-            open={open}
-            onOpenChange={(nextOpen) => {
-                if (!isPending) onOpenChange(nextOpen);
-            }}
-        >
+        <Dialog.Root open={open} onOpenChange={isPending ? undefined : onOpenChange}>
             <Dialog.Portal>
                 <Dialog.Overlay className="fixed inset-0 z-40 bg-black/50" />
                 <Dialog.Content

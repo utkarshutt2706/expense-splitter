@@ -30,12 +30,7 @@ export function ConfirmationDialog({
     const cancelButtonRef = useRef<HTMLButtonElement>(null);
 
     return (
-        <AlertDialog.Root
-            open={open}
-            onOpenChange={(nextOpen) => {
-                if (!isPending) onOpenChange(nextOpen);
-            }}
-        >
+        <AlertDialog.Root open={open} onOpenChange={isPending ? undefined : onOpenChange}>
             <AlertDialog.Portal>
                 <AlertDialog.Overlay className="fixed inset-0 z-40 bg-black/50" />
                 <AlertDialog.Content

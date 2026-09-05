@@ -1,15 +1,22 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { User } from '@features/users/api/usersApi';
 import { CURRENT_USER_ID } from '@test/fixtures/ids';
 import { MemberPicker } from './MemberPicker';
 
+const { currentUser } = vi.hoisted(() => ({
+    currentUser: {
+        value: { id: 'current-user', name: 'Alex Morgan', email: 'alex@example.com' } as
+            { id: string; name: string; email: string } | undefined,
+    },
+}));
+
 vi.mock('@app/hooks', async (importOriginal) => ({
     ...(await importOriginal<typeof import('@app/hooks')>()),
     useCurrentUser: () => ({
-        data: { id: CURRENT_USER_ID, name: 'Alex Morgan', email: 'alex@example.com' },
+        data: currentUser.value,
     }),
 }));
 
@@ -31,6 +38,14 @@ function renderPicker(value: string, onChange = vi.fn()) {
 }
 
 describe('MemberPicker', () => {
+    beforeEach(() => {
+        currentUser.value = {
+            id: CURRENT_USER_ID,
+            name: 'Alex Morgan',
+            email: 'alex@example.com',
+        };
+    });
+
     it('shows "You" on the trigger when the current user is selected', () => {
         renderPicker(CURRENT_USER_ID);
 
@@ -107,5 +122,59 @@ describe('MemberPicker', () => {
             'Priya',
             'Zoe',
         ]);
+    });
+
+    it('works without current-user data and does not label any option as You', async () => {
+        currentUser.value = undefined;
+        const user = userEvent.setup();
+        renderPicker(CURRENT_USER_ID);
+
+        expect(screen.getByRole('button', { name: 'Paid by' })).toHaveTextContent('Alex');
+        await user.click(screen.getByRole('button', { name: 'Paid by' }));
+
+        expect(screen.queryByRole('menuitemradio', { name: 'You' })).not.toBeInTheDocument();
+        expect(screen.getByRole('menuitemradio', { name: /alex morgan/i })).toBeInTheDocument();
+    });
+
+    it('renders an empty menu and placeholder when no members are available', async () => {
+        const user = userEvent.setup();
+        render(
+            <MemberPicker
+                members={[]}
+                value="missing-user"
+                onChange={vi.fn()}
+                ariaLabel="Paid by"
+                placeholder="Nobody available"
+            />,
+        );
+
+        expect(screen.getByRole('button', { name: 'Paid by' })).toHaveTextContent(
+            'Nobody available',
+        );
+        await user.click(screen.getByRole('button', { name: 'Paid by' }));
+        expect(screen.queryAllByRole('menuitemradio')).toHaveLength(0);
+    });
+
+    it('disambiguates duplicate first names in the trigger and options', async () => {
+        const user = userEvent.setup();
+        const duplicateNames: User[] = [
+            { id: CURRENT_USER_ID, name: 'Alex Morgan' },
+            { id: 'user-2', name: 'Alex Sharma' },
+        ];
+        render(
+            <MemberPicker
+                members={duplicateNames}
+                value="user-2"
+                onChange={vi.fn()}
+                ariaLabel="Paid by"
+                placeholder="Select"
+            />,
+        );
+
+        expect(screen.getByRole('button', { name: 'Paid by' })).toHaveTextContent('Alex S');
+        await user.click(screen.getByRole('button', { name: 'Paid by' }));
+        expect(screen.getByRole('menuitemradio', { name: 'Alex Sharma' })).toHaveTextContent(
+            'Alex S',
+        );
     });
 });
