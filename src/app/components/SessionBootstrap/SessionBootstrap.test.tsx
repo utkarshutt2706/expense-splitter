@@ -1,4 +1,5 @@
 import { render, screen, waitFor } from '@testing-library/react';
+import { StrictMode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useAuthStore } from '@app/stores';
@@ -59,5 +60,20 @@ describe('SessionBootstrap', () => {
         );
 
         await waitFor(() => expect(screen.getByText('application')).toBeInTheDocument());
+    });
+
+    it('refreshes only once when effects are replayed in StrictMode', async () => {
+        vi.mocked(refreshSession).mockResolvedValue(null);
+
+        render(
+            <StrictMode>
+                <SessionBootstrap>
+                    <p>application</p>
+                </SessionBootstrap>
+            </StrictMode>,
+        );
+
+        expect(await screen.findByText('application')).toBeInTheDocument();
+        expect(refreshSession).toHaveBeenCalledOnce();
     });
 });

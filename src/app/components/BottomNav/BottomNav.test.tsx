@@ -2,6 +2,7 @@ import { render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 
+import { navItems } from '@app/configs/navigation';
 import { BottomNav } from './BottomNav';
 
 function renderNav(initialPath = '/') {
@@ -23,6 +24,12 @@ describe('BottomNav', () => {
         expect(nav.getByRole('link', { name: /analytics/i })).toHaveAttribute('href', '/analytics');
         expect(nav.getByRole('link', { name: /activity/i })).toHaveAttribute('href', '/activity');
         expect(nav.getAllByRole('link')).toHaveLength(5);
+        expect(nav.getAllByRole('link').map((link) => link.textContent)).toEqual(
+            navItems.map(({ label }) => label),
+        );
+        expect(nav.getAllByRole('link').map((link) => link.getAttribute('href'))).toEqual(
+            navItems.map(({ to }) => to),
+        );
     });
 
     it('stays pinned to the bottom of the viewport, above the home indicator', () => {
