@@ -63,6 +63,7 @@ export default defineConfig(({ command }) => ({
                 'src/test/**',
                 'src/**/index.ts',
                 'src/vite-env.d.ts',
+                'src/lib/api/contracts.ts',
                 'src/lib/api/generated/**',
             ],
             thresholds: {
