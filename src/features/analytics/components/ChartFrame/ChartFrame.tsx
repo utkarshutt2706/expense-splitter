@@ -1,5 +1,5 @@
 import type { LineChart } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { useId, type ReactNode } from 'react';
 
 export type ChartFrameProps = Readonly<{
     title: string;
@@ -9,9 +9,10 @@ export type ChartFrameProps = Readonly<{
 }>;
 
 export function ChartFrame({ title, description, icon: Icon, children }: ChartFrameProps) {
+    const headingId = useId();
     return (
         <section
-            aria-labelledby={`${title}-heading`}
+            aria-labelledby={headingId}
             className="border-border bg-surface min-w-0 rounded-2xl border p-5 md:p-6"
         >
             <div className="flex items-start gap-3">
@@ -19,7 +20,7 @@ export function ChartFrame({ title, description, icon: Icon, children }: ChartFr
                     <Icon aria-hidden="true" className="size-5" />
                 </span>
                 <div>
-                    <h2 id={`${title}-heading`} className="text-xl font-semibold">
+                    <h2 id={headingId} className="text-xl font-semibold">
                         {title}
                     </h2>
                     <p className="text-muted-foreground mt-1 text-sm">{description}</p>
