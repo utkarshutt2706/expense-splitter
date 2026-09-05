@@ -50,7 +50,8 @@ export function reloadForStaleChunk(now: number = Date.now()): boolean {
     // Absence has to be checked separately: a stored 0 would otherwise read as
     // "reloaded at the epoch", which is inside the window for any small clock.
     const last = lastReloadAt();
-    if (last > 0 && now - last < RETRY_WINDOW_MS) return false;
+    const elapsed = now - last;
+    if (last > 0 && elapsed >= 0 && elapsed < RETRY_WINDOW_MS) return false;
 
     reloadedThisPage = true;
     rememberReload(now);

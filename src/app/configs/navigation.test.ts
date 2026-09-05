@@ -44,4 +44,13 @@ describe('navigation configuration', () => {
             expect(pageTitles[to]).toBe(label);
         }
     });
+
+    it('uses unique absolute destinations and labels', () => {
+        const destinations = navItems.map(({ to }) => to);
+        const labels = navItems.map(({ label }) => label);
+
+        expect(new Set(destinations).size).toBe(destinations.length);
+        expect(new Set(labels).size).toBe(labels.length);
+        expect(destinations.every((destination) => destination.startsWith('/'))).toBe(true);
+    });
 });

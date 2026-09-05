@@ -64,9 +64,9 @@ describe('AppLayout', () => {
         expect(screen.getByText('child route content')).toBeInTheDocument();
     });
 
-    it('blocks the app until a logged-in user adds a phone number', () => {
+    it.each([undefined, ''])('blocks the app when the logged-in user phone is %j', (phone) => {
         vi.mocked(useCurrentUser).mockReturnValue({
-            data: { id: 'current-user', name: 'Alex Morgan', email: '', phone: undefined },
+            data: { id: 'current-user', name: 'Alex Morgan', email: '', phone },
         });
         useAuthStore.setState({ currentUserId: 'current-user' });
 
@@ -74,6 +74,15 @@ describe('AppLayout', () => {
 
         expect(screen.getByText('Add your phone number')).toBeInTheDocument();
         expect(screen.queryByText('child route content')).not.toBeInTheDocument();
+    });
+
+    it('keeps rendering the route while current-user data is loading', () => {
+        vi.mocked(useCurrentUser).mockReturnValue({ data: undefined });
+        useAuthStore.setState({ currentUserId: 'current-user' });
+
+        renderLayout();
+
+        expect(screen.getByText('child route content')).toBeInTheDocument();
     });
 
     it('redirects to the login page when not logged in', () => {

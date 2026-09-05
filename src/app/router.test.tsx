@@ -1,9 +1,23 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, render, screen } from '@testing-library/react';
+import { Suspense, type ComponentType, type ReactElement } from 'react';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useAuthStore } from '@app/stores';
+import {
+    AnalyticsPage,
+    DashboardPage,
+    ExpenseDetailPage,
+    FriendsPage,
+    GroupBalancePage,
+    GroupDetailPage,
+    GroupSettingsPage,
+    GroupsPage,
+    LoginPage,
+    RegisterPage,
+    UpsertExpensePage,
+} from './lazyPages';
 import { router, routes } from './router';
 
 vi.mock('./hooks/useCurrentUser', () => ({
@@ -64,6 +78,39 @@ describe('router', () => {
             );
         });
     }
+
+    it('maps every authenticated URL to its intended page component', () => {
+        const appRoute = routes.find(({ path }) => path === '/');
+        const expected: Array<[string, ComponentType]> = [
+            ['dashboard', DashboardPage],
+            ['analytics', AnalyticsPage],
+            ['friends', FriendsPage],
+            ['groups', GroupsPage],
+            ['groups/:groupId', GroupDetailPage],
+            ['groups/:groupId/settings', GroupSettingsPage],
+            ['groups/:groupId/balance', GroupBalancePage],
+            ['groups/:groupId/expenses/new', UpsertExpensePage],
+            ['groups/:groupId/expenses/:expenseId', ExpenseDetailPage],
+            ['groups/:groupId/expenses/:expenseId/edit', UpsertExpensePage],
+        ];
+
+        for (const [path, component] of expected) {
+            const route = appRoute?.children?.find((candidate) => candidate.path === path);
+            expect((route?.element as ReactElement).type).toBe(component);
+        }
+    });
+
+    it.each([
+        ['login', LoginPage],
+        ['register', RegisterPage],
+    ] as const)('wraps the %s page in the shared loading boundary', (path, component) => {
+        const route = routes.find((candidate) => candidate.path === path);
+        const suspense = route?.element as ReactElement<{ children: ReactElement }>;
+
+        expect(suspense.type).toBe(Suspense);
+        expect(suspense.props.children.type).toBe(component);
+        expect(route?.errorElement).toBeTruthy();
+    });
 
     it('redirects to the login page at the root path when not logged in', async () => {
         await renderRouterWithClient();
