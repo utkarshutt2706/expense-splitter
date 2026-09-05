@@ -23,16 +23,26 @@ function axiosErrorWithoutResponse(message: string): AxiosError {
 }
 
 describe('toApiError', () => {
-    it('parses the code, message, and status from a well-formed API error body', () => {
+    it.each([
+        'VALIDATION_ERROR',
+        'UNAUTHORIZED',
+        'FORBIDDEN',
+        'NOT_FOUND',
+        'CONFLICT',
+        'ERROR',
+        'INTERNAL_ERROR',
+    ] as const)('parses the supported %s API error code', (code) => {
         const error = axiosErrorWithResponse(404, {
-            error: { code: 'NOT_FOUND', message: 'User does-not-exist not found' },
+            error: { code, message: 'Request-specific message' },
         });
 
         const apiError = toApiError(error);
 
         expect(apiError).toBeInstanceOf(ApiError);
-        expect(apiError.code).toBe('NOT_FOUND');
-        expect(apiError.message).toBe('User does-not-exist not found');
+        expect(apiError).toBeInstanceOf(Error);
+        expect(apiError.name).toBe('ApiError');
+        expect(apiError.code).toBe(code);
+        expect(apiError.message).toBe('Request-specific message');
         expect(apiError.status).toBe(404);
     });
 
@@ -47,7 +57,11 @@ describe('toApiError', () => {
     });
 
     it.each([
+        ['null data', null],
+        ['string data', 'gateway failure'],
+        ['an absent error property', {}],
         ['a null error', { error: null }],
+        ['a primitive error', { error: 'Unauthorized' }],
         ['a missing code', { error: { message: 'Unauthorized' } }],
         ['a missing message', { error: { code: 'UNAUTHORIZED' } }],
         ['a non-string code', { error: { code: 401, message: 'Unauthorized' } }],
@@ -70,5 +84,12 @@ describe('toApiError', () => {
         expect(apiError.code).toBe('ERROR');
         expect(apiError.message).toBe('Network Error');
         expect(apiError.status).toBeUndefined();
+    });
+
+    it('preserves the transport error message even when it is empty', () => {
+        const apiError = toApiError(axiosErrorWithoutResponse(''));
+
+        expect(apiError.message).toBe('');
+        expect(apiError.code).toBe('ERROR');
     });
 });
