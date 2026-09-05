@@ -43,4 +43,37 @@ describe('ContactAction', () => {
             'tel:+911234567890',
         );
     });
+
+    it.each([
+        [true, /choose an action/i],
+        [false, /copy email/i],
+    ] as const)(
+        'prefers userAgentData.mobile=%s over the legacy user agent',
+        (mobile, expectedLabel) => {
+            const writeText = vi.fn().mockResolvedValue(undefined);
+            vi.stubGlobal('navigator', {
+                ...window.navigator,
+                userAgent: mobile ? 'Desktop Browser' : 'Mozilla/5.0 (iPhone)',
+                userAgentData: { mobile },
+                clipboard: { writeText },
+            });
+
+            render(<ContactAction friendName="Alex" kind="email" value="alex@example.com" />);
+
+            expect(screen.getByRole('button', { name: expectedLabel })).toBeInTheDocument();
+        },
+    );
+
+    it('offers the native email action and copies from the mobile menu', async () => {
+        const writeText = device('Android Mobile');
+        render(<ContactAction friendName="Alex" kind="email" value="alex@example.com" />);
+
+        fireEvent.click(screen.getByRole('button', { name: /choose an action/i }));
+        expect(screen.getByRole('link', { name: 'Send email' })).toHaveAttribute(
+            'href',
+            'mailto:alex@example.com',
+        );
+        fireEvent.click(screen.getByRole('button', { name: 'Copy email' }));
+        await waitFor(() => expect(writeText).toHaveBeenCalledWith('alex@example.com'));
+    });
 });

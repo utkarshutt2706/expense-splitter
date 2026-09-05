@@ -27,4 +27,17 @@ describe('friendsApi', () => {
         expect(httpClient.get).toHaveBeenCalledWith('/users/me/friends');
         expect(friends).toEqual([friend]);
     });
+
+    it('preserves an empty friend list', async () => {
+        vi.mocked(httpClient.get).mockResolvedValue({ data: [] });
+
+        await expect(getFriends()).resolves.toEqual([]);
+    });
+
+    it('propagates transport failures unchanged', async () => {
+        const failure = new Error('Network unavailable');
+        vi.mocked(httpClient.get).mockRejectedValue(failure);
+
+        await expect(getFriends()).rejects.toBe(failure);
+    });
 });
