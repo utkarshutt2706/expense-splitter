@@ -61,7 +61,8 @@ export default defineConfig(({ command }) => ({
             exclude: [
                 'src/main.tsx',
                 'src/test/**',
-                'src/**/*.test.{ts,tsx}',
+                'src/**/index.ts',
+                'src/vite-env.d.ts',
                 'src/lib/api/generated/**',
             ],
             thresholds: {
