@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { Group } from './groupsApi';
 import { httpClient } from '@lib/api/httpClient';
@@ -21,6 +21,10 @@ const group: Group = {
 };
 
 describe('groupsApi', () => {
+    beforeEach(() => {
+        vi.resetAllMocks();
+    });
+
     it('getAll fetches the group list from /groups', async () => {
         vi.mocked(httpClient.get).mockResolvedValue({ data: [group] });
 
@@ -86,5 +90,26 @@ describe('groupsApi', () => {
         await remove('group-1');
 
         expect(httpClient.delete).toHaveBeenCalledWith('/groups/group-1');
+    });
+
+    it('preserves empty collection responses', async () => {
+        vi.mocked(httpClient.get).mockResolvedValue({ data: [] });
+
+        await expect(getAll()).resolves.toEqual([]);
+        await expect(getAllSummaries()).resolves.toEqual([]);
+    });
+
+    it.each([
+        ['getAll', () => getAll(), httpClient.get],
+        ['getAllSummaries', () => getAllSummaries(), httpClient.get],
+        ['getById', () => getById('group-1'), httpClient.get],
+        ['create', () => create({ name: 'Trip', memberIds: [] }), httpClient.post],
+        ['update', () => update('group-1', { name: 'Trip' }), httpClient.patch],
+        ['remove', () => remove('group-1'), httpClient.delete],
+    ] as const)('propagates %s transport failures unchanged', async (_name, request, method) => {
+        const failure = new Error('Network unavailable');
+        vi.mocked(method).mockRejectedValue(failure);
+
+        await expect(request()).rejects.toBe(failure);
     });
 });

@@ -1,5 +1,6 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import type { ComponentProps } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { User } from '@features/users/api/usersApi';
@@ -7,16 +8,34 @@ import { CURRENT_USER_ID } from '@test/fixtures/ids';
 import { useUserLookup } from '@features/users/hooks';
 import { EditGroupMembersForm } from './EditGroupMembersForm';
 
+const currentUserState = vi.hoisted(() => ({
+    data: { id: 'current-user', name: 'Alex Morgan', email: 'alex@example.com' } as
+        User | undefined,
+}));
+
 vi.mock('@app/hooks', async (importOriginal) => ({
     ...(await importOriginal<typeof import('@app/hooks')>()),
-    useCurrentUser: () => ({
-        data: { id: CURRENT_USER_ID, name: 'Alex Morgan', email: 'alex@example.com' },
-    }),
+    useCurrentUser: () => ({ data: currentUserState.data }),
 }));
 
 vi.mock('@features/users/hooks', () => ({
     useUserLookup: vi.fn(),
 }));
+
+vi.mock('../MemberSearchSection', async (importOriginal) => {
+    const actual = await importOriginal<typeof import('../MemberSearchSection')>();
+    return {
+        ...actual,
+        MemberSearchSection: (props: ComponentProps<typeof actual.MemberSearchSection>) => (
+            <>
+                <actual.MemberSearchSection {...props} />
+                <button type="button" onClick={() => props.onToggle(CURRENT_USER_ID)}>
+                    Attempt guarded current-user removal
+                </button>
+            </>
+        ),
+    };
+});
 
 function mockLookup(overrides: Record<string, unknown> = {}) {
     vi.mocked(useUserLookup).mockReturnValue({
@@ -36,6 +55,11 @@ const users: User[] = [
 
 describe('EditGroupMembersForm', () => {
     beforeEach(() => {
+        currentUserState.data = {
+            id: CURRENT_USER_ID,
+            name: 'Alex Morgan',
+            email: 'alex@example.com',
+        };
         vi.clearAllMocks();
         mockLookup();
     });
@@ -95,6 +119,26 @@ describe('EditGroupMembersForm', () => {
         expect(onSubmit).toHaveBeenCalledWith({ memberIds: [CURRENT_USER_ID] });
     });
 
+    it('rejects current-user removal even when the child invokes the toggle callback', async () => {
+        const onSubmit = vi.fn();
+        const user = userEvent.setup();
+        render(
+            <EditGroupMembersForm
+                users={users}
+                initialMemberIds={[CURRENT_USER_ID]}
+                onSubmit={onSubmit}
+                onCancel={vi.fn()}
+            />,
+        );
+
+        await user.click(
+            screen.getByRole('button', { name: /attempt guarded current-user removal/i }),
+        );
+        await user.click(screen.getByRole('button', { name: /save changes/i }));
+
+        expect(onSubmit).toHaveBeenCalledWith({ memberIds: [CURRENT_USER_ID] });
+    });
+
     it('adds a non-friend found by search and submits them as a member', async () => {
         const jamie: User = { id: 'user-9', name: 'Jamie Fox', email: 'jamie@example.com' };
         mockLookup({ data: [jamie] });
@@ -144,5 +188,26 @@ describe('EditGroupMembersForm', () => {
         await user.click(screen.getByRole('button', { name: /cancel/i }));
 
         expect(onCancel).toHaveBeenCalled();
+    });
+
+    it('keeps members editable when current-user data is unavailable', async () => {
+        currentUserState.data = undefined;
+        const onSubmit = vi.fn();
+        const user = userEvent.setup();
+        render(
+            <EditGroupMembersForm
+                users={users}
+                initialMemberIds={[CURRENT_USER_ID]}
+                onSubmit={onSubmit}
+                onCancel={vi.fn()}
+            />,
+        );
+
+        const currentMember = screen.getByRole('checkbox', { name: /alex morgan/i });
+        expect(currentMember).not.toBeDisabled();
+        await user.click(currentMember);
+        await user.click(screen.getByRole('button', { name: /save changes/i }));
+
+        expect(onSubmit).toHaveBeenCalledWith({ memberIds: [] });
     });
 });

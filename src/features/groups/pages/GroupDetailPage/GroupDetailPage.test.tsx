@@ -8,9 +8,11 @@ import { useGroup, useGroupMembers } from '@features/groups';
 import { ApiError } from '@lib/api/apiError';
 import { GroupDetailPage } from './GroupDetailPage';
 
+const routeState = vi.hoisted(() => ({ groupId: 'group-1' as string | undefined }));
+
 vi.mock('react-router', async () => {
     const actual = await vi.importActual('react-router');
-    return { ...actual, useParams: () => ({ groupId: 'group-1' }) };
+    return { ...actual, useParams: () => ({ groupId: routeState.groupId }) };
 });
 
 vi.mock('@features/groups', () => ({
@@ -19,7 +21,21 @@ vi.mock('@features/groups', () => ({
 }));
 
 vi.mock('@features/groups/components/GroupMembersSection', () => ({
-    GroupMembersSection: () => <div data-testid="group-members-section" />,
+    GroupMembersSection: ({
+        members,
+        isMembersLoading,
+        isMembersFetching,
+        isGroupFetching,
+    }: {
+        members: User[];
+        isMembersLoading: boolean;
+        isMembersFetching: boolean;
+        isGroupFetching: boolean;
+    }) => (
+        <div data-testid="group-members-section">
+            {`${members.length}-${String(isMembersLoading)}-${String(isMembersFetching)}-${String(isGroupFetching)}`}
+        </div>
+    ),
 }));
 
 vi.mock('@features/groups/components/MemberAvatarsSkeleton', () => ({
@@ -59,6 +75,11 @@ function renderPage() {
 }
 
 describe('GroupDetailPage', () => {
+    beforeEach(() => {
+        routeState.groupId = 'group-1';
+        vi.clearAllMocks();
+    });
+
     it('shows a loading message while fetching, with group-name content deferred but balance/expenses fetching in parallel', () => {
         vi.mocked(useGroup).mockReturnValue({
             data: undefined,
@@ -119,6 +140,46 @@ describe('GroupDetailPage', () => {
         renderPage();
 
         expect(screen.getByText(/you don't have access to this group/i)).toBeInTheDocument();
+    });
+
+    it('shows the fallback error when a successful query has no group', () => {
+        vi.mocked(useGroup).mockReturnValue({
+            data: undefined,
+            isLoading: false,
+            isError: false,
+        } as unknown as ReturnType<typeof useGroup>);
+        vi.mocked(useGroupMembers).mockReturnValue({
+            data: undefined,
+            isLoading: false,
+            isFetching: false,
+        } as unknown as ReturnType<typeof useGroupMembers>);
+
+        renderPage();
+
+        expect(screen.getByText(/couldn't load this group/i)).toBeInTheDocument();
+        expect(screen.getByTestId('group-balance-summary')).toHaveTextContent('group-1');
+        expect(screen.queryByTestId('add-expense-action')).not.toBeInTheDocument();
+    });
+
+    it('uses empty identifiers and member lists when the route parameter is absent', () => {
+        routeState.groupId = undefined;
+        vi.mocked(useGroup).mockReturnValue({
+            data: undefined,
+            isLoading: true,
+            isError: false,
+        } as unknown as ReturnType<typeof useGroup>);
+        vi.mocked(useGroupMembers).mockReturnValue({
+            data: undefined,
+            isLoading: true,
+            isFetching: false,
+        } as unknown as ReturnType<typeof useGroupMembers>);
+
+        renderPage();
+
+        expect(useGroup).toHaveBeenCalledWith('');
+        expect(useGroupMembers).toHaveBeenCalledWith([]);
+        expect(screen.getByTestId('group-balance-summary')).toHaveTextContent('');
+        expect(screen.getByTestId('group-activity-list')).toHaveTextContent('-0');
     });
 
     it('renders the back link', () => {
@@ -185,6 +246,28 @@ describe('GroupDetailPage', () => {
                 'href',
                 '/analytics?groupId=group-1',
             );
+        });
+
+        it('passes loading and fetching state with an empty member fallback', () => {
+            vi.mocked(useGroup).mockReturnValue({
+                data: group,
+                isLoading: false,
+                isError: false,
+                isFetching: true,
+            } as unknown as ReturnType<typeof useGroup>);
+            vi.mocked(useGroupMembers).mockReturnValue({
+                data: undefined,
+                isLoading: true,
+                isFetching: true,
+            } as unknown as ReturnType<typeof useGroupMembers>);
+
+            renderPage();
+
+            expect(screen.getByTestId('group-members-section')).toHaveTextContent(
+                '0-true-true-true',
+            );
+            expect(screen.getByTestId('group-activity-list')).toHaveTextContent('group-1-0');
+            expect(screen.getByTestId('add-expense-action')).toHaveTextContent('group-1-0');
         });
     });
 });

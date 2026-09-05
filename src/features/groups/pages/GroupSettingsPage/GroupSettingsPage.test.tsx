@@ -14,12 +14,13 @@ import { ApiError } from '@lib/api/apiError';
 import { GroupSettingsPage } from './GroupSettingsPage';
 
 const navigateMock = vi.fn();
+const routeState = vi.hoisted(() => ({ groupId: 'group-1' as string | undefined }));
 
 vi.mock('react-router', async () => {
     const actual = await vi.importActual('react-router');
     return {
         ...actual,
-        useParams: () => ({ groupId: 'group-1' }),
+        useParams: () => ({ groupId: routeState.groupId }),
         useNavigate: () => navigateMock,
     };
 });
@@ -46,8 +47,21 @@ vi.mock('@features/groups/hooks/useUpdateGroupMembers', () => ({
 }));
 
 vi.mock('@features/groups/components/GroupNameEditor', () => ({
-    GroupNameEditor: ({ group }: { group: Group }) => (
-        <div data-testid="group-name-editor">{group.name}</div>
+    GroupNameEditor: ({
+        group,
+        isEditing,
+        onEditingChange,
+    }: {
+        group: Group;
+        isEditing: boolean;
+        onEditingChange: (isEditing: boolean) => void;
+    }) => (
+        <div data-testid="group-name-editor">
+            {group.name}-{isEditing ? 'editing' : 'idle'}
+            <button type="button" onClick={() => onEditingChange(true)}>
+                Fake edit name
+            </button>
+        </div>
     ),
 }));
 
@@ -105,6 +119,7 @@ function renderPage() {
 
 describe('GroupSettingsPage', () => {
     beforeEach(() => {
+        routeState.groupId = 'group-1';
         vi.clearAllMocks();
         vi.mocked(useCurrentUser).mockReturnValue({
             data: { id: 'current-user', name: 'Alex Morgan', email: 'alex@example.com' },
@@ -169,6 +184,47 @@ describe('GroupSettingsPage', () => {
         expect(screen.getByText(/you don't have access to this group/i)).toBeInTheDocument();
     });
 
+    it('shows the fallback error when a successful query has no group', () => {
+        vi.mocked(useGroup).mockReturnValue({
+            data: undefined,
+            isLoading: false,
+            isError: false,
+        } as unknown as ReturnType<typeof useGroup>);
+        vi.mocked(useGroupMembers).mockReturnValue({
+            data: undefined,
+            isLoading: false,
+        } as unknown as ReturnType<typeof useGroupMembers>);
+        vi.mocked(useGroupBalances).mockReturnValue({
+            data: undefined,
+        } as unknown as ReturnType<typeof useGroupBalances>);
+
+        renderPage();
+
+        expect(screen.getByText(/couldn't load this group/i)).toBeInTheDocument();
+    });
+
+    it('uses empty query identifiers and a safe back link when the route id is absent', () => {
+        routeState.groupId = undefined;
+        vi.mocked(useGroup).mockReturnValue({
+            data: undefined,
+            isLoading: true,
+            isError: false,
+        } as unknown as ReturnType<typeof useGroup>);
+        vi.mocked(useGroupMembers).mockReturnValue({
+            data: undefined,
+            isLoading: false,
+        } as unknown as ReturnType<typeof useGroupMembers>);
+
+        renderPage();
+
+        expect(useGroup).toHaveBeenCalledWith('');
+        expect(useGroupBalances).toHaveBeenCalledWith('');
+        expect(screen.getByRole('link', { name: /back to group/i })).toHaveAttribute(
+            'href',
+            '/groups',
+        );
+    });
+
     it('renders the back link to the group', () => {
         vi.mocked(useGroup).mockReturnValue({
             data: undefined,
@@ -228,6 +284,37 @@ describe('GroupSettingsPage', () => {
             expect(screen.getByTestId('group-name-editor')).toHaveTextContent('Weekend Trip');
             expect(screen.getByTestId('edit-group-members-action')).toHaveTextContent('group-1-2');
             expect(screen.getByTestId('member-list')).toHaveTextContent('2');
+        });
+
+        it('forwards name editing changes and falls back to empty unresolved members', () => {
+            vi.mocked(useGroupMembers).mockReturnValue({
+                data: undefined,
+                isLoading: false,
+            } as unknown as ReturnType<typeof useGroupMembers>);
+            renderPage();
+
+            expect(screen.getByTestId('edit-group-members-action')).toHaveTextContent('group-1-0');
+            expect(screen.getByTestId('member-list')).toHaveTextContent('0');
+            fireEvent.click(screen.getByRole('button', { name: /fake edit name/i }));
+            expect(screen.getByTestId('group-name-editor')).toHaveTextContent(
+                'Weekend Trip-editing',
+            );
+        });
+
+        it('disables actions while their mutations are pending', () => {
+            vi.mocked(useDeleteGroup).mockReturnValue({
+                mutate: vi.fn(),
+                isPending: true,
+            } as unknown as ReturnType<typeof useDeleteGroup>);
+            vi.mocked(useUpdateGroupMembers).mockReturnValue({
+                mutate: vi.fn(),
+                isPending: true,
+            } as unknown as ReturnType<typeof useUpdateGroupMembers>);
+
+            renderPage();
+
+            expect(screen.getByRole('button', { name: /leave group/i })).toBeDisabled();
+            expect(screen.getByRole('button', { name: /delete group/i })).toBeDisabled();
         });
 
         it('enables leave-group and delete-group when everyone is settled up', () => {

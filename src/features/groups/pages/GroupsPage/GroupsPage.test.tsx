@@ -106,16 +106,21 @@ describe('GroupsPage', () => {
     });
 
     it('shows an error message when the query fails', () => {
+        const refetch = vi.fn();
         vi.mocked(useGroupSummaries).mockReturnValue({
             data: undefined,
             isLoading: false,
             isError: true,
+            refetch,
         } as unknown as ReturnType<typeof useGroupSummaries>);
 
         renderPage();
 
         expect(screen.getByText(/we couldn’t load your groups/i)).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /try again/i })).toBeInTheDocument();
+
+        fireEvent.click(screen.getByRole('button', { name: /try again/i }));
+        expect(refetch).toHaveBeenCalledOnce();
     });
 
     it('shows an empty state when there are no groups', () => {
@@ -167,6 +172,22 @@ describe('GroupsPage', () => {
             'href',
             '/groups/group-2',
         );
+    });
+
+    it('renders groups and supplies an empty friend list while friends are unavailable', () => {
+        vi.mocked(useGroupSummaries).mockReturnValue({
+            data: groups,
+            isLoading: false,
+            isError: false,
+        } as unknown as ReturnType<typeof useGroupSummaries>);
+        vi.mocked(useFriends).mockReturnValue({
+            data: undefined,
+        } as unknown as ReturnType<typeof useFriends>);
+
+        renderPage();
+
+        expect(screen.getByText('Weekend Trip')).toBeInTheDocument();
+        expect(screen.getByText('Roommates')).toBeInTheDocument();
     });
 
     it('sorts active groups by latest activity and places inactive groups last', () => {
@@ -238,6 +259,19 @@ describe('GroupsPage', () => {
             renderPage();
 
             expect(screen.queryByText(/fake create group submit/i)).not.toBeInTheDocument();
+
+            fireEvent.click(screen.getByRole('button', { name: /create group/i }));
+
+            expect(screen.getByText(/fake create group submit/i)).toBeInTheDocument();
+        });
+
+        it('opens the create dialog from the toolbar when groups exist', () => {
+            vi.mocked(useGroupSummaries).mockReturnValue({
+                data: groups,
+                isLoading: false,
+                isError: false,
+            } as unknown as ReturnType<typeof useGroupSummaries>);
+            renderPage();
 
             fireEvent.click(screen.getByRole('button', { name: /create group/i }));
 
@@ -340,6 +374,19 @@ describe('GroupsPage', () => {
             expect(screen.getByText(/try a different search/i)).toBeInTheDocument();
             expect(screen.queryByText('Weekend Trip')).not.toBeInTheDocument();
             expect(screen.queryByText('Roommates')).not.toBeInTheDocument();
+        });
+
+        it('restores every group from the no-match state when clear search is clicked', () => {
+            renderPage();
+            fireEvent.change(screen.getByRole('searchbox', { name: /search groups/i }), {
+                target: { value: 'nobody' },
+            });
+
+            fireEvent.click(screen.getByRole('button', { name: /clear search/i }));
+
+            expect(screen.getByText('Weekend Trip')).toBeInTheDocument();
+            expect(screen.getByText('Roommates')).toBeInTheDocument();
+            expect(screen.getByRole('searchbox', { name: /search groups/i })).toHaveValue('');
         });
 
         it('shows every group again once the search is cleared', () => {

@@ -101,7 +101,7 @@ export function GroupSettingsPage() {
     return (
         <div>
             <Link
-                to={`/groups/${groupId}`}
+                to={groupId ? `/groups/${groupId}` : '/groups'}
                 className="text-muted-foreground hover:text-surface-foreground mb-4 inline-flex items-center gap-1 text-sm"
             >
                 <ArrowLeft className="size-4" />

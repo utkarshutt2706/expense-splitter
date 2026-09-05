@@ -39,4 +39,21 @@ describe('useUpdateGroupMembers', () => {
         expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['groups'] });
         expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['users', 'friends'] });
     });
+
+    it('exposes update failures without invalidating cached data', async () => {
+        const failure = new Error('Update failed');
+        vi.mocked(groupsApi.update).mockRejectedValue(failure);
+        const queryClient = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
+        const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
+        const wrapper = ({ children }: { children: ReactNode }) => (
+            <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+        );
+        const { result } = renderHook(() => useUpdateGroupMembers(), { wrapper });
+
+        result.current.mutate({ id: 'group-1', memberIds: ['current-user'] });
+
+        await waitFor(() => expect(result.current.isError).toBe(true));
+        expect(result.current.error).toBe(failure);
+        expect(invalidateSpy).not.toHaveBeenCalled();
+    });
 });

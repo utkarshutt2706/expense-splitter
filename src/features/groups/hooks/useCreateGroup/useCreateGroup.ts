@@ -8,8 +8,10 @@ export function useCreateGroup() {
     const { data: currentUser } = useCurrentUser();
 
     return useMutation({
-        mutationFn: ({ name, memberIds }: CreateGroupInput) =>
-            create({ name, memberIds: [currentUser?.id ?? '', ...memberIds] }),
+        mutationFn: ({ name, memberIds }: CreateGroupInput) => {
+            if (!currentUser) throw new Error('You must be signed in to create a group');
+            return create({ name, memberIds: [currentUser.id, ...memberIds] });
+        },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['groups'] });
             queryClient.invalidateQueries({ queryKey: ['users', 'friends'] });

@@ -36,4 +36,21 @@ describe('useRenameGroup', () => {
         expect(groupsApi.update).toHaveBeenCalledWith('group-1', { name: 'Ski Trip' });
         expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['groups'] });
     });
+
+    it('exposes rename failures without invalidating cached groups', async () => {
+        const failure = new Error('Rename failed');
+        vi.mocked(groupsApi.update).mockRejectedValue(failure);
+        const queryClient = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
+        const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
+        const wrapper = ({ children }: { children: ReactNode }) => (
+            <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+        );
+        const { result } = renderHook(() => useRenameGroup(), { wrapper });
+
+        result.current.mutate({ id: 'group-1', name: 'Ski Trip' });
+
+        await waitFor(() => expect(result.current.isError).toBe(true));
+        expect(result.current.error).toBe(failure);
+        expect(invalidateSpy).not.toHaveBeenCalled();
+    });
 });

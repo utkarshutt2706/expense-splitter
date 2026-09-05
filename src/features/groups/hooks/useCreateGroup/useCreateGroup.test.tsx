@@ -1,12 +1,17 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { Group } from '@features/groups/api/groupsApi';
 import { CURRENT_USER_ID } from '@test/fixtures/ids';
 import * as groupsApi from '@features/groups/api/groupsApi';
 import { useCreateGroup } from './useCreateGroup';
+
+const currentUserState = vi.hoisted(() => ({
+    data: { id: 'current-user', name: 'Alex Morgan', email: 'alex@example.com' } as
+        { id: string; name: string; email: string } | undefined,
+}));
 
 vi.mock('@features/groups/api/groupsApi', () => ({
     create: vi.fn(),
@@ -14,12 +19,19 @@ vi.mock('@features/groups/api/groupsApi', () => ({
 
 vi.mock('@app/hooks', async (importOriginal) => ({
     ...(await importOriginal<typeof import('@app/hooks')>()),
-    useCurrentUser: () => ({
-        data: { id: CURRENT_USER_ID, name: 'Alex Morgan', email: 'alex@example.com' },
-    }),
+    useCurrentUser: () => ({ data: currentUserState.data }),
 }));
 
 describe('useCreateGroup', () => {
+    beforeEach(() => {
+        currentUserState.data = {
+            id: CURRENT_USER_ID,
+            name: 'Alex Morgan',
+            email: 'alex@example.com',
+        };
+        vi.resetAllMocks();
+    });
+
     it('creates a group via the API with the current user included', async () => {
         const created: Group = {
             id: 'server-generated-id',
@@ -71,5 +83,39 @@ describe('useCreateGroup', () => {
         expect(groupsApi.create).toHaveBeenCalledWith(
             expect.objectContaining({ memberIds: [CURRENT_USER_ID] }),
         );
+    });
+
+    it('rejects locally instead of sending an empty member id when the session is unavailable', async () => {
+        currentUserState.data = undefined;
+        const queryClient = new QueryClient({
+            defaultOptions: { mutations: { retry: false } },
+        });
+        const wrapper = ({ children }: { children: ReactNode }) => (
+            <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+        );
+        const { result } = renderHook(() => useCreateGroup(), { wrapper });
+
+        result.current.mutate({ name: 'Weekend Trip', memberIds: ['friend-1'] });
+
+        await waitFor(() => expect(result.current.isError).toBe(true));
+        expect(result.current.error).toEqual(new Error('You must be signed in to create a group'));
+        expect(groupsApi.create).not.toHaveBeenCalled();
+    });
+
+    it('exposes API failures without invalidating cached data', async () => {
+        const failure = new Error('Create failed');
+        vi.mocked(groupsApi.create).mockRejectedValue(failure);
+        const queryClient = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
+        const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
+        const wrapper = ({ children }: { children: ReactNode }) => (
+            <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+        );
+        const { result } = renderHook(() => useCreateGroup(), { wrapper });
+
+        result.current.mutate({ name: 'Weekend Trip', memberIds: [] });
+
+        await waitFor(() => expect(result.current.isError).toBe(true));
+        expect(result.current.error).toBe(failure);
+        expect(invalidateSpy).not.toHaveBeenCalled();
     });
 });

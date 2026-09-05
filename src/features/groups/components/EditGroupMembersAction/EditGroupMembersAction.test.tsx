@@ -21,12 +21,15 @@ vi.mock('../EditGroupMembersDialog', () => ({
     EditGroupMembersDialog: ({
         open,
         onSubmit,
+        users,
     }: {
         open: boolean;
         onSubmit: (values: { memberIds: string[] }) => void;
+        users: User[];
     }) =>
         open ? (
             <div data-testid="edit-group-members-dialog">
+                <span data-testid="editable-user-ids">{users.map(({ id }) => id).join(',')}</span>
                 <button type="button" onClick={() => onSubmit({ memberIds: ['friend-2'] })}>
                     Fake edit members submit
                 </button>
@@ -53,6 +56,7 @@ const members: User[] = [{ id: 'current-user', name: 'Alex Morgan', email: 'alex
 
 describe('EditGroupMembersAction', () => {
     beforeEach(() => {
+        vi.clearAllMocks();
         vi.mocked(useFriends).mockReturnValue({
             data: [],
         } as unknown as ReturnType<typeof useFriends>);
@@ -76,6 +80,33 @@ describe('EditGroupMembersAction', () => {
         await user.click(screen.getByRole('button', { name: /add\/remove members/i }));
 
         expect(screen.getByTestId('edit-group-members-dialog')).toBeInTheDocument();
+    });
+
+    it('falls back to current members when friends have not loaded', async () => {
+        vi.mocked(useFriends).mockReturnValue({
+            data: undefined,
+        } as unknown as ReturnType<typeof useFriends>);
+        const user = userEvent.setup();
+        render(<EditGroupMembersAction group={group} members={members} />);
+
+        await user.click(screen.getByRole('button', { name: /add\/remove members/i }));
+
+        expect(screen.getByTestId('editable-user-ids')).toHaveTextContent('current-user');
+    });
+
+    it('deduplicates friends and members while preferring the loaded member record', async () => {
+        vi.mocked(useFriends).mockReturnValue({
+            data: [
+                { id: 'current-user', name: 'Stale Name' },
+                { id: 'friend-2', name: 'Jordan Lee' },
+            ],
+        } as unknown as ReturnType<typeof useFriends>);
+        const user = userEvent.setup();
+        render(<EditGroupMembersAction group={group} members={members} />);
+
+        await user.click(screen.getByRole('button', { name: /add\/remove members/i }));
+
+        expect(screen.getByTestId('editable-user-ids')).toHaveTextContent('current-user,friend-2');
     });
 
     it('updates group members and shows a loading toast, then success', async () => {

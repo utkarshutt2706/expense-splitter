@@ -58,4 +58,23 @@ describe('useMemberSearchSelection', () => {
 
         expect(result.current.visibleUsers).toEqual(baseUsers);
     });
+
+    it('does not duplicate a discovered user or an already-selected member', () => {
+        const jamie: User = { id: 'user-9', name: 'Jamie Fox', email: 'jamie@example.com' };
+        const { result } = renderHook(() => useMemberSearchSelection(baseUsers, ['user-9']));
+
+        act(() => result.current.addFoundUser(jamie));
+        act(() => result.current.addFoundUser(jamie));
+
+        expect(result.current.memberIds).toEqual(['user-9']);
+        expect(result.current.visibleUsers).toEqual([...baseUsers, jamie]);
+    });
+
+    it('trims search text and matches case-insensitively', () => {
+        const { result } = renderHook(() => useMemberSearchSelection(baseUsers));
+
+        act(() => result.current.setSearch('  PRIYA@EXAMPLE.COM  '));
+
+        expect(result.current.visibleUsers).toEqual([priya]);
+    });
 });
