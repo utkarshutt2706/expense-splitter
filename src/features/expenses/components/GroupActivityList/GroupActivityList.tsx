@@ -102,9 +102,7 @@ export function GroupActivityList({
 
             <ConfirmationDialog
                 open={deletingExpense !== null}
-                onOpenChange={(open) => {
-                    if (!open) closeDeleteExpense();
-                }}
+                onOpenChange={closeDeleteExpense}
                 title={`Delete "${deletingExpense?.description ?? 'this expense'}"?`}
                 description="This will permanently remove the expense from this group."
                 confirmLabel="Delete"
@@ -115,9 +113,7 @@ export function GroupActivityList({
             <RecordPaymentDialog
                 mode="edit"
                 open={editingPayment !== null}
-                onOpenChange={(open) => {
-                    if (!open) closeEditPayment();
-                }}
+                onOpenChange={closeEditPayment}
                 members={members}
                 initialValues={
                     editingPayment
@@ -134,9 +130,7 @@ export function GroupActivityList({
 
             <ConfirmationDialog
                 open={deletingPayment !== null}
-                onOpenChange={(open) => {
-                    if (!open) closeDeletePayment();
-                }}
+                onOpenChange={closeDeletePayment}
                 title="Delete this payment?"
                 description={`This will permanently remove the ${formatCurrency(deletingPayment?.amount)} payment and recalculate group balances.`}
                 confirmLabel="Delete"

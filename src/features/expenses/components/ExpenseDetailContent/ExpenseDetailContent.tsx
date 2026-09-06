@@ -11,7 +11,7 @@ const dateFormatter = new Intl.DateTimeFormat('en-US', {
 
 function memberLabel(member: User | undefined, names: Map<string, string>): string {
     if (!member) return 'Someone';
-    return names.get(member.id) ?? member.name;
+    return names.get(member.id)!;
 }
 
 function shareLabel(label: string): string {
@@ -90,7 +90,7 @@ export function ExpenseDetailContent({
                                     />
                                 )}
                                 <Avatar name={member.name} size="sm" />
-                                <span className="text-surface-foreground text-sm">{`${shareLabel(names.get(member.id) ?? member.name)} ${formatCurrency(share)}`}</span>
+                                <span className="text-surface-foreground text-sm">{`${shareLabel(names.get(member.id)!)} ${formatCurrency(share)}`}</span>
                             </li>
                         );
                     })}

@@ -49,7 +49,7 @@ export function SplitParticipantList({
     return (
         <ul className="flex flex-col gap-1">
             {orderedUsers.map((user) => {
-                const name = names.get(user.id) ?? user.name;
+                const name = names.get(user.id)!;
                 const accessibleName = user.id === currentUser?.id ? 'You' : user.name;
                 const isSelected = selectedIds.includes(user.id);
                 const resolvedAmount = resolvedAmounts[user.id];

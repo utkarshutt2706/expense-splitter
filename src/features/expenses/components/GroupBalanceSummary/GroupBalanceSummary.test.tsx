@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -12,10 +12,13 @@ vi.mock('@features/balances/hooks/useGroupBalances', () => ({
     useGroupBalances: vi.fn(),
 }));
 
+const currentUserState = vi.hoisted(() => ({ id: 'current-user' as string | undefined }));
 vi.mock('@app/hooks', async (importOriginal) => ({
     ...(await importOriginal<typeof import('@app/hooks')>()),
     useCurrentUser: () => ({
-        data: { id: CURRENT_USER_ID, name: 'Alex Morgan', email: 'alex@example.com' },
+        data: currentUserState.id
+            ? { id: currentUserState.id, name: 'Alex Morgan', email: 'alex@example.com' }
+            : undefined,
     }),
 }));
 
@@ -41,6 +44,7 @@ function renderSummary(members: User[] = defaultMembers) {
 
 describe('GroupBalanceSummary', () => {
     beforeEach(() => {
+        currentUserState.id = CURRENT_USER_ID;
         window.sessionStorage.clear();
         vi.spyOn(window, 'matchMedia').mockImplementation(
             (query) =>
@@ -70,16 +74,20 @@ describe('GroupBalanceSummary', () => {
     });
 
     it('shows an error message when balances fail to load', () => {
+        const refetch = vi.fn();
         vi.mocked(useGroupBalances).mockReturnValue({
             data: undefined,
             isLoading: false,
             isError: true,
+            refetch,
         } as unknown as ReturnType<typeof useGroupBalances>);
 
         renderSummary();
 
         expect(screen.getByText('Balance unavailable')).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /try again/i })).toBeInTheDocument();
+        fireEvent.click(screen.getByRole('button', { name: /try again/i }));
+        expect(refetch).toHaveBeenCalledOnce();
     });
 
     it('renders an owed balance as one explicit link surface to the balance page', () => {
@@ -296,6 +304,45 @@ describe('GroupBalanceSummary', () => {
         expect(screen.queryByRole('link')).not.toBeInTheDocument();
     });
 
+    it('treats an absent successful response as an empty balance summary', () => {
+        vi.mocked(useGroupBalances).mockReturnValue({
+            data: undefined,
+            isLoading: false,
+            isError: false,
+        } as unknown as ReturnType<typeof useGroupBalances>);
+
+        renderSummary();
+
+        expect(screen.getByText('No balances yet')).toBeInTheDocument();
+    });
+
+    it('uses a neutral empty identity while the current user is unavailable', () => {
+        currentUserState.id = undefined;
+        vi.mocked(useGroupBalances).mockReturnValue({
+            data: groupBalances([{ userId: 'friend-1', balance: 25 }]),
+            isLoading: false,
+            isError: false,
+        } as unknown as ReturnType<typeof useGroupBalances>);
+
+        renderSummary();
+
+        expect(screen.getByText('You are settled up')).toBeInTheDocument();
+    });
+
+    it('shows refresh progress beside an empty summary', () => {
+        vi.mocked(useGroupBalances).mockReturnValue({
+            data: groupBalances([]),
+            isLoading: false,
+            isFetching: true,
+            isError: false,
+        } as unknown as ReturnType<typeof useGroupBalances>);
+
+        renderSummary();
+
+        expect(screen.getByText('No balances yet')).toBeInTheDocument();
+        expect(screen.getByRole('status', { name: 'Refreshing…' })).toBeInTheDocument();
+    });
+
     it('shows a refreshing indicator during a background refetch, not the loading skeleton', () => {
         vi.mocked(useGroupBalances).mockReturnValue({
             data: groupBalances([
@@ -314,6 +361,23 @@ describe('GroupBalanceSummary', () => {
             screen.getByRole('status', { name: 'Refreshing…' }),
         );
         expect(container.querySelector('.animate-pulse')).not.toBeInTheDocument();
+    });
+
+    it('shows refresh progress in the fully settled state', () => {
+        vi.mocked(useGroupBalances).mockReturnValue({
+            data: groupBalances([
+                { userId: CURRENT_USER_ID, balance: 0 },
+                { userId: 'friend-1', balance: 0 },
+            ]),
+            isLoading: false,
+            isFetching: true,
+            isError: false,
+        } as unknown as ReturnType<typeof useGroupBalances>);
+
+        renderSummary();
+
+        expect(screen.getByText('Everyone is settled up')).toBeInTheDocument();
+        expect(screen.getByRole('status', { name: 'Refreshing…' })).toBeInTheDocument();
     });
 
     it('does not show a refreshing indicator once the background refetch settles', () => {

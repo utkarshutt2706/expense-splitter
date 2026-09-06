@@ -21,6 +21,27 @@ function renderCreateExpense() {
 }
 
 describe('useCreateExpense', () => {
+    it('surfaces creation failures without invalidating cached data', async () => {
+        const error = new Error('Unable to create expense');
+        vi.mocked(expensesApi.create).mockRejectedValue(error);
+
+        const { result, invalidateSpy } = renderCreateExpense();
+
+        result.current.mutate({
+            groupId: 'group-1',
+            description: 'Groceries',
+            amount: 90,
+            paidByUserId: 'user-1',
+            participantUserIds: ['user-1'],
+            splitType: 'equal',
+        });
+
+        await waitFor(() => expect(result.current.isError).toBe(true));
+
+        expect(result.current.error).toBe(error);
+        expect(invalidateSpy).not.toHaveBeenCalled();
+    });
+
     it('creates an expense with an equal split, paid by whoever is passed in', async () => {
         const created: Expense = {
             id: 'server-generated-id',

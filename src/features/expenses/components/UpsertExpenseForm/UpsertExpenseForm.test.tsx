@@ -171,6 +171,32 @@ describe('UpsertExpenseForm', () => {
         expect(await screen.findByText(/paid date cannot be in the future/i)).toBeInTheDocument();
     });
 
+    it('requires a payer instead of submitting an unassigned expense', async () => {
+        const onSubmit = vi.fn();
+        const user = userEvent.setup();
+        render(
+            <UpsertExpenseForm
+                members={members}
+                initialValues={{
+                    description: '',
+                    amount: 42.5,
+                    paidByUserId: '',
+                    participantUserIds: [CURRENT_USER_ID],
+                    splitType: 'equal',
+                    splitValues: {},
+                }}
+                onSubmit={onSubmit}
+                onCancel={vi.fn()}
+            />,
+        );
+
+        await user.type(screen.getByLabelText(/description/i), 'Groceries');
+        await user.click(screen.getByRole('button', { name: /add expense/i }));
+
+        expect(await screen.findByText('Select who paid')).toBeInTheDocument();
+        expect(onSubmit).not.toHaveBeenCalled();
+    });
+
     it('excludes an unchecked participant from the submitted values', async () => {
         const onSubmit = vi.fn();
         const user = userEvent.setup();

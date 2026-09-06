@@ -81,6 +81,34 @@ describe('ExpenseActivityRow', () => {
         expect(screen.getByText('You were not involved')).toHaveClass('text-muted-foreground');
     });
 
+    it('shows what the current user lent when they paid more than their own share', () => {
+        renderRow(expense({ paidByUserId: currentUser.id }));
+
+        expect(screen.getByText('You lent ₹20.00')).toHaveClass('text-owed');
+        expect(screen.getByRole('link', { name: /dinner/i })).toHaveAttribute(
+            'href',
+            '/groups/group-1/expenses/expense-1',
+        );
+    });
+
+    it('uses the member record when a compact payer label is unavailable', () => {
+        render(
+            <MemoryRouter>
+                <ExpenseActivityRow
+                    groupId="group-1"
+                    expense={expense()}
+                    membersById={membersById}
+                    names={new Map()}
+                    onEdit={vi.fn()}
+                    onDelete={vi.fn()}
+                />
+            </MemoryRouter>,
+        );
+
+        expect(screen.getByText(/Priya Sharma paid/)).toBeInTheDocument();
+        expect(screen.getByText('You were not involved')).toBeInTheDocument();
+    });
+
     it('uses neutral payer details when the payer is unavailable', () => {
         renderRow(expense({ paidByUserId: 'missing-user' }));
 

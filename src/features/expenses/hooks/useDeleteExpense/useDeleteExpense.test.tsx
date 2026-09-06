@@ -11,6 +11,44 @@ vi.mock('@features/expenses/api/expensesApi', () => ({
 }));
 
 describe('useDeleteExpense', () => {
+    it('surfaces deletion failures without invalidating cached data', async () => {
+        const error = new Error('Unable to delete expense');
+        vi.mocked(expensesApi.remove).mockRejectedValue(error);
+
+        const queryClient = new QueryClient();
+        const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
+        const wrapper = ({ children }: { children: ReactNode }) => (
+            <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+        );
+        const { result } = renderHook(() => useDeleteExpense(), { wrapper });
+
+        result.current.mutate({ id: 'expense-1', groupId: 'group-1' });
+
+        await waitFor(() => expect(result.current.isError).toBe(true));
+
+        expect(result.current.error).toBe(error);
+        expect(invalidateSpy).not.toHaveBeenCalled();
+    });
+
+    it('surfaces deletion failures without invalidating cached data', async () => {
+        const error = new Error('Unable to delete expense');
+        vi.mocked(expensesApi.remove).mockRejectedValue(error);
+
+        const queryClient = new QueryClient();
+        const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
+        const wrapper = ({ children }: { children: ReactNode }) => (
+            <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+        );
+        const { result } = renderHook(() => useDeleteExpense(), { wrapper });
+
+        result.current.mutate({ id: 'expense-1', groupId: 'group-1' });
+
+        await waitFor(() => expect(result.current.isError).toBe(true));
+
+        expect(result.current.error).toBe(error);
+        expect(invalidateSpy).not.toHaveBeenCalled();
+    });
+
     it('deletes the expense and invalidates the group expense list', async () => {
         vi.mocked(expensesApi.remove).mockResolvedValue(undefined);
 

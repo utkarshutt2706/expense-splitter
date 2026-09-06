@@ -378,6 +378,25 @@ describe('GroupActivityList', () => {
             expect(screen.getByLabelText('Paid on')).toHaveValue('2026-07-01');
         });
 
+        it('falls back to the creation date when editing a legacy payment without paidOn', async () => {
+            mockPayments([
+                {
+                    id: 'payment-1',
+                    groupId: 'group-1',
+                    fromUserId: CURRENT_USER_ID,
+                    toUserId: 'friend-1',
+                    amount: 25,
+                    createdAt: '2026-07-02T00:00:00.000Z',
+                },
+            ]);
+            const user = userEvent.setup();
+            renderList();
+
+            await user.click(screen.getByRole('button', { name: 'Edit', hidden: true }));
+
+            expect(screen.getByLabelText('Paid on')).toHaveValue('2026-07-02');
+        });
+
         it('asks for confirmation before deleting the payment', async () => {
             const user = userEvent.setup();
             renderList();

@@ -155,6 +155,28 @@ describe('ExpenseDetailPage', () => {
         expect(screen.getByText(/couldn't load this expense/i)).toBeInTheDocument();
     });
 
+    it('shows the same safe fallback when a completed request has no expense', () => {
+        vi.mocked(useExpense).mockReturnValue({
+            data: undefined,
+            isLoading: false,
+            isError: false,
+        } as unknown as ReturnType<typeof useExpense>);
+        vi.mocked(useGroup).mockReturnValue({
+            data: undefined,
+            isLoading: false,
+        } as unknown as ReturnType<typeof useGroup>);
+        vi.mocked(useGroupMembers).mockReturnValue({
+            data: undefined,
+            isLoading: false,
+        } as unknown as ReturnType<typeof useGroupMembers>);
+
+        renderPage();
+
+        expect(screen.getByRole('heading', { name: 'Expense' })).toBeInTheDocument();
+        expect(screen.getByText(/couldn't load this expense/i)).toBeInTheDocument();
+        expect(screen.getByRole('link', { name: /edit expense/i })).toBeInTheDocument();
+    });
+
     it('renders the back link and expense title once loaded', () => {
         vi.mocked(useExpense).mockReturnValue({
             data: expense,
