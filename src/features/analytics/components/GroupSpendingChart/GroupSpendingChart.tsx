@@ -74,7 +74,7 @@ export function GroupSpendingChart({ groups, dailyTrend }: GroupSpendingChartPro
                         <th>{entry.name}</th>
                         {active.map((group) => (
                             <td key={group.groupId}>
-                                {formatCurrency(Number(entry[group.groupId] ?? 0))}
+                                {formatCurrency(Number(entry[group.groupId]))}
                             </td>
                         ))}
                     </tr>

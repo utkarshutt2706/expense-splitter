@@ -2,28 +2,40 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { DashboardGroupSpend } from '@features/dashboard/api/dashboardApi';
+import { ANALYTICS_BAR_RADIUS, ANALYTICS_CHART_MARGIN } from '@features/analytics/utils';
 import { ContributionChart } from './ContributionChart';
 
+const mocks = vi.hoisted(() => ({ barChart: vi.fn(), bar: vi.fn(), scrollable: vi.fn() }));
 vi.mock('recharts', () => ({
-    BarChart: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-    Bar: ({ name }: { name: string }) => <span>{name}</span>,
+    BarChart: (props: { children: React.ReactNode }) => (
+        mocks.barChart(props),
+        (<div>{props.children}</div>)
+    ),
+    Bar: (props: { name: string }) => (mocks.bar(props), (<span>{props.name}</span>)),
     Tooltip: () => null,
 }));
 vi.mock('@features/analytics/components/ChartAxes', () => ({ ChartAxes: () => null }));
 vi.mock('@features/analytics/components/ScrollableChart', () => ({
     ScrollableChart: ({
+        categories,
         label,
+        ticks,
         legend,
         children,
     }: {
+        categories: number;
         label: string;
+        ticks: number[];
         legend: { name: string }[];
         children: React.ReactNode;
     }) => (
-        <div aria-label={label}>
-            {legend.map((item) => item.name).join(',')}
-            {children}
-        </div>
+        mocks.scrollable({ categories, label, ticks, legend }),
+        (
+            <div aria-label={label}>
+                {legend.map((item) => item.name).join(',')}
+                {children}
+            </div>
+        )
     ),
 }));
 
@@ -75,6 +87,28 @@ describe('ContributionChart', () => {
         expect(table).toHaveTextContent('120');
         expect(table).toHaveTextContent('50');
         expect(table).toHaveTextContent(/owed/i);
+
+        expect(mocks.barChart).toHaveBeenLastCalledWith(
+            expect.objectContaining({
+                data: [{ name: '1 Aug', paid: 120, share: 50 }],
+                margin: ANALYTICS_CHART_MARGIN,
+            }),
+        );
+        expect(mocks.bar.mock.calls.map(([props]) => props)).toEqual([
+            expect.objectContaining({
+                dataKey: 'paid',
+                name: 'Paid by you',
+                radius: ANALYTICS_BAR_RADIUS,
+            }),
+            expect.objectContaining({
+                dataKey: 'share',
+                name: 'Your share',
+                radius: ANALYTICS_BAR_RADIUS,
+            }),
+        ]);
+        expect(mocks.scrollable).toHaveBeenLastCalledWith(
+            expect.objectContaining({ label: 'Paid versus share chart' }),
+        );
     });
 
     it('labels fallback data by month when daily series are incomplete', () => {

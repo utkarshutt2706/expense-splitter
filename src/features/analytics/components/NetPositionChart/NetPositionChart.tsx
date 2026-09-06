@@ -33,7 +33,7 @@ export function NetPositionChart({ groups, dailyTrend }: NetPositionChartProps) 
     }));
     if (chartData.length === 0)
         return <p className="text-muted-foreground mt-6 text-sm">No spending in this period.</p>;
-    const closing = chartData.at(-1)?.cumulative ?? 0;
+    const closing = chartData.at(-1)!.cumulative;
     let description = 'You ended this period level with your share.';
     if (closing > 0)
         description = `By the end of this period you had fronted ${formatCurrency(closing)} more than your share.`;
