@@ -14,6 +14,8 @@ describe('BalanceDisclosure', () => {
         fireEvent.click(trigger);
         expect(trigger).toHaveAttribute('aria-expanded', 'true');
         expect(screen.getByText('Details')).toBeVisible();
+        fireEvent.click(trigger);
+        expect(trigger).toHaveAttribute('aria-expanded', 'false');
     });
 
     it('omits an absent description', () => {

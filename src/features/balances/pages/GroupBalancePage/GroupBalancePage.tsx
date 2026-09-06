@@ -101,7 +101,7 @@ export function GroupBalancePage() {
     return (
         <div className="mx-auto max-w-5xl">
             <Link
-                to={`/groups/${groupId}`}
+                to={groupId ? `/groups/${groupId}` : '/groups'}
                 className="text-muted-foreground hover:text-surface-foreground mb-3 inline-flex items-center gap-1 text-sm sm:mb-4"
             >
                 <ArrowLeft className="size-4" />

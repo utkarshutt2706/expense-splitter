@@ -31,4 +31,28 @@ describe('SettlementConfetti', () => {
         render(<SettlementConfetti groupId="group-1" celebration="group" />);
         expect(screen.queryByTestId('group-settlement-confetti')).not.toBeInTheDocument();
     });
+
+    it('still celebrates when session storage is unavailable', () => {
+        vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+            throw new DOMException('Storage blocked');
+        });
+
+        render(<SettlementConfetti groupId="private" celebration="personal" />);
+
+        expect(screen.getByTestId('personal-settlement-confetti')).toBeInTheDocument();
+    });
+
+    it('uses deterministic visual properties while cycling the color palette', () => {
+        render(<SettlementConfetti groupId="styled" celebration="personal" />);
+
+        const particles = screen.getByTestId('personal-settlement-confetti').children;
+        expect(particles[0]).toHaveStyle({
+            '--confetti-color': '#c2410c',
+            '--confetti-delay': '0ms',
+            '--confetti-left': '8%',
+            '--confetti-rotation': '90deg',
+        });
+        expect(particles[5]).toHaveStyle({ '--confetti-color': '#c2410c' });
+        expect(particles[6]).toHaveStyle({ '--confetti-delay': '0ms' });
+    });
 });

@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import * as balancesApi from '@features/balances/api/balancesApi';
 import type { GroupBalances } from '@features/balances/api/balancesApi';
@@ -12,7 +12,7 @@ vi.mock('@features/balances/api/balancesApi', () => ({
 }));
 
 function renderUseGroupBalances(groupId: string) {
-    const queryClient = new QueryClient();
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     const wrapper = ({ children }: { children: ReactNode }) => (
         <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     );
@@ -20,6 +20,10 @@ function renderUseGroupBalances(groupId: string) {
 }
 
 describe('useGroupBalances', () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+    });
+
     it('fetches balances and settlements for the given group', async () => {
         const groupBalances: GroupBalances = {
             balances: [{ userId: 'current-user', balance: -20 }],
@@ -39,5 +43,16 @@ describe('useGroupBalances', () => {
         const { result } = renderUseGroupBalances('');
 
         expect(result.current.fetchStatus).toBe('idle');
+        expect(balancesApi.getByGroupId).not.toHaveBeenCalled();
+    });
+
+    it('exposes API failures through the query state', async () => {
+        const error = new Error('Could not load balances');
+        vi.mocked(balancesApi.getByGroupId).mockRejectedValue(error);
+
+        const { result } = renderUseGroupBalances('group-1');
+
+        await waitFor(() => expect(result.current.isError).toBe(true));
+        expect(result.current.error).toBe(error);
     });
 });

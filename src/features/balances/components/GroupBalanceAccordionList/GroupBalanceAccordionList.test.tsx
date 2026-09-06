@@ -91,6 +91,18 @@ describe('GroupBalanceAccordionList', () => {
         expect(rows[1]).toHaveTextContent('Jayant owes You');
     });
 
+    it('describes a mixed position with a negative net as still to pay', () => {
+        renderList(
+            [
+                { fromUserId: 'jayant', toUserId: CURRENT_USER_ID, amount: 25 },
+                { fromUserId: CURRENT_USER_ID, toUserId: 'shivam', amount: 75 },
+            ],
+            new Map([[CURRENT_USER_ID, -50]]),
+        );
+
+        expect(screen.getByText(/₹50\.00 to pay/)).toBeInTheDocument();
+    });
+
     it('shows personal settled state while other balances remain collapsed', () => {
         renderList(
             [{ fromUserId: 'jayant', toUserId: 'rohan', amount: 14065.11 }],

@@ -67,6 +67,7 @@ function renderAccordion(
     netAmount: number,
     transactions: SettlementTransaction[],
     defaultValue: string[] = [],
+    allMembers = members,
 ) {
     return render(
         <Accordion.Root type="multiple" defaultValue={defaultValue}>
@@ -74,7 +75,7 @@ function renderAccordion(
                 member={member}
                 netAmount={netAmount}
                 transactions={transactions}
-                members={members}
+                members={allMembers}
                 groupId="group-1"
                 currentUserId={CURRENT_USER_ID}
             />
@@ -121,6 +122,15 @@ describe('MemberBalanceAccordion', () => {
         ).toBeInTheDocument();
     });
 
+    it.each([
+        [-50, /^you owe ₹50\.00 in total$/i, 'text-owe'],
+        [0, /^you are settled up$/i, 'text-settled'],
+    ] as const)('uses current-user grammar for a net position of %s', (net, name, className) => {
+        renderAccordion(currentUser, net, []);
+
+        expect(screen.getByRole('button', { name })).toHaveClass(className);
+    });
+
     it('is collapsed by default unless included in defaultValue', () => {
         renderAccordion(abhinav, 0, []);
 
@@ -153,6 +163,25 @@ describe('MemberBalanceAccordion', () => {
         );
 
         expect(screen.getByText('Abhinav owes ₹38.00 to You')).toBeInTheDocument();
+    });
+
+    it('falls back safely when a settlement references users absent from the member list', () => {
+        renderAccordion(
+            abhinav,
+            10,
+            [{ fromUserId: 'removed-payer', toUserId: 'removed-recipient', amount: 10 }],
+            [abhinav.id],
+        );
+
+        expect(screen.getByText('Someone owes ₹10.00 to someone')).toBeInTheDocument();
+    });
+
+    it('uses the member record name when the displayed member is absent from the names collection', () => {
+        renderAccordion(abhinav, 10, [], [], [khem, currentUser]);
+
+        expect(
+            screen.getByRole('button', { name: /abhinav gets back ₹10\.00/i }),
+        ).toBeInTheDocument();
     });
 
     it('shows a fallback message when there are no settlement transactions', () => {
