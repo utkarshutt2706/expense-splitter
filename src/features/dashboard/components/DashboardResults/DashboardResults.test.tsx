@@ -84,11 +84,30 @@ describe('DashboardResults', () => {
         expect(screen.getByTestId('participants')).toBeInTheDocument();
     });
 
+    it('still presents the current position for a selected zero-spending group overall', () => {
+        const selected = group({ amount: 0 });
+        render(
+            <DashboardResults data={summary([selected])} selected={selected} period={overall} />,
+        );
+
+        expect(screen.getByTestId('position')).toBeInTheDocument();
+        expect(screen.getByTestId('no-spending')).toBeInTheDocument();
+        expect(screen.queryByTestId('summary')).not.toBeInTheDocument();
+    });
+
     it('renders aggregate summary, daily trend, and group breakdown when expenses exist', () => {
         render(<DashboardResults data={summary([group()])} period={month} />);
         expect(screen.getByTestId('summary')).toBeInTheDocument();
         expect(screen.getByTestId('trend')).toHaveAttribute('data-daily', 'true');
         expect(screen.getByTestId('breakdown')).toBeInTheDocument();
+    });
+
+    it('shows the aggregate current position only for the all-time period', () => {
+        const view = render(<DashboardResults data={summary([group()])} period={overall} />);
+        expect(screen.getByTestId('position')).toBeInTheDocument();
+
+        view.rerender(<DashboardResults data={summary([group()])} period={month} />);
+        expect(screen.queryByTestId('position')).not.toBeInTheDocument();
     });
 
     it('renders aggregate no-spending guidance when every group has zero spending', () => {

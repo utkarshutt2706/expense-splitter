@@ -73,4 +73,35 @@ describe('GroupScopeSelector', () => {
         fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'missing' } });
         expect(screen.getByText('No groups found')).toBeInTheDocument();
     });
+
+    it('falls back to all groups when the controlled selection no longer exists', () => {
+        render(
+            <GroupScopeSelector
+                scope="dashboard"
+                groups={groups.slice(0, 2)}
+                value="removed"
+                onChange={vi.fn()}
+            />,
+        );
+
+        expect(screen.getByRole('button', { name: 'Group: All groups' })).toBeInTheDocument();
+    });
+
+    it('clears a search when the popover is dismissed without making a selection', () => {
+        render(
+            <GroupScopeSelector
+                scope="dashboard"
+                groups={groups}
+                value={null}
+                onChange={vi.fn()}
+            />,
+        );
+        const trigger = screen.getByRole('button', { name: 'Group: All groups' });
+        fireEvent.click(trigger);
+        fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'Beach' } });
+        fireEvent.click(trigger);
+        fireEvent.click(trigger);
+
+        expect(screen.getByRole('searchbox')).toHaveValue('');
+    });
 });

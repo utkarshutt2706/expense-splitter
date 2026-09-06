@@ -92,4 +92,35 @@ describe('DashboardTimeFilter', () => {
         expect(setShowCustom).toHaveBeenCalledWith(false);
         expect(setError).toHaveBeenCalledWith(null);
     });
+
+    it('uses the supplied custom label, marks custom selected, and disables the end until a start exists', () => {
+        const custom: DashboardPeriod = { preset: 'custom', label: '1 Aug – 10 Aug' };
+        mockFilter({ start: '', end: '', maximumEnd: undefined });
+
+        render(<DashboardTimeFilter period={custom} onChange={vi.fn()} />);
+
+        expect(
+            screen.getByRole('button', { name: 'Time period 1 Aug – 10 Aug' }),
+        ).toBeInTheDocument();
+        expect(
+            screen.getByRole('button', { name: 'Custom date range' }).querySelector('svg'),
+        ).toBeInTheDocument();
+        fireEvent.click(screen.getByRole('button', { name: 'Custom date range' }));
+        expect(setShowCustom).toHaveBeenCalledWith(true);
+    });
+
+    it('falls back to native date input behavior when showPicker is absent or restricted', () => {
+        mockFilter({ showCustom: true });
+        render(<DashboardTimeFilter period={period} onChange={vi.fn()} />);
+        const start = screen.getByLabelText('Custom range start');
+        const end = screen.getByLabelText('Custom range end');
+        Object.defineProperty(start, 'showPicker', {
+            value: () => {
+                throw new DOMException('Restricted');
+            },
+        });
+
+        expect(() => fireEvent.click(start)).not.toThrow();
+        expect(() => fireEvent.click(end)).not.toThrow();
+    });
 });

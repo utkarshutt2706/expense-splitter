@@ -2,6 +2,8 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { SpendingTrendGraph } from './SpendingTrendGraph';
 
+const tooltip = vi.hoisted(() => vi.fn());
+
 vi.mock('recharts', () => ({
     ResponsiveContainer: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
     ComposedChart: ({ children, data }: { children: React.ReactNode; data: unknown[] }) => (
@@ -12,7 +14,7 @@ vi.mock('recharts', () => ({
     CartesianGrid: () => null,
     XAxis: () => null,
     YAxis: () => null,
-    Tooltip: () => null,
+    Tooltip: (props: unknown) => (tooltip(props), null),
     Legend: () => null,
     Area: () => null,
     Line: () => null,
@@ -56,4 +58,18 @@ describe('SpendingTrendGraph', () => {
             expect(plotted[1]?.label).toBe(formatted);
         },
     );
+
+    it('formats numeric and string tooltip values as currency', () => {
+        render(
+            <SpendingTrendGraph
+                granularity="month"
+                data={[{ month: '2026-08', amount: 5, actualPaid: 3, currentUserShare: 2 }]}
+            />,
+        );
+        const formatter = (tooltip.mock.lastCall?.[0] as { formatter: (value: unknown) => string })
+            .formatter;
+
+        expect(formatter(12.5)).toBe('₹12.50');
+        expect(formatter('20')).toBe('₹20.00');
+    });
 });

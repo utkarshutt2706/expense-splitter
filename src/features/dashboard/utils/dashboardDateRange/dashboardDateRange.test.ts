@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { customPeriod, presetPeriod, usesDailyTrend } from './dashboardDateRange';
+import {
+    customPeriod,
+    dateInputValue,
+    periodLabel,
+    presetPeriod,
+    usesDailyTrend,
+} from './dashboardDateRange';
 
 describe('dashboardDateRange', () => {
     const now = new Date(2026, 7, 17, 12);
@@ -42,6 +48,14 @@ describe('dashboardDateRange', () => {
         );
     });
 
+    it.each([
+        ['', '2026-08-01'],
+        ['2026-08-01', ''],
+        ['not-a-date', '2026-08-01'],
+    ])('rejects incomplete or invalid custom dates (%s, %s)', (start, end) => {
+        expect(() => customPeriod(start, end, now)).toThrow('Choose a start and end date.');
+    });
+
     it('rejects custom dates after today', () => {
         expect(() => customPeriod('2026-08-01', '2026-08-18', now)).toThrow('after today');
         expect(() => customPeriod('2026-08-18', '2026-08-18', now)).toThrow('after today');
@@ -54,5 +68,12 @@ describe('dashboardDateRange', () => {
         expect(usesDailyTrend(customPeriod('2024-01-31', '2024-02-29', now))).toBe(true);
         expect(usesDailyTrend(customPeriod('2026-03-31', '2026-04-30', now))).toBe(true);
         expect(usesDailyTrend(customPeriod('2026-06-01', '2026-07-02', now))).toBe(false);
+        expect(usesDailyTrend({ preset: 'custom', label: 'Custom' })).toBe(false);
+    });
+
+    it('formats local calendar input values and exposes every preset label', () => {
+        expect(dateInputValue(new Date(2026, 0, 9))).toBe('2026-01-09');
+        expect(periodLabel('this-year')).toBe('This year');
+        expect(periodLabel('custom')).toBe('Custom date range');
     });
 });

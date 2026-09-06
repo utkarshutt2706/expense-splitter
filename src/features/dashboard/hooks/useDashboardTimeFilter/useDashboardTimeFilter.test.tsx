@@ -2,6 +2,7 @@ import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { DashboardPeriod } from '@features/dashboard/utils/dashboardDateRange';
+import * as dashboardDateRange from '@features/dashboard/utils/dashboardDateRange';
 
 import { useDashboardTimeFilter } from './useDashboardTimeFilter';
 
@@ -65,6 +66,21 @@ describe('useDashboardTimeFilter', () => {
         expect(result.current.error).toBeNull();
     });
 
+    it('closes the selector and clears errors without changing the chosen panel', () => {
+        const { result } = renderHook(() => useDashboardTimeFilter(overall, vi.fn()));
+        act(() => {
+            result.current.changeOpen(true);
+            result.current.setShowCustom(true);
+            result.current.setError('Old error');
+        });
+
+        act(() => result.current.changeOpen(false));
+
+        expect(result.current.open).toBe(false);
+        expect(result.current.showCustom).toBe(true);
+        expect(result.current.error).toBeNull();
+    });
+
     it('applies a valid inclusive custom range and closes the selector', () => {
         const onChange = vi.fn();
         const { result } = renderHook(() => useDashboardTimeFilter(overall, onChange));
@@ -102,6 +118,17 @@ describe('useDashboardTimeFilter', () => {
         expect(onChange).not.toHaveBeenCalled();
         expect(result.current.open).toBe(true);
         expect(result.current.error).toBe('Start date must be on or before end date.');
+    });
+
+    it('uses a safe validation message when a dependency throws a non-Error value', () => {
+        vi.spyOn(dashboardDateRange, 'customPeriod').mockImplementationOnce(() => {
+            throw 'invalid';
+        });
+        const { result } = renderHook(() => useDashboardTimeFilter(overall, vi.fn()));
+
+        act(() => result.current.applyCustom());
+
+        expect(result.current.error).toBe('Choose a valid date range.');
     });
 
     it('limits end dates to one inclusive year or today, whichever is earlier', () => {

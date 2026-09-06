@@ -14,7 +14,7 @@ export function Participants({ group }: ParticipantsProps) {
     });
     const labels = disambiguateParticipantNames(orderedMembers);
     const participants = (showAll ? orderedMembers : orderedMembers.slice(0, 8)).map(
-        (member, index) => ({ member, label: labels[index] ?? member.name }),
+        (member, index) => ({ member, label: labels[index]! }),
     );
     const max = Math.max(...group.memberShares.map((member) => member.amount), 1);
     if (group.amount === 0) return null;
@@ -62,7 +62,7 @@ export function Participants({ group }: ParticipantsProps) {
                     );
                 })}
             </ol>
-            {group.memberShares.length > 8 && (
+            {!showAll && group.memberShares.length > 8 && (
                 <button
                     type="button"
                     onClick={() => setShowAll(true)}
