@@ -6,7 +6,7 @@ import type {
     SplitTypeContract,
 } from '@lib/api/contracts';
 
-export type ExpenseWriteInput = CreateExpenseContract;
+export type ExpenseWriteInput = Omit<CreateExpenseContract, 'timeZone'>;
 export type ExpenseSplit = ExpenseSplitContract;
 export type SplitType = SplitTypeContract;
 export type Expense = Omit<ExpenseContract, 'createdByUserId' | 'paidOn'> &
@@ -25,7 +25,10 @@ export async function getById(groupId: string, expenseId: string): Promise<Expen
 }
 
 export async function create(groupId: string, input: ExpenseWriteInput): Promise<Expense> {
-    const { data } = await httpClient.post<ExpenseContract>(`/groups/${groupId}/expenses`, input);
+    const { data } = await httpClient.post<ExpenseContract>(`/groups/${groupId}/expenses`, {
+        ...input,
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    } satisfies CreateExpenseContract);
     return data;
 }
 
@@ -36,7 +39,10 @@ export async function update(
 ): Promise<Expense> {
     const { data } = await httpClient.patch<ExpenseContract>(
         `/groups/${groupId}/expenses/${expenseId}`,
-        input,
+        {
+            ...input,
+            timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        } satisfies CreateExpenseContract,
     );
     return data;
 }
