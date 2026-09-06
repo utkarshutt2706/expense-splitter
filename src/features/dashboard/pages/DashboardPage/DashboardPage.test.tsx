@@ -69,6 +69,22 @@ function renderPage(data: DashboardSummary = dashboard) {
 describe('DashboardPage', () => {
     beforeEach(() => vi.mocked(useDashboard).mockReset());
 
+    it('shows the dashboard skeleton during the initial request', () => {
+        vi.mocked(useDashboard).mockReturnValue({
+            data: undefined,
+            isLoading: true,
+            isError: false,
+        } as unknown as ReturnType<typeof useDashboard>);
+
+        render(
+            <MemoryRouter>
+                <DashboardPage />
+            </MemoryRouter>,
+        );
+
+        expect(screen.getByRole('status', { name: /loading dashboard/i })).toBeInTheDocument();
+    });
+
     it('shows a retryable, non-destructive error', () => {
         const refetch = vi.fn();
         vi.mocked(useDashboard).mockReturnValue({
@@ -84,6 +100,23 @@ describe('DashboardPage', () => {
         expect(screen.getByText(/expenses have not been changed/i)).toBeInTheDocument();
         fireEvent.click(screen.getByRole('button', { name: /retry/i }));
         expect(refetch).toHaveBeenCalled();
+    });
+
+    it('shows the retryable error when a completed request has no data', () => {
+        vi.mocked(useDashboard).mockReturnValue({
+            data: undefined,
+            isError: false,
+            isLoading: false,
+            refetch: vi.fn(),
+        } as unknown as ReturnType<typeof useDashboard>);
+
+        render(
+            <MemoryRouter>
+                <DashboardPage />
+            </MemoryRouter>,
+        );
+
+        expect(screen.getByText(/couldn't load your dashboard/i)).toBeInTheDocument();
     });
 
     it('defaults to overall and shows the outstanding position', () => {

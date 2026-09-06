@@ -32,4 +32,35 @@ describe('useDashboard', () => {
         expect(result.current.data).toEqual(dashboard);
         expect(dashboardApi.getDashboard).toHaveBeenCalledWith(range);
     });
+
+    it('loads the unbounded dashboard when no range is supplied', async () => {
+        vi.mocked(dashboardApi.getDashboard).mockResolvedValue({
+            actualPaid: 0,
+            currentUserShare: 0,
+            groupSpend: [],
+        });
+        const queryClient = new QueryClient();
+        const wrapper = ({ children }: { children: ReactNode }) => (
+            <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+        );
+
+        const { result } = renderHook(() => useDashboard(), { wrapper });
+        await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+        expect(dashboardApi.getDashboard).toHaveBeenCalledWith(undefined);
+    });
+
+    it('exposes dashboard API failures through the query state', async () => {
+        const error = new Error('Dashboard unavailable');
+        vi.mocked(dashboardApi.getDashboard).mockRejectedValue(error);
+        const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+        const wrapper = ({ children }: { children: ReactNode }) => (
+            <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+        );
+
+        const { result } = renderHook(() => useDashboard(), { wrapper });
+        await waitFor(() => expect(result.current.isError).toBe(true));
+
+        expect(result.current.error).toBe(error);
+    });
 });

@@ -69,7 +69,7 @@ export function DashboardResults({ data, selected, period }: DashboardResultsPro
             ) : (
                 <NoSpendingState
                     description="Try another time period or add an expense to a group."
-                    link={data.groupSpend[0] ? `/groups/${data.groupSpend[0].groupId}` : undefined}
+                    link={`/groups/${data.groupSpend[0]!.groupId}`}
                     linkLabel="Open group"
                 />
             )}

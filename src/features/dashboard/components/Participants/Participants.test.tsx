@@ -64,5 +64,15 @@ describe('Participants', () => {
         expect(screen.getAllByRole('listitem')).toHaveLength(8);
         fireEvent.click(screen.getByRole('button', { name: 'Show all 10 participants' }));
         expect(screen.getAllByRole('listitem')).toHaveLength(10);
+        expect(
+            screen.queryByRole('button', { name: 'Show all 10 participants' }),
+        ).not.toBeInTheDocument();
+    });
+
+    it('keeps zero-value participants visible without inventing a minimum bar', () => {
+        render(<Participants group={group([member('zero', 'Zero', 0)], 100)} />);
+
+        expect(screen.getByText('0.0%')).toBeInTheDocument();
+        expect(screen.getByTestId('progress')).toHaveAttribute('data-percentage', '0');
     });
 });
