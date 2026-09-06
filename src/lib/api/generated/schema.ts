@@ -371,7 +371,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    '/health': {
+    '/liveness': {
         parameters: {
             query?: never;
             header?: never;
@@ -379,10 +379,10 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Database health check
-         * @description Always public. Returns 200 only when the API can query its database.
+         * Process liveness probe
+         * @description Always public. Confirms that the API process is running without checking external dependencies.
          */
-        get: operations['HealthController_check'];
+        get: operations['HealthController_liveness'];
         put?: never;
         post?: never;
         delete?: never;
@@ -399,10 +399,30 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * System readiness check
-         * @description Always public. Confirms that the API process can handle requests without querying external dependencies.
+         * Traffic readiness probe
+         * @description Always public. Returns 200 only when the API and all dependencies required to serve traffic are available.
          */
         get: operations['HealthController_readiness'];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    '/health': {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Aggregate health check
+         * @description Always public. Backward-compatible aggregate check of the API and its required dependencies.
+         */
+        get: operations['HealthController_health'];
         put?: never;
         post?: never;
         delete?: never;
@@ -530,6 +550,11 @@ export interface components {
             shares: number;
         };
         CreateExpenseDto: {
+            /**
+             * @description IANA timezone used to validate paidOn against local today. Defaults to UTC.
+             * @example Asia/Kolkata
+             */
+            timeZone?: string;
             description: string;
             amount: number;
             paidOn?: string;
@@ -558,6 +583,11 @@ export interface components {
             createdAt: string;
         };
         UpdateExpenseDto: {
+            /**
+             * @description IANA timezone used to validate paidOn against local today. Defaults to UTC.
+             * @example Asia/Kolkata
+             */
+            timeZone?: string;
             description: string;
             amount: number;
             paidOn?: string;
@@ -569,6 +599,11 @@ export interface components {
             shares?: components['schemas']['ShareInputDto'][];
         };
         CreatePaymentDto: {
+            /**
+             * @description IANA timezone used to validate paidOn against local today. Defaults to UTC.
+             * @example Asia/Kolkata
+             */
+            timeZone?: string;
             fromUserId: string;
             toUserId: string;
             amount: number;
@@ -584,6 +619,11 @@ export interface components {
             createdAt: string;
         };
         UpdatePaymentDto: {
+            /**
+             * @description IANA timezone used to validate paidOn against local today. Defaults to UTC.
+             * @example Asia/Kolkata
+             */
+            timeZone?: string;
             fromUserId: string;
             toUserId: string;
             amount: number;
@@ -2483,7 +2523,7 @@ export interface operations {
             };
         };
     };
-    HealthController_check: {
+    HealthController_liveness: {
         parameters: {
             query?: never;
             header?: never;
@@ -2492,7 +2532,27 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Service is up. */
+            /** @description API process is alive. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': unknown;
+                };
+            };
+        };
+    };
+    HealthController_readiness: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description API is ready for traffic. */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -2510,7 +2570,7 @@ export interface operations {
             };
         };
     };
-    HealthController_readiness: {
+    HealthController_health: {
         parameters: {
             query?: never;
             header?: never;
@@ -2519,7 +2579,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description API process is responsive. */
+            /** @description Service is healthy. */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -2527,6 +2587,13 @@ export interface operations {
                 content: {
                     'application/json': unknown;
                 };
+            };
+            /** @description The service is unhealthy. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

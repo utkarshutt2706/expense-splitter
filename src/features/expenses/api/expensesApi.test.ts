@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { Expense } from './expensesApi';
 import { httpClient } from '@lib/api/httpClient';
@@ -28,6 +28,19 @@ const expense: Expense = {
 };
 
 describe('expensesApi', () => {
+    beforeEach(() => {
+        vi.resetAllMocks();
+        const options = Intl.DateTimeFormat().resolvedOptions();
+        vi.spyOn(Intl.DateTimeFormat.prototype, 'resolvedOptions').mockReturnValue({
+            ...options,
+            timeZone: 'Asia/Kolkata',
+        });
+    });
+
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+
     it('getByGroupId fetches the expense list from /groups/:groupId/expenses', async () => {
         vi.mocked(httpClient.get).mockResolvedValue({ data: [expense] });
 
@@ -55,6 +68,7 @@ describe('expensesApi', () => {
             paidByUserId: 'user-1',
             splitType: 'equal',
             splits: expense.splits,
+            paidOn: '2026-09-06',
         });
 
         expect(httpClient.post).toHaveBeenCalledWith('/groups/group-1/expenses', {
@@ -63,6 +77,8 @@ describe('expensesApi', () => {
             paidByUserId: 'user-1',
             splitType: 'equal',
             splits: expense.splits,
+            paidOn: '2026-09-06',
+            timeZone: 'Asia/Kolkata',
         });
         expect(result).toEqual(expense);
     });
@@ -77,6 +93,7 @@ describe('expensesApi', () => {
             paidByUserId: 'user-1',
             splitType: 'equal',
             splits: expense.splits,
+            paidOn: '2026-09-06',
         });
 
         expect(httpClient.patch).toHaveBeenCalledWith('/groups/group-1/expenses/expense-1', {
@@ -85,6 +102,8 @@ describe('expensesApi', () => {
             paidByUserId: 'user-1',
             splitType: 'equal',
             splits: expense.splits,
+            paidOn: '2026-09-06',
+            timeZone: 'Asia/Kolkata',
         });
         expect(result).toEqual(updated);
     });

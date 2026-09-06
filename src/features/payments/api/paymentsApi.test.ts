@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { Payment } from './paymentsApi';
 import { httpClient } from '@lib/api/httpClient';
@@ -25,6 +25,15 @@ const payment: Payment = {
 describe('paymentsApi', () => {
     beforeEach(() => {
         vi.resetAllMocks();
+        const options = Intl.DateTimeFormat().resolvedOptions();
+        vi.spyOn(Intl.DateTimeFormat.prototype, 'resolvedOptions').mockReturnValue({
+            ...options,
+            timeZone: 'Asia/Kolkata',
+        });
+    });
+
+    afterEach(() => {
+        vi.restoreAllMocks();
     });
 
     it('getByGroupId fetches the payment list from /groups/:groupId/payments', async () => {
@@ -43,12 +52,15 @@ describe('paymentsApi', () => {
             fromUserId: 'user-1',
             toUserId: 'user-2',
             amount: 45,
+            paidOn: '2026-09-06',
         });
 
         expect(httpClient.post).toHaveBeenCalledWith('/groups/group-1/payments', {
             fromUserId: 'user-1',
             toUserId: 'user-2',
             amount: 45,
+            paidOn: '2026-09-06',
+            timeZone: 'Asia/Kolkata',
         });
         expect(result).toEqual(payment);
     });
@@ -61,12 +73,15 @@ describe('paymentsApi', () => {
             fromUserId: 'user-1',
             toUserId: 'user-2',
             amount: 60,
+            paidOn: '2026-09-06',
         });
 
         expect(httpClient.patch).toHaveBeenCalledWith('/groups/group-1/payments/payment-1', {
             fromUserId: 'user-1',
             toUserId: 'user-2',
             amount: 60,
+            paidOn: '2026-09-06',
+            timeZone: 'Asia/Kolkata',
         });
         expect(result).toEqual(updated);
     });
@@ -103,6 +118,7 @@ describe('paymentsApi', () => {
                     fromUserId: 'user-1',
                     toUserId: 'user-2',
                     amount: 45,
+                    paidOn: '2026-09-06',
                 }),
             httpClient.patch,
         ],
