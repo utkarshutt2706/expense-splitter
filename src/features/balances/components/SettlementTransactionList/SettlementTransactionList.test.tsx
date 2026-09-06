@@ -24,11 +24,13 @@ describe('SettlementTransactionList', () => {
                 onSettle={vi.fn()}
             />,
         );
-        expect(screen.getByText(/You owe Alex/)).toHaveTextContent('₹20.00');
+        expect(screen.getByText(/You owe Alex/).querySelector('span')).toHaveClass('text-owe');
         expect(screen.getByText('You need to make this payment.')).toBeInTheDocument();
-        expect(screen.getByText(/Alex owes You/)).toHaveTextContent('₹15.00');
+        expect(screen.getByText(/Alex owes You/).querySelector('span')).toHaveClass('text-owed');
         expect(screen.getByText('You will receive this payment.')).toBeInTheDocument();
         expect(screen.getByText(/Alex owes Sam/)).toHaveTextContent('₹5.00');
+        expect(screen.getByText(/Alex owes Sam/).querySelector('span')).toHaveClass('text-owe');
+        expect(screen.getAllByRole('button', { name: /^settle up:/i })).toHaveLength(3);
     });
 
     it('passes the selected transaction and button trigger to settlement', () => {

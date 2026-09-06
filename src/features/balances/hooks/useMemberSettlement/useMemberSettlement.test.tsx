@@ -88,6 +88,29 @@ describe('useMemberSettlement', () => {
         expect(result.current.settlingTransaction).toEqual(transaction);
         expect(result.current.paymentError).toBe(message);
         expect(toast.error).toHaveBeenCalledWith(message, { id: 'toast-id' });
+
+        act(() => result.current.openSettlement(transaction, document.createElement('button')));
+        expect(result.current.paymentError).toBeUndefined();
+    });
+
+    it('clears an earlier error before retrying submission', () => {
+        let onError: (() => void) | undefined;
+        const mutate = vi.fn((_values, options: { onError?: () => void }) => {
+            onError = options.onError;
+        });
+        vi.mocked(useCreatePayment).mockReturnValue({
+            isPending: false,
+            mutate,
+        } as unknown as ReturnType<typeof useCreatePayment>);
+        const { result } = renderHook(() => useMemberSettlement('group-1'));
+
+        act(() => result.current.submitSettlement(paymentValues));
+        act(() => onError?.());
+        expect(result.current.paymentError).toBeDefined();
+
+        act(() => result.current.submitSettlement(paymentValues));
+        expect(result.current.paymentError).toBeUndefined();
+        expect(mutate).toHaveBeenCalledTimes(2);
     });
 
     it('closes the dialog and reports success when recording succeeds', () => {

@@ -26,4 +26,11 @@ describe('balancesApi', () => {
         expect(httpClient.get).toHaveBeenCalledWith('/groups/group-1/balances');
         expect(result).toEqual(groupBalances);
     });
+
+    it('encodes no assumptions about failures and lets the HTTP error propagate', async () => {
+        const error = new Error('network unavailable');
+        vi.mocked(httpClient.get).mockRejectedValue(error);
+
+        await expect(getByGroupId('group-1')).rejects.toBe(error);
+    });
 });
