@@ -80,7 +80,7 @@ export function bucketGroupSpending(
 
         for (const [key, amount] of entries) {
             const row = buckets.get(key) ?? { ...blank };
-            row[group.groupId] = round((row[group.groupId] ?? 0) + amount);
+            row[group.groupId] = round(row[group.groupId]! + amount);
             buckets.set(key, row);
         }
     }
@@ -100,11 +100,11 @@ export function bucketGroupSpending(
  * (₹20K, ₹40K) instead of arbitrary (₹32.5K).
  */
 export function niceTicks(max: number, count = 4): number[] {
-    if (!Number.isFinite(max) || max <= 0) return [0];
+    if (!Number.isFinite(max) || max <= 0 || !Number.isFinite(count) || count <= 0) return [0];
 
     const magnitude = 10 ** Math.floor(Math.log10(max / count));
     const step =
-        ([1, 2, 2.5, 5, 10].find((factor) => magnitude * factor >= max / count) ?? 10) * magnitude;
+        [1, 2, 2.5, 5, 10].find((factor) => magnitude * factor >= max / count)! * magnitude;
     const top = Math.ceil(max / step) * step;
 
     const ticks: number[] = [];

@@ -32,6 +32,8 @@ describe('contributionBalance', () => {
 
     it('treats negative inputs as zero rather than inverting the direction', () => {
         expect(contributionBalance(-50, 100)).toEqual({ owed: 0, owe: 100 });
+        expect(contributionBalance(100, -50)).toEqual({ owed: 100, owe: 0 });
+        expect(contributionBalance(-50, -100)).toEqual({ owed: 0, owe: 0 });
     });
 });
 
@@ -68,6 +70,15 @@ describe('cumulativeNetPosition', () => {
         const entries = Array.from({ length: 10 }, () => point(0.1, 0));
 
         expect(cumulativeNetPosition(entries).at(-1)?.cumulative).toBe(1);
+    });
+
+    it('rounds both each bucket change and the carried position to cents', () => {
+        const result = cumulativeNetPosition([point(1.005, 0), point(0.004, 0)]);
+
+        expect(result.map(({ net, cumulative }) => ({ net, cumulative }))).toEqual([
+            { net: 1, cumulative: 1 },
+            { net: 0, cumulative: 1 },
+        ]);
     });
 });
 
@@ -141,6 +152,14 @@ describe('bucketGroupSpending', () => {
     it('returns nothing when there are no groups', () => {
         expect(bucketGroupSpending([], 'month')).toEqual([]);
     });
+
+    it('does not mutate the source series while aggregating repeated buckets', () => {
+        const source = structuredClone(trip);
+
+        bucketGroupSpending([trip, flat], 'month');
+
+        expect(trip).toEqual(source);
+    });
 });
 
 describe('niceTicks', () => {
@@ -175,5 +194,16 @@ describe('niceTicks', () => {
 
     it('honours a requested tick count', () => {
         expect(niceTicks(100, 2).length).toBeLessThanOrEqual(4);
+    });
+
+    it.each([0, -1, Number.NaN, Number.POSITIVE_INFINITY])(
+        'returns a safe zero scale for an invalid tick count of %s',
+        (count) => {
+            expect(niceTicks(100, count)).toEqual([0]);
+        },
+    );
+
+    it('supports values below one without introducing floating-point tick noise', () => {
+        expect(niceTicks(0.035)).toEqual([0, 0.01, 0.02, 0.03, 0.04]);
     });
 });

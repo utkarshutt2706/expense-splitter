@@ -11,11 +11,19 @@ describe('PinnedValueAxis', () => {
         expect(axis).toHaveAttribute('aria-hidden', 'true');
         expect(axis).toHaveStyle({ width: `${VALUE_AXIS_WIDTH}px`, height: `${PLOT_HEIGHT}px` });
         expect(screen.getByText(/1k/i)).toHaveStyle({ top: '8px' });
+        expect(screen.getByText(/₹500/)).toHaveStyle({ top: '129px' });
         expect(screen.getByText(/₹0/)).toHaveStyle({ top: '250px' });
     });
 
     it('positions zero safely when it is the only tick', () => {
         render(<PinnedValueAxis ticks={[0]} />);
         expect(screen.getByText(/₹0/)).toHaveStyle({ top: '250px' });
+    });
+
+    it('renders an empty axis safely when no ticks are provided', () => {
+        const { container } = render(<PinnedValueAxis ticks={[]} />);
+
+        expect(container.firstElementChild).toHaveAttribute('aria-hidden', 'true');
+        expect(container.querySelectorAll('span')).toHaveLength(0);
     });
 });

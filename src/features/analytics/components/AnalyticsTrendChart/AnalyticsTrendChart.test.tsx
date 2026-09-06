@@ -57,4 +57,30 @@ describe('AnalyticsTrendChart', () => {
         view.rerender(<AnalyticsTrendChart groups={[one, two]} dailyTrend={false} />);
         expect(screen.getByTestId('trend')).toHaveTextContent('"amount":9');
     });
+
+    it('combines and chronologically orders complete daily series when no group is selected', () => {
+        render(
+            <AnalyticsTrendChart
+                groups={[
+                    group({
+                        spendingByDay: [
+                            { date: '2026-08-02', amount: 5, actualPaid: 3, currentUserShare: 2 },
+                        ],
+                    }),
+                    group({
+                        groupId: 'two',
+                        spendingByDay: [
+                            { date: '2026-08-01', amount: 4, actualPaid: 1, currentUserShare: 3 },
+                            { date: '2026-08-02', amount: 6, actualPaid: 2, currentUserShare: 4 },
+                        ],
+                    }),
+                ]}
+                dailyTrend
+            />,
+        );
+
+        expect(screen.getByTestId('trend')).toHaveTextContent(
+            '[{"date":"2026-08-01","amount":4,"actualPaid":1,"currentUserShare":3},{"date":"2026-08-02","amount":11,"actualPaid":5,"currentUserShare":6}]',
+        );
+    });
 });

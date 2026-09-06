@@ -2,6 +2,8 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { DashboardGroupSpend } from '@features/dashboard/api/dashboardApi';
+import { ANALYTICS_CHART_COLORS } from '@features/analytics/utils';
+import { ColoredPieSector } from '@features/analytics/components/ColoredPieSector';
 import { ShareDistributionChart } from './ShareDistributionChart';
 
 const pie = vi.hoisted(() => vi.fn());
@@ -60,10 +62,43 @@ describe('ShareDistributionChart', () => {
         expect(rows[1]).toHaveTextContent('Alex');
         expect(table).not.toHaveTextContent('Zoe');
         const props = pie.mock.lastCall?.[0] as {
-            data: unknown[];
+            data: { name: string; amount: number; fill: string }[];
             label: (value: { name: string; percent?: number }) => string;
+            shape: unknown;
         };
-        expect(props.data).toHaveLength(2);
+        expect(props.data).toEqual([
+            { name: 'You', amount: 75, fill: ANALYTICS_CHART_COLORS[0] },
+            { name: 'Alex', amount: 25, fill: ANALYTICS_CHART_COLORS[1] },
+        ]);
+        expect(props.shape).toBe(ColoredPieSector);
         expect(props.label({ name: 'Alex', percent: 0.75 })).toBe('Alex: 75%');
+        expect(props.label({ name: 'Alex' })).toBe('Alex: 0%');
+    });
+
+    it('filters negative shares and cycles colors for a participant list larger than the palette', () => {
+        const participants = Array.from(
+            { length: ANALYTICS_CHART_COLORS.length + 1 },
+            (_, index) => ({
+                userId: `u-${index}`,
+                name: `Participant ${String(index).padStart(2, '0')}`,
+                amount: index + 1,
+                isCurrentUser: false,
+            }),
+        );
+        participants.push({
+            userId: 'negative',
+            name: 'Negative',
+            amount: -10,
+            isCurrentUser: false,
+        });
+
+        render(<ShareDistributionChart group={group(participants)} />);
+
+        const data = (pie.mock.lastCall?.[0] as { data: { fill: string }[] }).data;
+        expect(data).toHaveLength(ANALYTICS_CHART_COLORS.length + 1);
+        expect(data.at(-1)?.fill).toBe(ANALYTICS_CHART_COLORS[0]);
+        expect(
+            screen.getByRole('table', { name: 'Participant share values' }),
+        ).not.toHaveTextContent('Negative');
     });
 });

@@ -14,7 +14,7 @@ export function ShareDistributionChart({ group }: ShareDistributionChartProps) {
     );
     const names = disambiguateParticipantNames(activeMembers);
     const chartData = activeMembers.map((member, index) => ({
-        name: names[index] ?? member.name,
+        name: names[index]!,
         amount: member.amount,
         fill: ANALYTICS_CHART_COLORS[index % ANALYTICS_CHART_COLORS.length],
     }));

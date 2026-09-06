@@ -26,6 +26,8 @@ describe('ChartTooltip', () => {
         ) => string;
 
         expect(formatter('Aug', [{ payload: { fullName: 'August 2026' } }])).toBe('August 2026');
+        expect(formatter('Aug', [{}])).toBe('Aug');
+        expect(formatter('Aug', [{ payload: {} }])).toBe('Aug');
         expect(formatter('Aug', [])).toBe('Aug');
     });
 });
