@@ -5,8 +5,11 @@ import type { User } from '@features/users/api/usersApi';
 
 import { type UpsertExpenseFormInitialValues, useUpsertExpenseForm } from './useUpsertExpenseForm';
 
+const currentUserState = vi.hoisted(() => ({ id: 'current' as string | undefined }));
 vi.mock('@app/hooks', () => ({
-    useCurrentUser: () => ({ data: { id: 'current', name: 'Current User' } }),
+    useCurrentUser: () => ({
+        data: currentUserState.id ? { id: currentUserState.id, name: 'Current User' } : undefined,
+    }),
 }));
 
 const members: User[] = [
@@ -41,6 +44,7 @@ async function submit(result: ReturnType<typeof renderForm>['result']) {
 
 describe('useUpsertExpenseForm', () => {
     beforeEach(() => {
+        currentUserState.id = 'current';
         vi.useFakeTimers();
         vi.setSystemTime(new Date(2026, 7, 17, 12));
     });
@@ -62,6 +66,14 @@ describe('useUpsertExpenseForm', () => {
         expect(result.current.splitType).toBe('equal');
         expect(result.current.splitValues).toEqual({});
         expect(result.current.defaultPaidOn).toEqual(new Date(2026, 7, 17, 12));
+    });
+
+    it('leaves the payer unselected when neither initial values nor a current user exist', () => {
+        currentUserState.id = undefined;
+
+        const { result } = renderForm();
+
+        expect(result.current.getValues('paidByUserId')).toBe('');
     });
 
     it('normalizes supplied initial values and preserves edit selections', () => {

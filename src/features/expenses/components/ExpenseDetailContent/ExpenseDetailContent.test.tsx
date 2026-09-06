@@ -110,4 +110,32 @@ describe('ExpenseDetailContent', () => {
         expect(screen.getByTestId('avatar')).toHaveAttribute('data-name', '?');
         expect(screen.queryAllByRole('listitem')).toHaveLength(0);
     });
+
+    it('defaults the creator and paid date to the payer and creation timestamp', () => {
+        render(
+            <ExpenseDetailContent
+                expense={expense({ createdByUserId: undefined, paidOn: undefined })}
+                members={members}
+                currentUserId="current"
+            />,
+        );
+
+        expect(screen.getByText('Added by You on Aug 11, 2026')).toBeInTheDocument();
+        expect(screen.getByText(/You paid ₹100\.00/)).toHaveTextContent('on Aug 11, 2026');
+    });
+
+    it.each([
+        [[{ userId: 'current', amount: Number.NaN }]],
+        [[{ userId: 'current', amount: Number.POSITIVE_INFINITY }]],
+    ])('does not claim coverage when the payer split is invalid', (splits) => {
+        render(
+            <ExpenseDetailContent
+                expense={expense({ splits })}
+                members={members}
+                currentUserId="current"
+            />,
+        );
+
+        expect(screen.queryByText(/covered .* for others/i)).not.toBeInTheDocument();
+    });
 });

@@ -16,9 +16,13 @@ const { navigateMock, toastLoadingMock, toastSuccessMock, toastErrorMock } = vi.
     toastSuccessMock: vi.fn(),
     toastErrorMock: vi.fn(),
 }));
+const routeParams = vi.hoisted(() => ({
+    groupId: 'group-1' as string | undefined,
+    expenseId: 'expense-1' as string | undefined,
+}));
 
 vi.mock('react-router', () => ({
-    useParams: () => ({ groupId: 'group-1', expenseId: 'expense-1' }),
+    useParams: () => routeParams,
     useNavigate: () => navigateMock,
 }));
 
@@ -87,6 +91,8 @@ function mockDependencies(
 describe('useExpenseDetailPage', () => {
     beforeEach(() => {
         vi.clearAllMocks();
+        routeParams.groupId = 'group-1';
+        routeParams.expenseId = 'expense-1';
         mockDependencies();
     });
 
@@ -143,6 +149,15 @@ describe('useExpenseDetailPage', () => {
         await act(async () => queueMicrotask(() => undefined));
 
         expect(result.current.isConfirmingDelete).toBe(false);
+        expect(result.current.deleteError).toBeUndefined();
+    });
+
+    it('accepts an explicit open-state request without clearing the dialog', () => {
+        const { result } = renderHook(() => useExpenseDetailPage());
+
+        act(() => result.current.setDeleteDialogOpen(true));
+
+        expect(result.current.isConfirmingDelete).toBe(true);
         expect(result.current.deleteError).toBeUndefined();
     });
 
@@ -217,5 +232,25 @@ describe('useExpenseDetailPage', () => {
 
         expect(mutate).not.toHaveBeenCalled();
         expect(toastLoadingMock).not.toHaveBeenCalled();
+    });
+
+    it('uses safe empty query inputs and blocks deletion when route parameters are absent', () => {
+        routeParams.groupId = undefined;
+        routeParams.expenseId = undefined;
+        mockDependencies({ group: { data: undefined }, members: { data: undefined } });
+        const mutate = vi.fn();
+        vi.mocked(useDeleteExpense).mockReturnValue({
+            mutate,
+            isPending: false,
+        } as unknown as ReturnType<typeof useDeleteExpense>);
+
+        const { result } = renderHook(() => useExpenseDetailPage());
+        act(() => result.current.handleDelete());
+
+        expect(useExpense).toHaveBeenCalledWith('', '');
+        expect(useGroup).toHaveBeenCalledWith('');
+        expect(useGroupMembers).toHaveBeenCalledWith([]);
+        expect(result.current.members).toEqual([]);
+        expect(mutate).not.toHaveBeenCalled();
     });
 });

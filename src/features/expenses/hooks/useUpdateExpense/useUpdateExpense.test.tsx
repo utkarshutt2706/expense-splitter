@@ -21,6 +21,50 @@ function renderUpdateExpense() {
 }
 
 describe('useUpdateExpense', () => {
+    it('surfaces update failures without invalidating cached data', async () => {
+        const error = new Error('Unable to update expense');
+        vi.mocked(expensesApi.update).mockRejectedValue(error);
+
+        const { result, invalidateSpy } = renderUpdateExpense();
+
+        result.current.mutate({
+            id: 'expense-1',
+            groupId: 'group-1',
+            description: 'Groceries',
+            amount: 90,
+            paidByUserId: 'user-2',
+            participantUserIds: ['user-1', 'user-2'],
+            splitType: 'equal',
+        });
+
+        await waitFor(() => expect(result.current.isError).toBe(true));
+
+        expect(result.current.error).toBe(error);
+        expect(invalidateSpy).not.toHaveBeenCalled();
+    });
+
+    it('surfaces update failures without invalidating cached data', async () => {
+        const error = new Error('Unable to update expense');
+        vi.mocked(expensesApi.update).mockRejectedValue(error);
+
+        const { result, invalidateSpy } = renderUpdateExpense();
+
+        result.current.mutate({
+            id: 'expense-1',
+            groupId: 'group-1',
+            description: 'Groceries',
+            amount: 90,
+            paidByUserId: 'user-1',
+            participantUserIds: ['user-1'],
+            splitType: 'equal',
+        });
+
+        await waitFor(() => expect(result.current.isError).toBe(true));
+
+        expect(result.current.error).toBe(error);
+        expect(invalidateSpy).not.toHaveBeenCalled();
+    });
+
     it('updates the expense with a recalculated equal split', async () => {
         const updated: Expense = {
             id: 'expense-1',

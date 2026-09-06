@@ -238,6 +238,13 @@ describe('useUpsertExpensePage', () => {
 
     it('does not mutate when the group route parameter is missing', () => {
         paramsMock = {};
+        vi.mocked(useGroup).mockReturnValue({ data: undefined } as unknown as ReturnType<
+            typeof useGroup
+        >);
+        vi.mocked(useGroupMembers).mockReturnValue({
+            data: undefined,
+            isLoading: false,
+        } as unknown as ReturnType<typeof useGroupMembers>);
         const createMutate = vi.fn();
         vi.mocked(useCreateExpense).mockReturnValue({
             mutate: createMutate,
@@ -248,5 +255,9 @@ describe('useUpsertExpensePage', () => {
 
         expect(createMutate).not.toHaveBeenCalled();
         expect(toast.loading).not.toHaveBeenCalled();
+        expect(useGroup).toHaveBeenCalledWith('');
+        expect(useGroupMembers).toHaveBeenCalledWith([]);
+        expect(useExpense).toHaveBeenCalledWith('', '');
+        expect(result.current.members).toEqual([]);
     });
 });
