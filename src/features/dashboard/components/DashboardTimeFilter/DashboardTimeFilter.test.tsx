@@ -63,6 +63,8 @@ describe('DashboardTimeFilter', () => {
         );
         fireEvent.click(screen.getByRole('button', { name: 'Previous month' }));
         expect(choosePreset).toHaveBeenCalledWith('previous-month');
+        fireEvent.click(screen.getByRole('button', { name: 'Last 30 days' }));
+        expect(choosePreset).toHaveBeenCalledWith('last-30-days');
         fireEvent.click(screen.getByRole('button', { name: 'Custom date range' }));
         expect(setShowCustom).toHaveBeenCalledWith(true);
     });

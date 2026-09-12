@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import type { ReactNode } from 'react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { DashboardSummary } from '@features/dashboard/api/dashboardApi';
 import { useDashboard } from '@features/dashboard/hooks';
@@ -94,7 +94,11 @@ const dashboard: DashboardSummary = {
 };
 
 describe('AnalyticsPage', () => {
+    afterEach(() => vi.useRealTimers());
+
     beforeEach(() => {
+        vi.useFakeTimers({ toFake: ['Date'] });
+        vi.setSystemTime(new Date(2026, 8, 12, 12));
         vi.mocked(useDashboard).mockReturnValue({
             data: dashboard,
             isLoading: false,
@@ -116,12 +120,43 @@ describe('AnalyticsPage', () => {
         expect(screen.getByRole('heading', { name: 'Spending by group' })).toBeInTheDocument();
         expect(screen.getByRole('heading', { name: 'Paid versus your share' })).toBeInTheDocument();
         expect(screen.getByRole('heading', { name: 'Participant share' })).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: /time period.*overall/i })).toBeInTheDocument();
-        expect(vi.mocked(useDashboard).mock.calls.at(-1)?.[0]).toBeUndefined();
+        expect(
+            screen.getByRole('button', { name: /time period.*last 30 days/i }),
+        ).toBeInTheDocument();
+        expect(vi.mocked(useDashboard).mock.calls.at(-1)?.[0]).toEqual({
+            from: new Date(2026, 7, 14).toISOString(),
+            to: new Date(2026, 8, 13).toISOString(),
+        });
+        expect(
+            screen.getByText('Daily recorded expenses. Settlements are excluded.'),
+        ).toBeInTheDocument();
 
         expect(screen.getByRole('button', { name: /group:.*all groups/i })).toBeInTheDocument();
         expect(
             screen.getByText(/select one group to view participant shares/i),
+        ).toBeInTheDocument();
+    });
+
+    it('can switch to Overall and back to Last 30 days', () => {
+        render(
+            <MemoryRouter>
+                <AnalyticsPage />
+            </MemoryRouter>,
+        );
+        fireEvent.click(screen.getByRole('button', { name: /time period.*last 30 days/i }));
+        fireEvent.click(screen.getByRole('button', { name: 'Overall' }));
+        expect(vi.mocked(useDashboard).mock.calls.at(-1)?.[0]).toBeUndefined();
+        expect(
+            screen.getByText('Monthly recorded expenses. Settlements are excluded.'),
+        ).toBeInTheDocument();
+        fireEvent.click(screen.getByRole('button', { name: /time period.*overall/i }));
+        fireEvent.click(screen.getByRole('button', { name: 'Last 30 days' }));
+        expect(vi.mocked(useDashboard).mock.calls.at(-1)?.[0]).toEqual({
+            from: new Date(2026, 7, 14).toISOString(),
+            to: new Date(2026, 8, 13).toISOString(),
+        });
+        expect(
+            screen.getByText('Daily recorded expenses. Settlements are excluded.'),
         ).toBeInTheDocument();
     });
 
@@ -463,7 +498,7 @@ describe('AnalyticsPage', () => {
             </MemoryRouter>,
         );
 
-        fireEvent.click(screen.getByRole('button', { name: /time period.*overall/i }));
+        fireEvent.click(screen.getByRole('button', { name: /time period.*last 30 days/i }));
         fireEvent.click(screen.getByRole('button', { name: 'This month' }));
 
         const table = screen.getByRole('table', { name: /paid versus share values/i });
@@ -525,7 +560,7 @@ describe('AnalyticsPage', () => {
             </MemoryRouter>,
         );
 
-        fireEvent.click(screen.getByRole('button', { name: /time period.*overall/i }));
+        fireEvent.click(screen.getByRole('button', { name: /time period.*last 30 days/i }));
         fireEvent.click(screen.getByRole('button', { name: 'This month' }));
 
         // Clustered by day: two buckets, each wide enough for ten bars.
@@ -559,7 +594,7 @@ describe('AnalyticsPage', () => {
         );
 
         // A time column, then a column per group.
-        expect(headers).toEqual(['Month', 'Weekend Trip', 'Dinner']);
+        expect(headers).toEqual(['Day', 'Weekend Trip', 'Dinner']);
     });
 
     it('buckets spending by month once the range is longer than a month', () => {
@@ -569,7 +604,7 @@ describe('AnalyticsPage', () => {
             </MemoryRouter>,
         );
 
-        fireEvent.click(screen.getByRole('button', { name: /time period.*overall/i }));
+        fireEvent.click(screen.getByRole('button', { name: /time period.*last 30 days/i }));
         fireEvent.click(screen.getByRole('button', { name: 'This year' }));
 
         const table = screen.getByRole('table', { name: /spending by group values/i });

@@ -8,6 +8,7 @@ import { useDashboardTimeFilter } from '@features/dashboard/hooks/useDashboardTi
 
 const PRESETS = [
     'all-time',
+    'last-30-days',
     'this-month',
     'previous-month',
     'last-three-months',

@@ -41,6 +41,21 @@ describe('dashboardDateRange', () => {
         );
     });
 
+    it.each([
+        [new Date(2026, 7, 17, 12), new Date(2026, 6, 19), new Date(2026, 7, 18)],
+        [new Date(2026, 0, 5, 23, 59), new Date(2025, 11, 7), new Date(2026, 0, 6)],
+        [new Date(2024, 2, 1, 12), new Date(2024, 1, 1), new Date(2024, 2, 2)],
+        [new Date(2026, 2, 15, 12), new Date(2026, 1, 14), new Date(2026, 2, 16)],
+    ])('includes today and the preceding 29 local calendar days from %s', (today, start, end) => {
+        const period = presetPeriod('last-30-days', today);
+        expect(period).toEqual({
+            preset: 'last-30-days',
+            label: 'Last 30 days',
+            range: { from: start.toISOString(), to: end.toISOString() },
+        });
+        expect(usesDailyTrend(period)).toBe(true);
+    });
+
     it('rejects reversed and longer-than-one-year custom ranges', () => {
         expect(() => customPeriod('2026-08-02', '2026-08-01', now)).toThrow('Start date');
         expect(() => customPeriod('2026-01-01', '2027-01-01', now)).toThrow(
