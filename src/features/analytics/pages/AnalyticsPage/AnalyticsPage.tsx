@@ -17,7 +17,7 @@ import { presetPeriod, usesDailyTrend, type DashboardPeriod } from '@features/da
 
 export function AnalyticsPage() {
     const [searchParams] = useSearchParams();
-    const [period, setPeriod] = useState<DashboardPeriod>(() => presetPeriod('all-time'));
+    const [period, setPeriod] = useState<DashboardPeriod>(() => presetPeriod('last-30-days'));
     const [scopeGroupId, setScopeGroupId] = useState<string | null>(() =>
         searchParams.get('groupId'),
     );

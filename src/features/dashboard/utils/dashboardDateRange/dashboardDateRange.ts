@@ -1,5 +1,11 @@
 export type DashboardPeriodPreset =
-    'all-time' | 'this-month' | 'previous-month' | 'last-three-months' | 'this-year' | 'custom';
+    | 'all-time'
+    | 'last-30-days'
+    | 'this-month'
+    | 'previous-month'
+    | 'last-three-months'
+    | 'this-year'
+    | 'custom';
 
 export interface DashboardDateRange {
     from: string;
@@ -14,6 +20,7 @@ export interface DashboardPeriod {
 
 const LABELS: Record<DashboardPeriodPreset, string> = {
     'all-time': 'Overall',
+    'last-30-days': 'Last 30 days',
     'this-month': 'This month',
     'previous-month': 'Previous month',
     'last-three-months': 'Last 3 months',
@@ -37,7 +44,10 @@ export function presetPeriod(
     const month = now.getMonth();
     let start: Date;
     let end: Date;
-    if (preset === 'previous-month') {
+    if (preset === 'last-30-days') {
+        start = localMidnight(year, month, now.getDate() - 29);
+        end = localMidnight(year, month, now.getDate() + 1);
+    } else if (preset === 'previous-month') {
         start = localMidnight(year, month - 1, 1);
         end = localMidnight(year, month, 1);
     } else if (preset === 'last-three-months') {
@@ -96,7 +106,12 @@ export function periodLabel(preset: DashboardPeriodPreset): string {
 }
 
 export function usesDailyTrend(period: DashboardPeriod): boolean {
-    if (period.preset === 'this-month' || period.preset === 'previous-month') return true;
+    if (
+        period.preset === 'last-30-days' ||
+        period.preset === 'this-month' ||
+        period.preset === 'previous-month'
+    )
+        return true;
     if (period.preset !== 'custom') return false;
     if (!period.range) return false;
 
