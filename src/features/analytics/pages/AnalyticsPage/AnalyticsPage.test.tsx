@@ -150,25 +150,33 @@ describe('AnalyticsPage', () => {
         ).toBeInTheDocument();
     });
 
-    it('does not render the group filter when there is only one group', () => {
-        vi.mocked(useDashboard).mockReturnValue({
-            data: {
-                ...dashboard,
-                groupSpend: [dashboard.groupSpend[0]!],
-            },
-            isLoading: false,
-            isError: false,
-            refetch: vi.fn(),
-        } as unknown as ReturnType<typeof useDashboard>);
+    it.each(['/analytics', '/analytics?groupId=unknown'])(
+        'automatically selects the only group and hides the filter at %s',
+        (route) => {
+            vi.mocked(useDashboard).mockReturnValue({
+                data: {
+                    ...dashboard,
+                    groupSpend: [dashboard.groupSpend[0]!],
+                },
+                isLoading: false,
+                isError: false,
+                refetch: vi.fn(),
+            } as unknown as ReturnType<typeof useDashboard>);
 
-        render(
-            <MemoryRouter>
-                <AnalyticsPage />
-            </MemoryRouter>,
-        );
+            render(
+                <MemoryRouter initialEntries={[route]}>
+                    <AnalyticsPage />
+                </MemoryRouter>,
+            );
 
-        expect(screen.queryByRole('button', { name: /group:/i })).not.toBeInTheDocument();
-    });
+            expect(screen.queryByRole('button', { name: /group:/i })).not.toBeInTheDocument();
+            expect(screen.queryByText(/select one group/i)).not.toBeInTheDocument();
+            expect(screen.getByLabelText('Participant share chart')).toBeInTheDocument();
+            const shareTable = screen.getByRole('table', { name: /participant share values/i });
+            expect(shareTable).toHaveTextContent('You');
+            expect(shareTable).toHaveTextContent('Priya');
+        },
+    );
 
     it('switches the selected group interactively via the group dropdown filter', () => {
         render(

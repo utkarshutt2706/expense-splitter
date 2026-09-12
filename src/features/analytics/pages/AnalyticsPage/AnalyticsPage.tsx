@@ -22,7 +22,10 @@ export function AnalyticsPage() {
         searchParams.get('groupId'),
     );
     const { data, isLoading, isError, refetch } = useDashboard(period.range);
-    const selectedGroup = data?.groupSpend.find((group) => group.groupId === scopeGroupId);
+    const selectedGroup =
+        data?.groupSpend.length === 1
+            ? data.groupSpend[0]
+            : data?.groupSpend.find((group) => group.groupId === scopeGroupId);
     const effectiveGroupId = selectedGroup?.groupId ?? null;
 
     if (isLoading) return <AnalyticsSkeleton />;
