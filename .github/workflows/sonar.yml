@@ -33,7 +33,7 @@ jobs:
       - run: pnpm install --frozen-lockfile --ignore-scripts
       - name: Run coverage shard
         run: >-
-          pnpm test:coverage
+          pnpm test:cov
           --pool=threads
           --shard=${{ matrix.shard }}/4
           --coverage.reporter=json
