@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import { createBrowserRouter, Navigate, type RouteObject } from 'react-router';
 
 import { AppLayout } from '@app/layouts';
+import { installAuthenticatedGroupHistory } from '@app/navigation/groupRootHistory';
 import {
     DashboardPage,
     AnalyticsPage,
@@ -76,3 +77,5 @@ export const routes: RouteObject[] = [
 ];
 
 export const router = createBrowserRouter(routes, { basename: import.meta.env.BASE_URL });
+
+installAuthenticatedGroupHistory(router, import.meta.hot);
