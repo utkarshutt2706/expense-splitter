@@ -128,7 +128,7 @@ export function RecordPaymentForm({
                     max={localDateInputValue(new Date())}
                     onClick={(event) => openDatePicker(event.currentTarget)}
                     {...register('paidOn')}
-                    className="border-border bg-surface text-surface-foreground focus-visible:ring-brand-500 rounded-md border px-3 py-2 text-sm outline-none focus-visible:ring-2"
+                    className="border-border bg-surface text-surface-foreground focus-visible:ring-brand-500 w-full min-w-0 rounded-md border px-3 py-2 text-sm outline-none focus-visible:ring-2"
                 />
                 {errors.paidOn && <p className="text-xs text-red-600">{errors.paidOn.message}</p>}
             </div>
