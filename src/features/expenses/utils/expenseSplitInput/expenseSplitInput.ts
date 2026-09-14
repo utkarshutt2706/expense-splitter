@@ -11,12 +11,9 @@ export function validateSplitInput(
     splitValues: Readonly<Record<string, string>>,
 ): { values?: ParsedSplitValue[]; error?: string } {
     if (splitType === 'equal') return {};
-    const label =
-        splitType === 'exact'
-            ? 'an amount'
-            : splitType === 'percentage'
-              ? 'a percentage'
-              : 'a share count';
+    let label = 'a share count';
+    if (splitType === 'exact') label = 'an amount';
+    else if (splitType === 'percentage') label = 'a percentage';
     const values = participantUserIds.map((userId) => ({
         userId,
         value: Number(splitValues[userId] ?? Number.NaN),

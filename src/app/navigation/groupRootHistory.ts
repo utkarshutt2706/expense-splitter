@@ -55,6 +55,28 @@ export function installGroupRootHistory(
     const basename = (router.basename ?? '/').replace(/\/$/, '');
     const isGroupPage = (path: string) => path === '/groups' || path.startsWith('/groups/');
 
+    function resumePendingNavigation(
+        target: Destination,
+        destination: Destination,
+        index: number,
+        root: number,
+        historyAction: AppRouter['state']['historyAction'],
+    ) {
+        if (index === root && destination.pathname === '/groups') {
+            pending = undefined;
+            if (target.pathname !== '/groups') {
+                void router.navigate(target, { state: target.state });
+            }
+            return;
+        }
+
+        // A push can cancel an in-flight history traversal. Keep the
+        // latest clicked destination and retry from the current entry.
+        // An intermediate POP must not overwrite that destination.
+        if (historyAction !== 'POP') pending = destination;
+        void router.navigate(root - index);
+    }
+
     function reconcile() {
         if (disposed || !router.state.initialized || router.state.navigation.state !== 'idle') {
             return;
@@ -81,31 +103,17 @@ export function installGroupRootHistory(
         if (typeof index !== 'number') return;
 
         const savedRoot: unknown = entry?.[ROOT_INDEX];
-        if (rootIndex === undefined) {
-            rootIndex =
-                typeof savedRoot === 'number' && savedRoot >= 0 && savedRoot <= index
-                    ? savedRoot
-                    : index;
-        }
+        rootIndex ??=
+            typeof savedRoot === 'number' && savedRoot >= 0 && savedRoot <= index
+                ? savedRoot
+                : index;
 
         const destination = { ...location, pathname };
         const fromPath = previousPath;
         previousPath = pathname;
 
         if (pending) {
-            if (index === rootIndex && pathname === '/groups') {
-                const target = pending;
-                pending = undefined;
-                if (target.pathname !== '/groups') {
-                    void router.navigate(target, { state: target.state });
-                }
-            } else {
-                // A push can cancel an in-flight history traversal. Keep the
-                // latest clicked destination and retry from the current entry.
-                // An intermediate POP must not overwrite that destination.
-                if (historyAction !== 'POP') pending = destination;
-                void router.navigate(rootIndex - index);
-            }
+            resumePendingNavigation(pending, destination, index, rootIndex, historyAction);
             return;
         }
 
