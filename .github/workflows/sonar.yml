@@ -60,6 +60,24 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
+      - name: Require successful coverage and authenticated PR analysis
+        env:
+          COVERAGE_RESULT: ${{ needs.coverage.result }}
+          IS_FORK: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
+        run: |
+          if [ "$COVERAGE_RESULT" != "success" ]; then
+            echo "::error::All coverage shards must pass."
+            exit 1
+          fi
+          if [ "$IS_FORK" = "true" ]; then
+            echo "::error::This PR requires Sonar analysis. Fork secrets are unavailable; use a reviewed branch in this repository."
+            exit 1
+          fi
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version-file: .nvmrc
+      - name: Test Sonar issue policy
+        run: node --test scripts/check-sonar-issues.node-test.mjs
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           pattern: coverage-*
@@ -68,8 +86,10 @@ jobs:
         run: node scripts/merge-coverage.mjs coverage-shards/*/coverage-final.json
       - uses: davelosert/vitest-coverage-report-action@c4bbc33a89b7ace0e63d35f1f7d4bcee31155a73 # v2
         if: always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
-      - uses: SonarSource/sonarqube-scan-action@22918119ff8e1ca75a623e15c8296b6ea4fbe28f # v8.2.1
-        # Fork PRs do not receive SONAR_TOKEN. Tests still run above; only the scan is skipped.
+      - name: Analyze with Sonar
+        id: scan
+        uses: SonarSource/sonarqube-scan-action@22918119ff8e1ca75a623e15c8296b6ea4fbe28f # v8.2.1
+        # Fork PRs are blocked above because they cannot run authenticated analysis.
         if: success() && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository)
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -78,4 +98,16 @@ jobs:
           # Without this the scan step exits as soon as results upload, before the
           # Quality Gate is even computed — this job would report success regardless
           # of the actual analysis outcome.
-          args: -Dsonar.qualitygate.wait=true
+          args: >-
+            -Dsonar.qualitygate.wait=true
+            -Dsonar.scm.revision=${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Require zero unresolved Sonar PR issues
+        if: >-
+          !cancelled() && github.event_name == 'pull_request' &&
+          (steps.scan.outcome == 'success' || steps.scan.outcome == 'failure')
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: node scripts/check-sonar-issues.mjs

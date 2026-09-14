@@ -27,6 +27,25 @@ export function ExpenseDetailPage() {
         setDeleteDialogOpen,
     } = useExpenseDetailPage();
 
+    let content;
+    if (isLoading) {
+        content = (
+            <output aria-label="Loading expense…" className="flex flex-col gap-6">
+                <ExpenseDetailSkeleton />
+            </output>
+        );
+    } else if (isExpenseError || !expense) {
+        content = <div className="text-red-600">Couldn't load this expense.</div>;
+    } else {
+        content = (
+            <ExpenseDetailContent
+                expense={expense}
+                members={members}
+                currentUserId={currentUserId}
+            />
+        );
+    }
+
     return (
         <div>
             <Link
@@ -84,19 +103,7 @@ export function ExpenseDetailPage() {
                 </div>
             </div>
 
-            {isLoading ? (
-                <output aria-label="Loading expense…" className="flex flex-col gap-6">
-                    <ExpenseDetailSkeleton />
-                </output>
-            ) : isExpenseError || !expense ? (
-                <div className="text-red-600">Couldn't load this expense.</div>
-            ) : (
-                <ExpenseDetailContent
-                    expense={expense}
-                    members={members}
-                    currentUserId={currentUserId}
-                />
-            )}
+            {content}
 
             <ConfirmationDialog
                 open={isConfirmingDelete}
