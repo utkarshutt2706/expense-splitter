@@ -37,11 +37,11 @@
         "react": "^19.3.0",
         "react-dom": "^19.2.7",
         "react-hook-form": "^7.86.0",
-        "react-router": "^8.3.0",
+        "react-router": "^8.4.0",
         "recharts": "^3.10.1",
         "sonner": "^2.0.7",
         "tailwind-merge": "^3.6.0",
-        "zod": "^4.4.3",
+        "zod": "^4.6.5",
         "zustand": "^5.0.15"
     },
     "devDependencies": {
@@ -55,7 +55,7 @@
         "@types/react-dom": "^19.2.5",
         "@vitejs/plugin-react": "^6.0.5",
         "@vitest/coverage-v8": "^4.1.10",
-        "eslint": "^10.8.0",
+        "eslint": "^10.10.0",
         "eslint-config-prettier": "^10.1.8",
         "eslint-plugin-jsx-a11y": "^6.10.2",
         "eslint-plugin-react-hooks": "^7.1.1",
